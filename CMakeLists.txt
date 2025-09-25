@@ -18,6 +18,10 @@ qt_add_qml_module(appbili
     QML_FILES MainPage.qml
     QML_FILES FrameLessWindow.qml
     RESOURCES Img.qrc
+    QML_FILES Mine.qml
+    QML_FILES VedioType.qml
+    QML_FILES VedioList.qml
+    QML_FILES ToolBars.qml
 )
 
 target_compile_features(appbili PRIVATE cxx_std_23)
