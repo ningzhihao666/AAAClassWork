@@ -16,6 +16,8 @@ qt_add_qml_module(appbili
     SOURCES     main.cpp
     QML_FILES   Main.qml
     QML_FILES MainPage.qml
+    QML_FILES FrameLessWindow.qml
+    RESOURCES Img.qrc
 )
 
 target_compile_features(appbili PRIVATE cxx_std_23)
