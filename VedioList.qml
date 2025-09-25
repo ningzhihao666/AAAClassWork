@@ -1,3 +1,4 @@
+//视频列表
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -20,9 +21,8 @@ ScrollView {
                 anchors.fill: parent
                 spacing: 5
 
-                // 视频封面
                 Image {
-                    // source: "qrc:/video_thumb.png"
+                    source: ""
                     width: parent.width
                     height: 120
                     fillMode: Image.PreserveAspectCrop
@@ -41,7 +41,7 @@ ScrollView {
                 Row {
                     spacing: 5
                     Image {
-                        // source: "qrc:/up_avatar.png"
+                        source: ""
                         width: 20
                         height: 20
                     }

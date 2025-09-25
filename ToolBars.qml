@@ -1,3 +1,5 @@
+//左侧工具栏
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
