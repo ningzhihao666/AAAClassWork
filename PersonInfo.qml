@@ -7,7 +7,7 @@ Rectangle {
         anchors.fill: parent
         anchors.margins: 10
 
-        // 用户头像
+        // 头像
         Image {
             source: "qrc:/avatar.png"
             width: 40
@@ -22,7 +22,6 @@ Rectangle {
             Text { text: "B币: 0  硬币: 794"; color: "gray" }
         }
 
-        // 动态/关注/粉丝数
         RowLayout {
             spacing: 20
             Text { text: "1 动态" }
@@ -30,7 +29,6 @@ Rectangle {
             Text { text: "1 粉丝" }
         }
 
-        // 成为大会员按钮
         Button {
             text: "成为大会员"
             background: Rectangle { color: "pink"; radius: 4 }

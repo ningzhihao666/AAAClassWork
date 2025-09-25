@@ -22,6 +22,7 @@ qt_add_qml_module(appbili
     QML_FILES VedioType.qml
     QML_FILES VedioList.qml
     QML_FILES ToolBars.qml
+    QML_FILES PersonInfo.qml
 )
 
 target_compile_features(appbili PRIVATE cxx_std_23)

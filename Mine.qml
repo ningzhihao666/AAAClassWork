@@ -1,4 +1,3 @@
-//我的
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -10,27 +9,20 @@ ApplicationWindow {
     visible: true
     title: "哔哩哔哩 QML 客户端"
 
-    // 工具栏
-    RowLayout{
+    RowLayout {
         anchors.fill: parent
-        spacing: 10
+        spacing: 0
 
-        ToolBars{
+        ToolBars {
             id: leftNav
-            visible: true
             Layout.preferredWidth: 60
-            Layout.preferredHeight: parent.height
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
+            Layout.fillHeight: true
         }
-
 
         // 主内容区
         Rectangle {
-            anchors.left: leftNav.right
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
+            Layout.fillWidth: true
+            Layout.fillHeight: true
             color: "#F9F9F9"
 
             ColumnLayout {
@@ -40,20 +32,20 @@ ApplicationWindow {
                 // 顶部个人界面
                 PersonInfo {
                     Layout.fillWidth: true
-                    height: 60
-                    color: "white"
+                    Layout.preferredHeight: 60
                 }
 
-                //视频类型
+                // 视频类型
                 VedioType {
-                    id:vediotype
+                    id: vediotype
                     Layout.fillWidth: true
+                    Layout.preferredHeight: 40
                 }
+
                 // 视频列表
                 VedioList {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    clip: true
                 }
             }
         }
