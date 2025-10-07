@@ -18,6 +18,7 @@ qt_add_qml_module(appbili
     QML_FILES MainPage.qml
     SOURCES
     SOURCES user.h user.cpp
+    SOURCES userinfo.h userinfo.cpp
 )
 
 target_compile_features(appbili PRIVATE cxx_std_23)
