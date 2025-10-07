@@ -4,7 +4,7 @@ project(bili VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Quick)
+find_package(Qt6 REQUIRED COMPONENTS Quick Sql)
 
 qt_standard_project_setup(REQUIRES 6.9)
 
@@ -18,6 +18,7 @@ qt_add_qml_module(appbili
     QML_FILES MainPage.qml
     SOURCES
     SOURCES user.h user.cpp
+    SOURCES databaseuser.h databaseuser.cpp
 )
 
 target_compile_features(appbili PRIVATE cxx_std_23)
@@ -25,6 +26,7 @@ target_compile_features(appbili PRIVATE cxx_std_23)
 target_link_libraries(appbili
     PRIVATE
         Qt6::Quick
+        Qt6::Sql
 )
 
 set_target_properties(appbili PROPERTIES
