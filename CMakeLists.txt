@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.0.2)
+cmake_minimum_required(VERSION 3.0)
 
 project(bili VERSION 0.1 LANGUAGES CXX)
 
@@ -23,6 +23,13 @@ qt_add_qml_module(appbili
     QML_FILES VedioList.qml
     QML_FILES ToolBars.qml
     QML_FILES PersonInfo.qml
+    RESOURCES
+    RESOURCES
+)
+qt_add_resources(appbili "app_resources"
+    PREFIX "/"
+    FILES
+    images.qrc
 )
 
 target_compile_features(appbili PRIVATE cxx_std_23)
