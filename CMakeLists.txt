@@ -1,182 +1,59 @@
-<<<<<<< HEAD
-cmake_minimum_required(VERSION 3.0)
-=======
-cmake_minimum_required(VERSION 3.9)
->>>>>>> 038ac5c (添加视频，动态)
+cmake_minimum_required(VERSION 3.16)  # Qt6 推荐至少 3.16
 
 project(bili VERSION 0.1 LANGUAGES CXX)
 
+# 设置C++标准，确保与Qt6兼容（Qt6需要C++17或更高）
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# 查找Qt6包
 find_package(Qt6 REQUIRED COMPONENTS Quick)
 
+# Qt标准项目设置
 qt_standard_project_setup(REQUIRES 6.9)
 
+# 1. 首先创建可执行文件目标
 qt_add_executable(appbili)
 
+# 2. 然后正确配置QML模块，将所有资源集中声明
 qt_add_qml_module(appbili
     URI bili
     VERSION 1.0
-    SOURCES     main.cpp
-    QML_FILES   Main.qml
-    QML_FILES MainPage.qml
-    QML_FILES FrameLessWindow.qml
-    RESOURCES Img.qrc
-    QML_FILES Mine.qml
-    QML_FILES VedioType.qml
-    QML_FILES VedioList.qml
-    QML_FILES ToolBars.qml
-    QML_FILES PersonInfo.qml
-<<<<<<< HEAD
+    SOURCES main.cpp  # 主要的C++源文件
+    # 将所有QML文件列在一个QML_FILES参数下
+    QML_FILES
+        Main.qml
+        MainPage.qml
+        FrameLessWindow.qml
+        Mine.qml
+        VedioType.qml
+        VedioList.qml
+        ToolBars.qml
+        PersonInfo.qml
+        Vedio.qml
+        Moments.qml
+    # 将所有资源文件（.qrc）列在一个RESOURCES参数下
     RESOURCES
-    RESOURCES
-)
-qt_add_resources(appbili "app_resources"
-    PREFIX "/"
-    FILES
-    images.qrc
-=======
-    QML_FILES Vedio.qml
-    QML_FILES Moments.qml
-    QML_FILES Commit.qml
->>>>>>> 038ac5c (添加视频，动态)
+        Img.qrc
+        images.qrc
+        QML_FILES Commit.qml
 )
 
-target_compile_features(appbili PRIVATE cxx_std_23)
+# 链接必要的Qt模块
+target_link_libraries(appbili PRIVATE Qt6::Quick)
 
-target_link_libraries(appbili
-    PRIVATE
-        Qt6::Quick
-)
-
+# 设置平台相关的属性
 set_target_properties(appbili PROPERTIES
-#    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.appbili
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
 )
 
+# 安装规则（可选，根据需要调整）
 include(GNUInstallDirs)
 install(TARGETS appbili
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# set(CMAKE_CXX_STANDARD_REQUIRED ON) # Globally preventing the fallback behaviour of C++ standard
-#qt_add_executable(bili)  //Creates and finalizes an application target of a platform-specific type.
-#This command performs the following tasks:
-#    1. Create a CMake target of the appropriate type for the target platform.
-#    2. Link the target to the Qt::Core library.
-#    3. Handle finalization of the CMake target.
-
-# set(CMAKE_CXX_STANDARD_REQUIRED ON) # Globally preventing the fallback behaviour of C++ standard
-
-# qt_standard_project_setup()  #set(CMAKE_AUTOUIC ON)  set(CMAKE_AUTOMOC ON)
-
-
-
-
-
-
-# cmake_minimum_required(VERSION 3.16)
-#
-# project(bili VERSION 0.1 LANGUAGES CXX)
-#
-# @if !true
-# set(CMAKE_AUTOMOC ON)
-# @endif
-# set(CMAKE_CXX_STANDARD_REQUIRED ON)
-#
-# find_package(Qt6 REQUIRED COMPONENTS Quick)
-#
-# @if true
-# @if true
-# qt_standard_project_setup(REQUIRES 6.9)
-# @else
-# qt_standard_project_setup()
-# @endif
-# @endif
-#
-# qt_add_executable(appbili
-#     main.cpp
-# )
-#
-# qt_add_qml_module(appbili
-#     URI bili
-#     VERSION 1.0
-#     QML_FILES
-#         Main.qml
-# )
-#
-# # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
-# # If you are developing for iOS or macOS you should consider setting an
-# # explicit, fixed bundle identifier manually though.
-# set_target_properties(appbili PROPERTIES
-# #    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.appbili
-#     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
-#     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
-#     MACOSX_BUNDLE TRUE
-#     WIN32_EXECUTABLE TRUE
-# )
-#
-# target_link_libraries(appbili
-#     PRIVATE Qt6::Quick
-# )
-#
-# include(GNUInstallDirs)
-# install(TARGETS appbili
-#     BUNDLE DESTINATION .
-#     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-#     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-# )
