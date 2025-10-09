@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 cmake_minimum_required(VERSION 3.0)
+=======
+cmake_minimum_required(VERSION 3.9)
+>>>>>>> 038ac5c (添加视频，动态)
 
 project(bili VERSION 0.1 LANGUAGES CXX)
 
@@ -23,6 +27,7 @@ qt_add_qml_module(appbili
     QML_FILES VedioList.qml
     QML_FILES ToolBars.qml
     QML_FILES PersonInfo.qml
+<<<<<<< HEAD
     RESOURCES
     RESOURCES
 )
@@ -30,6 +35,11 @@ qt_add_resources(appbili "app_resources"
     PREFIX "/"
     FILES
     images.qrc
+=======
+    QML_FILES Vedio.qml
+    QML_FILES Moments.qml
+    QML_FILES Commit.qml
+>>>>>>> 038ac5c (添加视频，动态)
 )
 
 target_compile_features(appbili PRIVATE cxx_std_23)
