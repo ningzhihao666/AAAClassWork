@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
         &app,
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
-    engine.loadFromModule("bili", "Vedio");
+    engine.loadFromModule("bili", "Main");
 
     return app.exec();
 }

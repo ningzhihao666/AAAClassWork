@@ -1,3 +1,5 @@
+//个人信息
+
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls

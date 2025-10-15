@@ -32,11 +32,14 @@ qt_add_qml_module(appbili
         PersonInfo.qml
         Vedio.qml
         Moments.qml
+        Send_videos/Video.qml
+        Send_videos/VideoLode.qml
     # 将所有资源文件（.qrc）列在一个RESOURCES参数下
     RESOURCES
         Img.qrc
         images.qrc
         QML_FILES Commit.qml
+        Send_videos/server.js
 )
 
 # 链接必要的Qt模块

@@ -215,11 +215,11 @@ FrameLessWindow {
                 // 下半部分菜单项
                 Repeater {
                     model: [
-                        {text: "朋友圈", icon: "📝"},
-                        {text: "上传视频", icon: "📹"},
-                        {text: "消息", icon: "✉️"},
-                        {text: "夜间模式", icon: "🌙"},
-                        {text: "设置", icon: "⚙️"}
+                        {text: "朋友圈", icon: "📝", qml:"Send_videos/VideoLode.qml"},
+                        {text: "上传视频", icon: "📹", qml:"Send_videos/VideoLode.qml"},
+                        {text: "消息", icon: "✉️", qml:"Send_videos/VideoLode.qml"},
+                        {text: "夜间模式", icon: "🌙", qml:"Send_videos/VideoLode.qml"},
+                        {text: "设置", icon: "⚙️", qml:"Send_videos/VideoLode.qml"}
                     ]
 
                     delegate: Rectangle {
@@ -232,8 +232,6 @@ FrameLessWindow {
                         function getBackgroundColor() {
                             if (root.currentLeftMenuItem === modelData.text) {
                                 return "#e0e0e0"
-                            } else if (bottomTapHandler.pressed) {
-                                return "#d8d8d8"
                             }
                             return "transparent"
                         }
@@ -257,16 +255,15 @@ FrameLessWindow {
                             }
                         }
 
-                        // 使用TapHandler
-                        TapHandler {
-                            id: bottomTapHandler
-                            acceptedDevices: PointerDevice.Mouse | PointerDevice.Touch
-                            gesturePolicy: TapHandler.ReleaseWithinBounds
-
-                            onTapped: {
-                                console.log("点击菜单项:", modelData.text)
+                        Button{
+                            anchors.fill:parent;
+                            background: Rectangle{color:"transparent"}
+                            onClicked: {
+                                if (modelData.text === "上传视频") {
+                                    videoUploadPopup.open()
+                                }
                                 root.currentLeftMenuItem = modelData.text
-                                // 点击其他菜单项时隐藏个人信息界面
+                                console.log("点击菜单项:", modelData.text)
                                 root.showPersonInfo = false
                             }
                         }
@@ -283,6 +280,48 @@ FrameLessWindow {
                 Layout.fillHeight: true
                 Layout.fillWidth: true
             }
+        }
+    }
+
+    // 视频上传弹窗
+    Popup {
+        id: videoUploadPopup
+        width: 800
+        height: 600
+        x: (parent.width - width) / 2
+        y: (parent.height - height) / 2
+        modal: true
+        focus: true
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+
+        // 加载视频上传页面
+        Loader {
+            id: videoLoader
+            anchors.fill: parent
+            source: "Send_videos/VideoLode.qml"
+
+            onLoaded: {
+                // 连接关闭信号
+                if (item) {
+                    item.uploadFinished.connect(function() {
+                        videoUploadPopup.close()
+                    })
+                    item.uploadCancelled.connect(function() {
+                        videoUploadPopup.close()
+                    })
+                }
+            }
+        }
+
+        // 关闭按钮
+        Button {
+            text: "×"
+            anchors.top: parent.top
+            anchors.right: parent.right
+            anchors.margins: 10
+            width: 30
+            height: 30
+            onClicked: videoUploadPopup.close()
         }
     }
 
@@ -568,7 +607,7 @@ FrameLessWindow {
                         }
 
                         TapHandler {
-                            onTapped: console.log("点击视频项:", index + 1)
+                            onTapped: stackView.replace("Vedio.qml")
                         }
                     }
                 }

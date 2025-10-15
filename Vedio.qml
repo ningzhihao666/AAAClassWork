@@ -1,3 +1,5 @@
+//视频页面
+
 import QtQuick
 import QtQuick.Window
 import QtQuick.Controls
@@ -98,7 +100,8 @@ FrameLessWindow {
 
                     onClicked:
                     {
-                        //点击操作
+                        videoPlayerPage.close()
+                        stackView.pop()
                     }
                 }
 
@@ -299,7 +302,7 @@ FrameLessWindow {
                         opacity:closeButton.hovered? 0.5 : 0
                     }
                     onClicked: {
-                        Qt.quit();
+                        videoPlayerPage.close()
                     }
 
                  }
@@ -389,16 +392,6 @@ FrameLessWindow {
                                 background: Rectangle {
                                     radius: 5
                                     color:"transparent"
-                                    // Rectangle {
-                                    //             anchors {
-                                    //                 bottom: parent.bottom
-                                    //                 horizontalCenter: parent.horizontalCenter
-                                    //             }
-                                    //             width: parent.width * 0.8
-                                    //             height: 3
-                                    //             color: "pink"
-                                    //             visible: videoPlayerPage.currentView === "info"
-                                    //         }
 
                                 }
                                 onClicked: {
@@ -432,16 +425,6 @@ FrameLessWindow {
                                 background: Rectangle {
                                     radius: 5
                                     color: "transparent"
-                                    // Rectangle {
-                                    //             anchors {
-                                    //                 bottom: parent.bottom
-                                    //                 horizontalCenter: parent.horizontalCenter
-                                    //             }
-                                    //             width: parent.width * 0.8
-                                    //             height: 3
-                                    //             color: "pink"
-                                    //             visible: videoPlayerPage.currentView === "commit"
-                                    //         }
                                 }
                                 onClicked: {
                                     videoPlayerPage.currentView = "commit"
