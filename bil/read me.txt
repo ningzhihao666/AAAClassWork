@@ -1,0 +1,1 @@
+运行项目之前先要在项目根目录执行 node server.js,如read me.png图所示
