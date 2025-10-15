@@ -13,7 +13,7 @@ class User : public QObject
     Q_PROPERTY(QString account READ getAccount CONSTANT)
     Q_PROPERTY(bool PremiunMembership READ isPremiunMembership NOTIFY isPremiunMembershipChanged)
     Q_PROPERTY(QString sign READ getSign WRITE setSign NOTIFY signChanged)
-    // Q_PROPERTY(QString headportrait READ getheadportrait WRITE setheadportrait NOTIFY headportraitChanged)
+    Q_PROPERTY(QString headportrait READ getheadportrait WRITE setHeadportraitFromFile NOTIFY headportraitChanged)
     Q_PROPERTY(QString level READ getLevel WRITE setLevel NOTIFY levelChanged)
     Q_PROPERTY(QString followingCount READ getFollowingCount WRITE setFollowingCount NOTIFY followingCountChanged)
     Q_PROPERTY(QString fansCount READ getFansCount WRITE setFansCount NOTIFY fansCountChanged)

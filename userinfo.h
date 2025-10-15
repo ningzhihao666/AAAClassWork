@@ -3,6 +3,15 @@
 #include <QObject>
 #include <QString>
 
+//头像所需库
+#include <QImage>
+#include <QByteArray>
+#include <QFile>
+#include <QStandardPaths>
+#include <QUrl>
+#include <QDir>
+#include <QDateTime>
+
 class User;
 
 class UserInfo : public QObject
@@ -20,10 +29,13 @@ public:
     QString getFansCount() { return m_fansCount; }
     QString getLikes() { return m_likes; }
     QString getAccount() { return m_account; }
+    QString getHeadportraitTempFile() { return m_headportraitTempFile; }
+
     bool getIsPremiunMembership() { return m_isPremiunMembership; }
     void setNickname(const QString &nickname);
     void setSign(const QString &sign);
     void setHeadportrait(const QString &base64);
+    void setHeadportraitFromFile(const QString &filePath);
     void setLevel(const QString &level);
     void setFollowingCount(const QString &followingCount);
     void setFansCount(const QString &fansCount);

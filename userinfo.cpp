@@ -37,6 +37,33 @@ void UserInfo::setHeadportrait(const QString &base64)
     }
 }
 
+void UserInfo::setHeadportraitFromFile(const QString &filePath)
+{
+    QString localPath = QUrl(filePath).toLocalFile();
+
+    QFile file(localPath);
+    if (!file.open(QIODevice::ReadOnly)) { return; }
+
+    QByteArray imageData = file.readAll();
+    file.close();
+
+    if (imageData.isEmpty()) { return; }
+
+    //检查JPEG和PNG格式
+    bool isValid = imageData.startsWith("\xFF\xD8\xFF") || // JPEG
+                   imageData.startsWith("\x89PNG");        // PNG
+
+    if (!isValid) { return; }
+
+    //base64
+    QString base64 = QString::fromLatin1(imageData.toBase64());
+
+    QString imageType = imageData.startsWith("\xFF\xD8\xFF") ? "jpeg" : "png";
+    QString formattedBase64 = QString("data:image/%1;base64,%2").arg(imageType, base64);
+
+    setHeadportrait(formattedBase64);
+}
+
 void UserInfo::setLevel(const QString &level)
 {
     if (level != m_level) {
