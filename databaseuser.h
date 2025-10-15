@@ -15,11 +15,11 @@ public:
     ~DatabaseUser();
 
     // 用于账号检测与管理
-    bool Contains(const QString &account) { return m_users.contains(account); };
+    // bool Contains(const QString &account) { return m_users.contains(account); };
     bool AddNetizen(User *user);
     bool RemoveNetizen(const QString &account);
-    User *GetNetizen(const QString &account) { return m_users[account]; };
-    QList<User *> GetAllNetizen() { return m_users.values(); };
+    // User *GetNetizen(const QString &account) { return m_users[account]; };
+    // QList<User *> GetAllNetizen() { return m_users.values(); };
 
     // 数据管理
     bool loadFromDatabase();

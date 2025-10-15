@@ -1,6 +1,7 @@
 #include <QDateTime>
 #include <QSqlQuery>
 #include <QSqlError>
+#include <QDebug>
 #include "databaseuser.h"
 
 // 初始化单例指针
@@ -35,9 +36,12 @@ bool DatabaseUser::initDatabase()
 {
     if (m_db.isOpen()) m_db.close();
 
-    m_db = QSqlDatabase::addDatabase("QSQLITE");
-    m_db.setDatabaseName("databse_userinfo.db");
-
+    m_db = QSqlDatabase::addDatabase("QMYSQL");
+    m_db.setHostName("10.0.0.2:3306");
+    m_db.setPort(3306);
+    m_db.setDatabaseName("database_userinfo.db");
+    m_db.setUserName("root");
+    m_db.setPassword("lsy02282725");
     if (!m_db.open()) {
         qWarning() << "Failed to open database:" << m_db.lastError().text();
         return false;
@@ -123,37 +127,53 @@ bool DatabaseUser::saveToDatabase()
     QSqlQuery query;
 
     // 事务保护
-    m_db.transaction();
-
-    // 清空旧的user数据
-    if (!query.exec("DELETE FROM users")) {
-        qWarning() << "Failed to clear tables:" << query.lastError().text();
-        m_db.rollback();
+    if (!m_db.transaction()) {
+        qWarning() << "Failed to start transaction:" << m_db.lastError().text();
         return false;
     }
 
-    // 保存users
-    query.prepare("INSERT INTO users (account, nickname, password, sign, level, followingCount, fansCount, likes ) "
-                  "VALUES (?, ?, ?, ?, ?)");
-    for (auto user : m_users.values()) {
-        // query.addBindValue(user->getAccount());
-        // query.addBindValue(user->getNickname());
-        // query.addBindValue(user->getPassword());
-        // // query.addBindValue(user->getAvatarBase64());
-        // query.addBindValue(user->getSign());
-        // query.addBindValue(user->getLevel());
-        // query.addBindValue(user->getFollowingCount);
-        // query.addBindValue(user->getFansCount());
-        // query.addBindValue(user->getLikes());
-
-        if (!query.exec()) {
-            qWarning() << "Failed to insert user:" << query.lastError().text();
-            m_db.rollback();
-            return false;
+    try {
+        // 清空旧的user数据（或者使用UPDATE替代）
+        if (!query.exec("TRUNCATE TABLE users")) {
+            throw std::runtime_error(query.lastError().text().toStdString());
         }
-    }
 
-    return m_db.commit();
+        // 准备插入语句
+        if (!query.prepare("INSERT INTO users (account, nickname, password, headportrait, sign, "
+                           "level, followingCount, fansCount, likes, isPermiunMembership, online) "
+                           "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+            throw std::runtime_error(query.lastError().text().toStdString());
+        }
+
+        // 保存所有用户
+        for (auto user : m_users.values()) {
+            query.addBindValue(user->getAccount());
+            query.addBindValue(user->getNickname());
+            // query.addBindValue(user->getPassword());
+            // query.addBindValue(user->getAvatarBase64());
+            query.addBindValue(user->getSign());
+            query.addBindValue(user->getLevel());
+            query.addBindValue(user->getFollowingCount());
+            query.addBindValue(user->getFansCount());
+            query.addBindValue(user->getLikes());
+            // query.addBindValue(user->isPremiumMembership);
+            // query.addBindValue(user->isOnline);
+
+            if (!query.exec()) {
+                throw std::runtime_error(query.lastError().text().toStdString());
+            }
+        }
+
+        if (!m_db.commit()) {
+            throw std::runtime_error("Failed to commit transaction");
+        }
+
+        return true;
+    } catch (const std::exception &e) {
+        m_db.rollback();
+        qWarning() << "Save to database failed:" << e.what();
+        return false;
+    }
 }
 
 // bool DatabaseUser::AddUser(User *user)

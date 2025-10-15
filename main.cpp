@@ -1,10 +1,12 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include "databaseuser.h"
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
-
+    DatabaseUser db;
+    db.initDatabase();
     QQmlApplicationEngine engine;
     QObject::connect(
         &engine,
