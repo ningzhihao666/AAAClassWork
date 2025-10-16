@@ -7,19 +7,42 @@ FrameLessWindow {
     width: 1100
     height: 800
 
+    // 全局头像URL属性
+    property string globalAvatarUrl: "https://i0.hdslb.com/bfs/face/member/noface.jpg@40w_40h.webp"
+
     // 状态管理属性
     property string currentLeftMenuItem: ""
     property string currentTopNavItem: "推荐"
-    property bool showPersonInfo: false // 控制个人信息界面显示
+    property bool showPersonInfo: false
 
-    onCurrentLeftMenuItemChanged: {
-        console.log("当前左侧选中:", currentLeftMenuItem)
-        // 如果点击的不是"我的"或用户头像，隐藏个人信息界面
-        if (currentLeftMenuItem !== "我的" && currentLeftMenuItem !== "用户信息") {
-            root.showPersonInfo = false
+    // 头像路径处理函数
+    function processAvatarUrl(url) {
+        if (!url || url === "") {
+            return "https://i0.hdslb.com/bfs/face/member/noface.jpg@40w_40h.webp"
         }
+
+        console.log("原始头像URL:", url)
+
+        if (url.startsWith("file:///")) {
+            console.log("已经是file:///格式，直接使用")
+            return url
+        }
+
+        if (url.startsWith("http://") || url.startsWith("https://")) {
+            console.log("网络URL，直接使用")
+            return url
+        }
+
+        var processedUrl = "file:///" + url
+        console.log("本地路径处理后URL:", processedUrl)
+        return processedUrl
     }
-    onCurrentTopNavItemChanged: console.log("当前顶部选中:", currentTopNavItem)
+
+    // 当全局头像URL改变时，强制更新侧边栏头像
+    onGlobalAvatarUrlChanged: {
+        console.log("全局头像URL更新为:", globalAvatarUrl)
+        leftSideBar.forceUpdateAvatar()
+    }
 
     // 左侧边栏
     Rectangle {
@@ -33,11 +56,18 @@ FrameLessWindow {
         color: "#f0f0f0"
         z: 100
 
+        // 强制更新头像的函数
+        function forceUpdateAvatar() {
+        console.log("强制更新侧边栏头像")
+        let processedUrl = root.processAvatarUrl(root.globalAvatarUrl)
+        console.log("更新头像为:", processedUrl)
+        userInfoArea.avatarImage.source = processedUrl
+        }
+
         ColumnLayout {
             spacing: 10
             anchors.fill: parent
 
-            // 顶部返回按钮
             Button {
                 id: backButton
                 Layout.alignment: Qt.AlignTop
@@ -56,7 +86,6 @@ FrameLessWindow {
                 }
             }
 
-            // 上半部分菜单区域
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.preferredHeight: childrenRect.height
@@ -70,7 +99,6 @@ FrameLessWindow {
                     Layout.topMargin: 10
                 }
 
-                // 上半部分菜单项
                 Repeater {
                     model: [
                         {text: "首页", icon: "🏠"},
@@ -114,7 +142,6 @@ FrameLessWindow {
                             }
                         }
 
-                        // 修改TapHandler：点击"我的"时显示个人信息界面
                         TapHandler {
                             id: tapHandler
                             acceptedDevices: PointerDevice.Mouse | PointerDevice.Touch
@@ -124,9 +151,12 @@ FrameLessWindow {
                                 console.log("点击菜单项:", modelData.text)
                                 root.currentLeftMenuItem = modelData.text
 
-                                // 如果点击的是"我的"，显示个人信息界面
                                 if (modelData.text === "我的") {
                                     root.showPersonInfo = true
+                                }
+                                if(modelData.text === "首页"){
+                                    root.showPersonInfo =false
+                                    root.currentLeftMenuItem = ""
                                 }
                             }
                         }
@@ -138,7 +168,6 @@ FrameLessWindow {
                 }
             }
 
-            // 分隔线
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 1
@@ -147,15 +176,13 @@ FrameLessWindow {
                 Layout.bottomMargin: 10
             }
 
-            // 下半部分菜单区域
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.preferredHeight: childrenRect.height
                 spacing: 5
 
-                // 用户信息区域
                 Rectangle {
-                    id: userInfo
+                    id: userInfoArea
                     width: leftSideBar.width
                     height: 80
                     Layout.preferredHeight: 80
@@ -166,7 +193,6 @@ FrameLessWindow {
                         spacing: 10
                         leftPadding: 15
 
-                        // 用户头像
                         Rectangle {
                             width: 50
                             height: 50
@@ -176,19 +202,26 @@ FrameLessWindow {
                             clip: true
 
                             Image {
+                                id: avatarImage
                                 anchors.fill: parent
-                                source:"https://i0.hdslb.com/bfs/face/member/noface.jpg@40w_40h.webp"
-                                // source: "file:///root/bilibli/AAAClassWork/maomao.jpg"
+                                source: root.processAvatarUrl(root.globalAvatarUrl)
                                 fillMode: Image.PreserveAspectCrop
+                                cache: false
+
+                                onStatusChanged: {
+                                    if (status === Image.Error) {
+                                        source = "https://i0.hdslb.com/bfs/face/member/noface.jpg@40w_40h.webp"
+                                    }
+                                }
                             }
                         }
 
-                        // 用户信息
                         Column {
                             anchors.verticalCenter: parent.verticalCenter
                             spacing: 2
 
                             Text {
+                                id:username
                                 text: "用户名"
                                 font.pixelSize: 14
                                 font.bold: true
@@ -202,7 +235,6 @@ FrameLessWindow {
                         }
                     }
 
-                    // 修改TapHandler：点击用户信息区域显示个人信息界面
                     TapHandler {
                         onTapped: {
                             console.log("点击用户信息")
@@ -212,7 +244,6 @@ FrameLessWindow {
                     }
                 }
 
-                // 下半部分菜单项
                 Repeater {
                     model: [
                         {text: "朋友圈", icon: "📝"},
@@ -257,7 +288,6 @@ FrameLessWindow {
                             }
                         }
 
-                        // 使用TapHandler
                         TapHandler {
                             id: bottomTapHandler
                             acceptedDevices: PointerDevice.Mouse | PointerDevice.Touch
@@ -266,7 +296,6 @@ FrameLessWindow {
                             onTapped: {
                                 console.log("点击菜单项:", modelData.text)
                                 root.currentLeftMenuItem = modelData.text
-                                // 点击其他菜单项时隐藏个人信息界面
                                 root.showPersonInfo = false
                             }
                         }
@@ -278,7 +307,6 @@ FrameLessWindow {
                 }
             }
 
-            // 底部留空区域
             Item {
                 Layout.fillHeight: true
                 Layout.fillWidth: true
@@ -314,7 +342,6 @@ FrameLessWindow {
                 height: 30
             }
 
-            // 导航区域 - 在显示个人信息时隐藏
             Row {
                 id: funcRegion
                 spacing: 10
@@ -350,7 +377,6 @@ FrameLessWindow {
                             font.pixelSize: 13
                         }
 
-                        // 使用TapHandler
                         TapHandler {
                             id: navTapHandler
                             acceptedDevices: PointerDevice.Mouse | PointerDevice.Touch
@@ -369,14 +395,13 @@ FrameLessWindow {
                 }
             }
 
-            // 搜索框 - 始终显示
             TextField {
                 id: search
                 Layout.preferredWidth: 250
                 Layout.preferredHeight: 40
                 anchors.rightMargin: 20
                 anchors.right: line.left
-                visible: true // 始终显示
+                visible: true
 
                 placeholderText: "搜索你感兴趣的视频  🔍"
                 placeholderTextColor: "gray"
@@ -400,13 +425,12 @@ FrameLessWindow {
                 }
             }
 
-            // 分隔线 - 始终显示
             Rectangle {
                 id: line
                 anchors.right: controls.left
                 anchors.leftMargin: 10
                 anchors.rightMargin: 10
-                visible: true // 始终显示
+                visible: true
                 Text {
                     anchors.centerIn: parent
                     text: "|"
@@ -415,13 +439,12 @@ FrameLessWindow {
                 }
             }
 
-            // 窗口控制按钮 - 始终显示
             RowLayout {
                 id: controls
                 spacing: 10
                 anchors.right: parent.right
                 Layout.rightMargin: 20
-                visible: true // 始终显示
+                visible: true
 
                 Button {
                     id: minimizeButton
@@ -480,25 +503,18 @@ FrameLessWindow {
             bottom: parent.bottom
         }
 
-        // 原来的内容区域（视频推荐）
         ScrollView {
             id: contentScrollView
             anchors.fill: parent
-            visible: !root.showPersonInfo // 不显示个人信息时可见
+            visible: !root.showPersonInfo
             contentWidth: availableWidth
             clip: true
             padding: 20
-
-            // 添加淡入淡出动画
-            Behavior on opacity {
-                NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
-            }
 
             ColumnLayout {
                 width: root.width - leftSideBar.width - 15
                 spacing: 20
 
-                // 视频推荐网格（原有内容）
                 GridView {
                     id: videoGrid
                     Layout.fillWidth: true
@@ -573,7 +589,6 @@ FrameLessWindow {
                     }
                 }
 
-                // 加载更多区域
                 Rectangle {
                     Layout.fillWidth: true
                     height: 40
@@ -595,25 +610,17 @@ FrameLessWindow {
             }
         }
 
-        // 个人信息界面加载器
         Loader {
             id: personInfoLoader
             anchors.fill: parent
             visible: root.showPersonInfo
             source: root.showPersonInfo ? "PersonInfo.qml" : ""
+            active: root.showPersonInfo
 
-            // 添加加载状态处理
-            onStatusChanged: {
-                if (status === Loader.Ready) {
-                    console.log("个人信息界面加载完成")
-                } else if (status === Loader.Error) {
-                    console.error("个人信息界面加载失败")
-                }
-            }
-
-            // 添加淡入淡出动画
-            Behavior on opacity {
-                NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
+            onLoaded: {
+                console.log("个人信息界面加载完成")
+                // 直接设置头像URL，确保同步
+                personInfoLoader.item.setMainAvatarUrl(root.globalAvatarUrl)
             }
         }
     }

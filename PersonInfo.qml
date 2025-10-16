@@ -1,39 +1,274 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import QtQuick.Dialogs
 
 Rectangle {
     id: personInfoPage
     color: "#f4f4f4"
 
+    // 接收全局头像URL属性
+    property alias globalAvatarUrl: personInfoPage.avatarUrl
+    property string avatarUrl: "https://i0.hdslb.com/bfs/face/member/noface.jpg@40w_40h.webp"
+
     // 状态管理
-    property int selectedHistoryIndex: -1  // 当前选中的历史记录索引
-    property bool isHistoryEmpty: false    // 历史记录是否为空
-    property int currentTabIndex: 0        // 当前选中的功能标签索引
+    property int selectedHistoryIndex: -1//历史记录index
+    property bool isHistoryEmpty: false
+    property int currentTabIndex: 0//当前个人的历史记录，离线换存的index
+
+    // 设置主窗口头像URL的函数
+    function setMainAvatarUrl(url) {
+        console.log("个人信息页面设置主窗口头像URL:", url)
+        avatarUrl = url
+        // 直接更新主窗口的globalAvatarUrl
+        root.globalAvatarUrl = url
+    }
 
     // 获取搜索提示文本
-    function getSearchPlaceholder() {
-        switch(currentTabIndex) {
-            case 0: return "搜索你的历史记录";
-            case 1: return "搜索你的离线缓存";
-            case 2: return "搜索你的收藏";
-            case 3: return "搜索你的稍后再看";
-            default: return "搜索";
+      function getSearchPlaceholder() {
+          switch(currentTabIndex) {
+              case 0: return "搜索你的历史记录";
+              case 1: return "搜索你的离线缓存";
+              case 2: return "搜索你的收藏";
+              case 3: return "搜索你的稍后再看";
+              default: return "搜索";
+          }
+      }
+
+      // 获取清空按钮文本
+      function getClearButtonText() {
+          switch(currentTabIndex) {
+              case 0: return "清空记录";
+              case 1: return "清空缓存";
+              case 2: return "清空收藏";
+              case 3: return "清空列表";
+              default: return "清空";
+          }
+      }
+
+    // 文件选择对话框
+    FileDialog {
+        id: fileDialog
+        title: "选择头像图片"
+        nameFilters: ["图片文件 (*.png *.jpg *.jpeg)"]
+        onAccepted: {
+            console.log("选择的文件: " + selectedFile)
+            // 更新头像URL
+            setMainAvatarUrl(selectedFile)
         }
     }
 
-    // 获取清空按钮文本
-    function getClearButtonText() {
-        switch(currentTabIndex) {
-            case 0: return "清空记录";
-            case 1: return "清空缓存";
-            case 2: return "清空收藏";
-            case 3: return "清空列表";
-            default: return "清空";
+    // 头像大图弹窗
+    Popup {
+        id: largeImagePopup
+        width: Math.min(parent.width * 0.9, 500)
+        height: Math.min(parent.height * 0.9, 500)
+        anchors.centerIn: Overlay.overlay
+        modal: true
+        focus: true
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+
+        contentItem: Image {
+            id: largeImage
+            source: avatarUrl
+            fillMode: Image.PreserveAspectFit
+            asynchronous: true
+            cache: false
+
+            // 点击关闭
+            TapHandler {
+                onTapped: largeImagePopup.close()
+            }
+        }
+
+        // 关闭按钮
+        Button {
+            anchors.top: parent.top
+            anchors.right: parent.right
+            anchors.margins: 10
+            width: 30
+            height: 30
+            padding: 0
+            background:null
+
+            contentItem: Text {
+                text: "×"
+                font.pixelSize: 20
+                font.bold: true
+                color: "white"
+                anchors.centerIn: parent
+            }
+
+            onClicked: largeImagePopup.close()
         }
     }
 
-    // 历史记录数据模型（添加示例数据）
+    // 用户信息弹窗
+    Popup {
+        id: userInfoPopup
+        width: 320
+        height: 320
+        anchors.centerIn: Overlay.overlay
+        modal: true
+        focus: true
+
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        padding: 15
+
+        background: Rectangle {
+            color: "white"
+            radius: 12
+            border.color: "#e0e0e0"
+            border.width: 1
+        }
+
+        contentItem: Column {
+            width: parent.width
+            spacing: 20
+
+            // 顶部标题栏和关闭按钮
+            Item {
+                width: parent.width
+                height: 30
+
+                Text {
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "📷 用户信息"
+                    font.pixelSize: 16
+                    font.bold: true
+                    color: "#333"
+                }
+
+                Button {
+                    id: closeButton
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 24
+                    height: 24
+                    padding: 0
+                    background: null
+
+                    contentItem: Text {
+                        text: "×"
+                        font.pixelSize: 16
+                        font.bold: true
+                        color: "#666"
+                        anchors.centerIn: parent
+                    }
+
+                    onClicked: userInfoPopup.close()
+                }
+            }
+
+            // 用户头像显示区域
+            Column {
+                width: parent.width
+                spacing: 10
+                anchors.horizontalCenter: parent.horizontalCenter
+
+                Rectangle {
+                    width: 80
+                    height: 80
+                    radius: 40
+                    clip: true
+                    opacity: isHistoryEmpty ? 0.6 : 1.0
+                    anchors.horizontalCenter: parent.horizontalCenter
+
+                    Image {
+                        id: avatarImage
+                        anchors.fill: parent
+                        source: avatarUrl
+                        fillMode: Image.PreserveAspectCrop
+                    }
+                }
+
+                Text {
+                    text: "用户名"
+                    font.pixelSize: 14
+                    font.bold: true
+                    color: "#333"
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+
+                Rectangle {
+                    width: 60
+                    height: 20
+                    color: "#FB7299"
+                    radius: 10
+                    anchors.horizontalCenter: parent.horizontalCenter
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "大会员"
+                        color: "white"
+                        font.pixelSize: 10
+                        font.bold: true
+                    }
+                }
+            }
+
+            // 功能按钮区域
+            Column {
+                width: parent.width
+                spacing: 12
+
+                Button {
+                    width: parent.width
+                    height: 40
+                    text: "查看大图"
+
+                    background: Rectangle {
+                        color: parent.hovered ? "#f8f8f8" : "white"
+                        radius: 8
+                        border.color: parent.down ? "#FB7299" : "#e0e0e0"
+                        border.width: 1
+                    }
+
+                    contentItem: Text {
+                        text: parent.text
+                        color: "#333"
+                        font.pixelSize: 14
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    onClicked: {
+                        console.log("查看头像大图")
+                        largeImagePopup.open()
+                    }
+                }
+
+                Button {
+                    width: parent.width
+                    height: 40
+                    text: "更换头像"
+
+                    background: Rectangle {
+                        color: parent.hovered ? "#f8f8f8" : "white"
+                        radius: 8
+                        border.color: parent.down ? "#FB7299" : "#e0e0e0"
+                        border.width: 1
+                    }
+
+                    contentItem: Text {
+                        text: parent.text
+                        color: "#333"
+                        font.pixelSize: 14
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    onClicked: {
+                        console.log("更换头像")
+                        fileDialog.open()
+                    }
+                }
+            }
+        }
+    }
+
+    // 历史记录数据模型
     ListModel {
         id: historyModel
         ListElement {
@@ -81,7 +316,7 @@ Rectangle {
         isHistoryEmpty = true
     }
 
-    // 主要内容区域
+    // 主要内容区域(个人硬币，粉丝等东西）
     ScrollView {
         anchors.fill: parent
         clip: true
@@ -94,9 +329,8 @@ Rectangle {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 150
-                color: "#f5f5f5"  // 浅灰色背景
+                color: "#f5f5f5"
 
-                // 使用Item确保内容填满整个卡片
                 Item {
                     anchors.fill: parent
                     anchors.margins: 0
@@ -106,7 +340,6 @@ Rectangle {
                         anchors.margins: 20
                         spacing: 20
 
-                        // 用户头像区域
                         Column {
                             spacing: 10
                             Layout.alignment: Qt.AlignTop
@@ -119,26 +352,28 @@ Rectangle {
                                 clip: true
                                 opacity: isHistoryEmpty ? 0.6 : 1.0
 
-                                Behavior on opacity {
-                                    NumberAnimation { duration: 300 }
+                                Image {
+                                    id: mainAvatarImage
+                                    anchors.fill: parent
+                                    source: avatarUrl
+                                    fillMode: Image.PreserveAspectCrop
                                 }
 
-                                Image {
-                                    anchors.fill: parent
-                                     source:"https://i0.hdslb.com/bfs/face/member/noface.jpg@40w_40h.webp"
-                                    // source: "file:///root/bilibli/AAAClassWork/maomao.jpg"
-                                    fillMode: Image.PreserveAspectCrop
+                                TapHandler {
+                                    onTapped: {
+                                        console.log("头像被点击，打开用户信息弹窗")
+                                        userInfoPopup.open()
+                                    }
                                 }
                             }
 
-                            // 用户名和大会员标识
                             Column {
                                 width: 80
                                 spacing: 5
 
                                 Text {
                                     width: parent.width
-                                    text: "提醒喝水小..."
+                                    text: "用户名"
                                     font.pixelSize: 14
                                     font.bold: true
                                     elide: Text.ElideRight
@@ -162,18 +397,15 @@ Rectangle {
                             }
                         }
 
-                        // 用户数据统计和按钮区域
                         ColumnLayout {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
                             spacing: 10
 
-                            // 数据统计行
                             RowLayout {
                                 Layout.fillWidth: true
                                 spacing: 30
 
-                                // 动态
                                 Column {
                                     Layout.alignment: Qt.AlignCenter
                                     Text {
@@ -190,7 +422,6 @@ Rectangle {
                                     }
                                 }
 
-                                // 关注
                                 Column {
                                     Layout.alignment: Qt.AlignCenter
                                     Text {
@@ -207,7 +438,6 @@ Rectangle {
                                     }
                                 }
 
-                                // 粉丝
                                 Column {
                                     Layout.alignment: Qt.AlignCenter
                                     Text {
@@ -224,7 +454,6 @@ Rectangle {
                                     }
                                 }
 
-                                // 硬币
                                 Column {
                                     Layout.alignment: Qt.AlignCenter
                                     Text {
@@ -241,7 +470,6 @@ Rectangle {
                                     }
                                 }
 
-                                // B币
                                 Column {
                                     Layout.alignment: Qt.AlignCenter
                                     Text {
@@ -258,14 +486,12 @@ Rectangle {
                                     }
                                 }
 
-                                // 分隔线
                                 Rectangle {
                                     Layout.preferredWidth: 1
                                     Layout.preferredHeight: 40
                                     color: "#e0e0e0"
                                 }
 
-                                // 成为大会员按钮
                                 Button {
                                     Layout.preferredWidth: 120
                                     Layout.preferredHeight: 36
@@ -285,7 +511,6 @@ Rectangle {
                                 }
                             }
 
-                            // 占位空间
                             Item {
                                 Layout.fillHeight: true
                             }
@@ -294,7 +519,7 @@ Rectangle {
                 }
             }
 
-            // 功能标签区域
+            // 功能标签区域（历史记录等东西）
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 50
@@ -322,7 +547,6 @@ Rectangle {
                                 font.bold: currentTabIndex === index
                             }
 
-                            // 下划线指示器
                             Rectangle {
                                 anchors.bottom: parent.bottom
                                 width: parent.width
@@ -342,7 +566,7 @@ Rectangle {
                 }
             }
 
-            // 搜索和清空区域 - 根据当前标签动态变化
+            // 搜索和清空区域
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 60
@@ -356,7 +580,7 @@ Rectangle {
                     TextField {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 36
-                        placeholderText: getSearchPlaceholder() // 动态提示文本
+                        placeholderText: getSearchPlaceholder()
                         placeholderTextColor: "#999"
                         background: Rectangle {
                             color: "#f4f4f4"
@@ -368,7 +592,7 @@ Rectangle {
                     Button {
                         Layout.preferredWidth: 100
                         Layout.preferredHeight: 36
-                        text: getClearButtonText() // 动态按钮文本
+                        text: getClearButtonText()
                         background: Rectangle {
                             color: "#f4f4f4"
                             radius: 4
@@ -385,7 +609,6 @@ Rectangle {
                                 clearHistory()
                             } else {
                                 console.log("清空操作:", getClearButtonText())
-                                // 这里可以添加其他标签的清空逻辑
                             }
                         }
                     }
@@ -397,15 +620,13 @@ Rectangle {
                 id: contentArea
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                color: currentTabIndex === 0 ? "transparent" : "#f4f4f4" // 其他标签使用灰色背景
+                color: currentTabIndex === 0 ? "transparent" : "#f4f4f4"
 
-                // 历史记录列表
                 ColumnLayout {
                     width: parent.width
                     spacing: 0
                     visible: currentTabIndex === 0
 
-                    // 空状态提示
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 200
@@ -437,12 +658,10 @@ Rectangle {
                         }
                     }
 
-                    // 历史记录列表
                     ColumnLayout {
                         spacing: 0
                         visible: !isHistoryEmpty
 
-                        // 今天标题
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 40
@@ -460,7 +679,6 @@ Rectangle {
                             }
                         }
 
-                        // 历史记录列表
                         ListView {
                             id: historyListView
                             Layout.fillWidth: true
@@ -474,10 +692,6 @@ Rectangle {
                                 width: historyListView.width
                                 height: 80
                                 color: selectedHistoryIndex === index ? "#fff0f0" : "white"
-
-                                Behavior on color {
-                                    ColorAnimation { duration: 200 }
-                                }
 
                                 Rectangle {
                                     anchors {
@@ -496,14 +710,12 @@ Rectangle {
                                     anchors.margins: 15
                                     spacing: 15
 
-                                    // 视频缩略图
                                     Rectangle {
                                         Layout.preferredWidth: 120
                                         Layout.preferredHeight: 70
                                         color: "#e0e0e0"
                                         radius: 4
 
-                                        // 播放进度条
                                         Rectangle {
                                             anchors.bottom: parent.bottom
                                             width: parent.width
@@ -517,7 +729,6 @@ Rectangle {
                                             }
                                         }
 
-                                        // 时长标签
                                         Rectangle {
                                             anchors {
                                                 right: parent.right
@@ -539,13 +750,11 @@ Rectangle {
                                         }
                                     }
 
-                                    // 视频信息
                                     ColumnLayout {
                                         Layout.fillWidth: true
                                         Layout.fillHeight: true
                                         spacing: 5
 
-                                        // 标题行
                                         RowLayout {
                                             Layout.fillWidth: true
                                             spacing: 10
@@ -565,7 +774,6 @@ Rectangle {
                                             }
                                         }
 
-                                        // UP主信息
                                         Text {
                                             text: author || up || "UP主"
                                             font.pixelSize: 12
@@ -573,7 +781,6 @@ Rectangle {
                                             visible: text !== ""
                                         }
 
-                                        // 底部信息行
                                         RowLayout {
                                             Layout.fillWidth: true
                                             spacing: 15
@@ -584,7 +791,6 @@ Rectangle {
                                                 color: "#999"
                                             }
 
-                                            // 已看完标签
                                             Rectangle {
                                                 visible: badge
                                                 width: badgeText.width + 8
@@ -606,7 +812,6 @@ Rectangle {
                                     }
                                 }
 
-                                // 点击处理
                                 TapHandler {
                                     onTapped: {
                                         selectedHistoryIndex = index
@@ -618,13 +823,11 @@ Rectangle {
                     }
                 }
 
-                // 其他标签内容区域 - 修复位置问题
                 ColumnLayout {
                     width: parent.width
                     spacing: 0
                     visible: currentTabIndex !== 0
 
-                    // 使用与历史记录空状态相同的结构
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 200
@@ -678,11 +881,16 @@ Rectangle {
                 }
             }
 
-            // 底部留白
             Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 20
             }
         }
+    }
+
+    // 初始化时同步头像
+    Component.onCompleted: {
+        console.log("个人信息页面初始化，同步头像URL:", root.globalAvatarUrl)
+        avatarUrl = root.globalAvatarUrl
     }
 }
