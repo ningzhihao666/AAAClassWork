@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9)  # Qt6 推荐至少 3.16
+cmake_minimum_required(VERSION 3.16)  # Qt6 推荐至少 3.16
 
 project(bili VERSION 0.1 LANGUAGES CXX)
 
@@ -32,12 +32,15 @@ qt_add_qml_module(appbili
         PersonInfo.qml
         Vedio.qml
         Moments.qml
+        # DamuSystem.qml
     # 将所有资源文件（.qrc）列在一个RESOURCES参数下
     RESOURCES
         Img.qrc
         images.qrc
         QML_FILES Commit.qml
         QML_FILES DamuSystem.qml
+
+
 )
 
 # 链接必要的Qt模块
