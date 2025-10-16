@@ -27,12 +27,22 @@ Item {
         id: uploader
 
         // 更新进度条的值和最大值(不可以为0) 还没实现！！！！！！！！！！！！！！！！！！！！！！！！！
-        onUploadProgress: function(bytesSent, bytesTotal) {
+        /*onUploadProgress: function(bytesSent, bytesTotal) {
             progressBar.value = bytesSent
             progressBar.to = bytesTotal
             var percent = bytesTotal > 0 ? Math.round((bytesSent / bytesTotal) * 100) : 0
             progressText.text = "上传进度: " + percent + "%"
-        }
+        }*/
+
+        onUploadProgress: function(bytesSent, bytesTotal) {
+                // bytesSent 和 bytesTotal 现在来自WebSocket进度
+                var percent = bytesTotal > 0 ? Math.round((bytesSent / bytesTotal) * 100) : 0;
+
+                progressBar.value = percent;
+                progressBar.to = 100; // 固定为100，因为WebSocket进度是百分比
+
+                console.log("界面进度更新:", percent + "%");
+            }
 
         // 上传完成处理
         onUploadFinished: function(videoUrl, coverUrl) {

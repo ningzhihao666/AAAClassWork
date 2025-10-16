@@ -1,7 +1,7 @@
-
-
+// 使用WebSocket
 import QtQuick
 import QtQuick.Controls
+import QtWebSockets
 
 Item {
     id: uploader
@@ -13,11 +13,18 @@ Item {
 
     // 配置属性
     property string apiBaseUrl: "http://localhost:3000/api"
+    property string wsBaseUrl: "ws://localhost:8080"
     property string currentFilePath: ""
     property string currentTitle: ""
     property string currentDescription: ""
     property bool isUploading: false
     property var currentRequest: null
+    property string currentUploadId: ""
+
+    // WebSocket相关属性
+    property WebSocket webSocket: null
+    property bool wsConnected: false
+    property int lastProgress: 0
 
     // 上传视频方法
     function uploadVideo(filePath, title, description) {
@@ -31,173 +38,233 @@ Item {
             return;
         }
 
+        // 生成上传ID
+        currentUploadId = "upload_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+
         // 设置属性
         currentFilePath = filePath;
         currentTitle = title || "未命名视频";
         currentDescription = description || "暂无描述";
         isUploading = true;
+        lastProgress = 0;
 
-        console.log("设置属性完成:");
-        console.log("  currentFilePath:", currentFilePath);
-        console.log("  currentTitle:", currentTitle);
-        console.log("  currentDescription:", currentDescription);
+        console.log("📋 上传ID:", currentUploadId);
 
-        // 使用模拟上传进行测试（先确保基础功能正常）
-        //uploadSimulate(filePath, currentTitle, currentDescription);
+        // 初始化WebSocket连接
+        initWebSocket();
 
-        // 如果需要真实上传，取消下面这行的注释
+        // 开始上传
         uploadViaPath(filePath, currentTitle, currentDescription);
     }
 
-    // 通过文件路径上传 - 修正版本
+    // 初始化WebSocket连接 - 修正版本
+    function initWebSocket() {
+        console.log("🔌 初始化WebSocket连接...");
+
+        if (webSocket) {
+            webSocket.active = false;
+            webSocket.destroy();
+            webSocket = null;
+        }
+
+        var wsUrl = wsBaseUrl + "?uploadId=" + currentUploadId;
+        console.log("WebSocket URL:", wsUrl);
+
+        // 正确创建 WebSocket 对象
+        webSocket = Qt.createQmlObject(`
+            import QtWebSockets
+            WebSocket {
+                url: "` + wsUrl + `"
+                active: true
+            }
+        `, uploader);
+
+        // 正确连接信号 - 使用 statusChanged 而不是 onConnected
+        webSocket.statusChanged.connect(function() {
+            console.log("WebSocket 状态变化:", webSocket.status);
+            if (webSocket.status === WebSocket.Open) {
+                console.log("✅ WebSocket连接成功");
+                wsConnected = true;
+            } else if (webSocket.status === WebSocket.Closed) {
+                console.log("🔌 WebSocket连接关闭");
+                wsConnected = false;
+            } else if (webSocket.status === WebSocket.Error) {
+                console.error("❌ WebSocket错误:", webSocket.errorString);
+                wsConnected = false;
+            }
+        });
+
+        // 正确连接文本消息信号
+        webSocket.textMessageReceived.connect(function(message) {
+            console.log("📨 收到WebSocket消息:", message);
+
+            try {
+                var data = JSON.parse(message);
+                handleWebSocketMessage(data);
+            } catch (e) {
+                console.error("解析WebSocket消息失败:", e);
+            }
+        });
+    }
+
+    // 处理WebSocket消息
+    function handleWebSocketMessage(data) {
+        switch(data.type) {
+            case 'connected':
+                console.log("🔗 WebSocket连接确认:", data.message);
+                break;
+
+            case 'progress':
+                console.log("📊 收到进度更新:", data.progress + "% - " + data.message);
+                handleProgressUpdate(data);
+                break;
+
+            case 'pong':
+                // 心跳响应
+                break;
+
+            default:
+                console.log("未知消息类型:", data.type);
+        }
+    }
+
+    // 处理进度更新
+    function handleProgressUpdate(data) {
+        var progress = data.progress;
+        var message = data.message;
+        var status = data.status;
+
+        // 更新进度显示
+        lastProgress = progress;
+
+        // 计算模拟的bytesSent和bytesTotal（用于兼容现有接口）
+        var bytesTotal = 100;
+        var bytesSent = progress;
+
+        // 发出进度信号
+        uploadProgress(bytesSent, bytesTotal);
+
+        // 更新状态文本
+        if (status === 'started') {
+            progressText.text = "开始上传...";
+        } else if (status === 'uploading') {
+            progressText.text = "上传进度: " + progress;
+        } else if (status === 'completed') {
+            progressText.text = "上传完成!";
+        } else if (status === 'error') {
+            progressText.text = "上传错误: " + message;
+        }
+
+        console.log("🔄 更新进度:", progress + "%");
+    }
+
+    // 通过文件路径上传
     function uploadViaPath(filePath, title, description) {
         console.log("📤 使用文件路径上传方案");
 
-        // 创建 XMLHttpRequest 对象，配置 POST 请求和 JSON 内容类型
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", apiBaseUrl + "/upload/by-path");
-        xhr.setRequestHeader("Content-Type", "application/json");
+        // 等待WebSocket连接建立
+        var waitTimer = Qt.createQmlObject('import QtQuick; Timer { interval: 1000; running: true }', uploader);
+        waitTimer.triggered.connect(function() {
+            waitTimer.destroy();
 
-        // 构建请求数据对象，包含文件路径、元数据和文件名
-        var requestData = {
-            filePath: filePath,
-            title: title,
-            description: description,
-            fileName: getFileName(filePath)
-        };
+            if (!wsConnected) {
+                console.log("⚠️ WebSocket未连接，继续上传但可能无法获取实时进度");
+            }
 
-        console.log("发送请求数据:", JSON.stringify(requestData));
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", apiBaseUrl + "/upload/by-path");
+            xhr.setRequestHeader("Content-Type", "application/json");
 
-        // 修正：检查 upload 属性是否存在
-        if (xhr.upload) {
-            xhr.upload.onprogress = function(event) {
-                if (event.lengthComputable) {
-                    var percent = Math.round((event.loaded / event.total) * 100);
-                    console.log("上传进度:", percent + "%");
-                    uploadProgress(event.loaded, event.total);
+            var requestData = {
+                filePath: filePath,
+                fileName: getFileName(filePath),
+                title: title,
+                description: description,
+                uploadId: currentUploadId
+            };
+
+            console.log("发送请求数据:", JSON.stringify(requestData));
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    isUploading = false;
+
+                    // 关闭WebSocket连接
+                    if (webSocket) {
+                        webSocket.active = false;
+                        webSocket.destroy();
+                        webSocket = null;
+                    }
+
+                    console.log("请求完成 - 状态:", xhr.status, "响应:", xhr.responseText);
+
+                    if (xhr.status === 200) {
+                        try {
+                            var response = JSON.parse(xhr.responseText);
+                            console.log("上传响应:", response);
+
+                            if (response.code === 0) {
+                                var videoUrl = response.data.videoUrl;
+                                var coverUrl = response.data.coverUrl;
+                                console.log("✅ 上传成功 - 视频URL:", videoUrl, "封面URL:", coverUrl);
+                                uploadFinished(videoUrl, coverUrl);
+                            } else {
+                                uploadError("上传失败: " + response.message);
+                            }
+                        } catch (e) {
+                            console.error("解析响应失败:", e);
+                            uploadError("解析服务器响应失败: " + e.toString());
+                        }
+                    } else {
+                        console.error("请求失败:", xhr.status, xhr.statusText);
+                        uploadError("上传请求失败: " + xhr.status + " " + xhr.statusText);
+                    }
                 }
             };
-        } else {
-            console.log("⚠️ xhr.upload 不支持，使用模拟进度");//暂时还没实！！！
 
-            // 如果没有 upload 支持，使用模拟进度
-            //startSimulatedProgress();
-        }
-
-        // 状态变化监听
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === XMLHttpRequest.DONE) {
+            xhr.onerror = function() {
                 isUploading = false;
+                console.error("网络错误");
+                uploadError("网络连接错误");
 
-                console.log("请求完成 - 状态:", xhr.status, "响应:", xhr.responseText);
-
-                if (xhr.status === 200) {
-                    try {
-                        var response = JSON.parse(xhr.responseText);
-                        console.log("上传响应:", response);
-
-                        if (response.code === 0) {
-                            var videoUrl = response.data.videoUrl;
-                            var coverUrl = response.data.coverUrl;
-                            console.log("✅ 上传成功 - 视频URL:", videoUrl, "封面URL:", coverUrl);
-                            uploadFinished(videoUrl, coverUrl);
-                        } else {
-                            uploadError("上传失败: " + response.message);
-                        }
-                    } catch (e) {
-                        console.error("解析响应失败:", e);
-                        uploadError("解析服务器响应失败: " + e.toString());
-                    }
-                } else {
-                    console.error("请求失败:", xhr.status, xhr.statusText);
-                    uploadError("上传请求失败: " + xhr.status + " " + xhr.statusText);
+                if (webSocket) {
+                    webSocket.active = false;
+                    webSocket.destroy();
+                    webSocket = null;
                 }
-            }
-        };
+            };
 
-        // 错误处理
-        xhr.onerror = function() {
-            isUploading = false;
-            console.error("网络错误");
-            uploadError("网络连接错误");
-        };
+            currentRequest = xhr;
 
-        currentRequest = xhr;
-
-        console.log("发送上传请求...");
-        xhr.send(JSON.stringify(requestData));
-    }
-
-    // 模拟进度（当 xhr.upload 不可用时）
-    function startSimulatedProgress() {
-        var total = 100;
-        var current = 0;
-        var step = 2;
-
-        var progressTimer = Qt.createQmlObject('import QtQuick; Timer { interval: 100; repeat: true }', uploader);
-        progressTimer.triggered.connect(function() {
-            if (current < total) {
-                current += step;
-                if (current > total) current = total;
-                console.log("模拟进度:", current + "%");
-                uploadProgress(current, total);
-            } else {
-                progressTimer.stop();
-            }
+            console.log("发送上传请求...");
+            xhr.send(JSON.stringify(requestData));
         });
-        progressTimer.start();
-    }
-
-    // 模拟上传（用于测试）
-    function uploadSimulate(filePath, title, description) {
-        console.log("🎭 使用模拟上传");
-
-        isUploading = true;
-
-        // 模拟上传进度
-        var total = 100;
-        var current = 0;
-        var step = 2;
-
-        var timer = Qt.createQmlObject('import QtQuick; Timer { interval: 100; repeat: true }', uploader);
-        timer.triggered.connect(function() {
-            current += step;
-            if (current <= total) {
-                uploadProgress(current, total);
-                console.log("模拟进度:", current + "%");
-            } else {
-                timer.stop();
-                // 模拟上传完成
-                var videoUrl = "https://example.com/videos/" + Date.now() + ".mp4";
-                var coverUrl = "https://example.com/covers/" + Date.now() + ".jpg";
-                console.log("✅ 模拟上传成功");
-                uploadFinished(videoUrl, coverUrl);
-                isUploading = false;
-            }
-        });
-        timer.start();
     }
 
     // 取消上传
     function cancelUpload() {
         console.log("取消上传");
+
         if (currentRequest && isUploading) {
             currentRequest.abort();
             currentRequest = null;
-            isUploading = false;
-            uploadCancelled();
         }
 
-        // 如果是模拟上传，也需要停止计时器
-        // 这里需要额外的逻辑来停止模拟计时器
+        if (webSocket) {
+            webSocket.active = false;
+            webSocket.destroy();
+            webSocket = null;
+        }
+
+        isUploading = false;
+        uploadCancelled();
     }
 
-    // 工具函数.从文件路径中提取文件名
+    // 工具函数：从文件路径中提取文件名
     function getFileName(filePath) {
-        // 处理文件路径格式
         var path = filePath.toString();
         if (path.startsWith("file://")) {
-            path = path.substring(7); // 移除 file:// 前缀
+            path = path.substring(7);
         }
         var lastSlash = path.lastIndexOf("/");
         return lastSlash >= 0 ? path.substring(lastSlash + 1) : path;
