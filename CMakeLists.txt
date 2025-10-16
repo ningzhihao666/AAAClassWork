@@ -37,6 +37,7 @@ qt_add_qml_module(appbili
         Img.qrc
         images.qrc
         QML_FILES Commit.qml
+        QML_FILES DamuSystem.qml
 )
 
 # 链接必要的Qt模块
