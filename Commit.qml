@@ -1,3 +1,5 @@
+//评论部分，基本不需要变动
+
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
@@ -33,7 +35,7 @@ Item {
         createReplyModel(commentId);
 
         // 添加到主评论模型
-        commentModel.append({
+        commentModel.insert(0,{
             userName: userName,
             time: "刚刚",
             content: content,
@@ -85,7 +87,7 @@ Item {
             });
 
             // 添加主评论
-            commentModel.append({
+            commentModel.insert(0,{
                 userName: "用户1",
                 time: "5分钟前",
                 content: "这是一条示例评论",
@@ -111,6 +113,9 @@ Item {
                 text: "最热"
                 font.pixelSize: 15
                 Layout.alignment: Qt.AlignVCenter
+                HoverHandler {
+                         cursorShape: Qt.PointingHandCursor
+                     }
                 contentItem: Text {
                     text: nbButton.text
                     font: nbButton.font
@@ -139,6 +144,9 @@ Item {
                 text: "最新"
                 font.pixelSize: 15
                 Layout.alignment: Qt.AlignVCenter
+                HoverHandler {
+                         cursorShape: Qt.PointingHandCursor
+                     }
                 contentItem: Text {
                     text: newButton.text
                     font: newButton.font
@@ -168,7 +176,9 @@ Item {
             font.pixelSize: 14
             wrapMode: Text.Wrap // 自动换行
             selectByMouse: true // 允许鼠标选择文本
-
+            HoverHandler {
+                     cursorShape: Qt.IBeamCursor
+                 }
             background: Rectangle {
                     id: commentInputBg
                     color: "#1E1E1E"
@@ -180,12 +190,6 @@ Item {
                     Behavior on border.color {
                         ColorAnimation { duration: 200 }
                     }
-                }
-
-            ScrollBar.vertical: ScrollBar {
-                    id: commentScrollBar
-                    policy: ScrollBar.AsNeeded
-                    width: 8
                 }
 
                 // 添加高度动画
@@ -223,6 +227,9 @@ Item {
                 Layout.leftMargin: 20
                 text: "😊"
                 font.pixelSize: 20
+                HoverHandler {
+                         cursorShape: Qt.PointingHandCursor
+                     }
                 background: Rectangle {
                     color: "transparent"
                 }
@@ -240,6 +247,9 @@ Item {
                 text: "发送"
                 font.pixelSize: 14
                 font.bold: true
+                HoverHandler {
+                         cursorShape: Qt.PointingHandCursor
+                     }
 
                 contentItem: Text {
                     text: parent.text
@@ -301,29 +311,25 @@ Item {
                     height: commentContent.height + 50
                     color: "transparent"
 
-                           // // 进入动画
-                           //     opacity: 0
-                           //     y: 20
-                           //     scale: 0.95
-                           //     transformOrigin: Item.Top
 
-                           //     Behavior on opacity {
-                           //         NumberAnimation { duration: 300; easing.type: Easing.OutQuad }
-                           //     }
-                           //     Behavior on y {
-                           //         NumberAnimation { duration: 300; easing.type: Easing.OutQuad }
-                           //     }
-                           //     Behavior on scale {
-                           //         NumberAnimation { duration: 300; easing.type: Easing.OutBack }
-                           //     }
+                           // 进入动画
+                               opacity: 0
+                               scale: 0.90
+                               transformOrigin: Item.Top
 
-                           //     Component.onCompleted: {
-                           //         if (animationsEnabled) {
-                           //             opacity = 1;
-                           //             y = 0;
-                           //             scale = 1;
-                           //         }
-                           //     }
+                               Behavior on opacity {
+                                   NumberAnimation { duration: 500; easing.type: Easing.OutQuad }
+                               }
+                               Behavior on scale {
+                                   NumberAnimation { duration: 500; easing.type: Easing.OutBack }
+                               }
+
+                               Component.onCompleted: {
+                                   if (animationsEnabled) {
+                                       opacity = 1;
+                                       scale = 1;
+                                   }
+                               }
 
                     // 评论项内容
                     Column {
@@ -399,6 +405,10 @@ Item {
 
                                 property bool isLiked: false
 
+                                HoverHandler {
+                                         cursorShape: Qt.PointingHandCursor
+                                     }
+
                                 contentItem: Row {
                                     spacing: 5
 
@@ -442,6 +452,10 @@ Item {
 
                                 property bool isLiked: false
 
+                                HoverHandler {
+                                         cursorShape: Qt.PointingHandCursor
+                                     }
+
                                 contentItem: Row {
                                     spacing: 5
 
@@ -483,6 +497,10 @@ Item {
                                 flat: true
                                 padding: 0
 
+                                HoverHandler {
+                                         cursorShape: Qt.PointingHandCursor
+                                     }
+
                                 contentItem: Row {
                                     spacing: 5
 
@@ -505,7 +523,8 @@ Item {
                                 onClicked: {
                                     replyInput.donhua = !replyInput.donhua
                                     replyInput.focus = replyInput.visible
-                                    replyInput.commentIndex = index
+                                    console.log(replyInput.commentIndex )
+                                    // replyInput.visible = true
                                 }
                             }
                         }
@@ -516,7 +535,7 @@ Item {
                             width: parent.width
                             spacing: 5
                             topPadding: 10
-                            property int commentIndex: -1
+                            property int commentIndex: index
                             property bool donhua: false
 
                             // 添加高度动画
@@ -551,13 +570,6 @@ Item {
                                             ColorAnimation { duration: 200 }
                                         }
                                     }
-
-                                // 添加滚动条
-                                   ScrollBar.vertical: ScrollBar {
-                                       id: replyScrollBar
-                                       policy: ScrollBar.AsNeeded
-                                       width: 8
-                                   }
 
                                     // 添加高度动画
                                     Behavior on implicitHeight {
@@ -595,6 +607,9 @@ Item {
                                 Button {
                                     Layout.preferredWidth: widthNum.width * 0.1
                                     Layout.preferredHeight: widthNum.height * 0.65
+                                    HoverHandler {
+                                             cursorShape: Qt.PointingHandCursor
+                                         }
                                     text: "😊"
                                     font.pixelSize: 20
                                     background: Rectangle {
@@ -613,6 +628,10 @@ Item {
                                     text: "发送"
                                     font.pixelSize: 14
                                     font.bold: true
+
+                                    HoverHandler {
+                                             cursorShape: Qt.PointingHandCursor
+                                         }
 
                                     contentItem: Text {
                                         text: parent.text
@@ -635,7 +654,7 @@ Item {
                                             addReply(commentId, "当前用户", replyPerson.text.trim());
 
                                             replyPerson.text = ""
-                                            replyInput.visible = false
+                                            replyInput.donhua = false
                                         }
                                     }
                                 }
@@ -705,29 +724,6 @@ Item {
                                             color: "transparent"
                                             property var replyData: model.modelData ? model.modelData : model
 
-                                            // 进入动画
-                                                opacity: 0
-                                                x: -10
-                                                scale: 0.95
-
-                                                Behavior on opacity {
-                                                    NumberAnimation { duration: 300; easing.type: Easing.OutQuad }
-                                                }
-                                                Behavior on x {
-                                                    NumberAnimation { duration: 300; easing.type: Easing.OutQuad }
-                                                }
-                                                Behavior on scale {
-                                                    NumberAnimation { duration: 300; easing.type: Easing.OutBack }
-                                                }
-
-                                                Component.onCompleted: {
-                                                    if (animationsEnabled) {
-                                                        opacity = 1;
-                                                        x = 0;
-                                                        scale = 1;
-                                                    }
-                                                }
-
                                             Column {
                                                 id: replyItem
                                                 width: parent.width
@@ -744,6 +740,42 @@ Item {
                                                           "<font color='white'>" + replyData.content + "</font>"
                                                     font.pixelSize: 12
                                                 }
+
+                                                Button {
+                                                    id: rrButton
+                                                    flat: true
+                                                    padding: 0
+
+                                                    HoverHandler {
+                                                             cursorShape: Qt.PointingHandCursor
+                                                         }
+
+                                                    contentItem: Row {
+                                                        spacing: 5
+
+                                                        Text {
+                                                            text: "↩️"
+                                                            font.pixelSize: 16
+                                                        }
+
+                                                        Text {
+                                                            text: "回复"
+                                                            color: "#AAAAAA"
+                                                            font.pixelSize: 12
+                                                        }
+                                                    }
+
+                                                    background: Rectangle {
+                                                        color: "transparent"
+                                                    }
+
+                                                    onClicked: {
+                                                        rreplyInput.donhua = !rreplyInput.donhua
+                                                        rreplyInput.focus = rreplyInput.visible
+                                                        rreplyInput.commentIndex = index
+                                                        rreplyInput.targetUserName = replyData.userName // 设置目标用户名
+                                                    }
+                                                }
                                             }
                                         }
                                     }
@@ -757,6 +789,10 @@ Item {
                                         width: parent.width
                                         height: widthNum.height * 0.5
                                         anchors.horizontalCenter: parent.horizontalCenter
+
+                                        HoverHandler {
+                                                 cursorShape: Qt.PointingHandCursor
+                                             }
 
                                         contentItem: Text {
                                             text: "查看更多" + (replyArea.replyModel.count - 3) + "条回复"
@@ -788,6 +824,10 @@ Item {
                                         height: widthNum.height * 0.5
                                         anchors.horizontalCenter: parent.horizontalCenter
 
+                                        HoverHandler {
+                                                 cursorShape: Qt.PointingHandCursor
+                                             }
+
                                         contentItem: Text {
                                             text: "收起"
                                             color: "#AAAAAA"
@@ -810,7 +850,150 @@ Item {
                                 }
                             }
                         }
-                    }
+
+                        //回复的回复输入
+                        Column {
+                            id: rreplyInput
+                            width: parent.width
+                            spacing: 5
+                            topPadding: 10
+                            property int commentIndex: -1
+                            property bool donhua: false
+                            property string targetUserName
+
+                            // 添加高度动画
+                            height: donhua ? childrenRect.height : 0
+                            opacity: donhua? 1 : 0
+
+                                Behavior on height {
+                                    NumberAnimation { duration: 200; easing.type: Easing.OutQuad }
+                                }
+                                Behavior on opacity {
+                                    NumberAnimation { duration: 200; easing.type: Easing.OutQuad }
+                                }
+
+                            TextField {
+                                id: rreplyPerson
+                                width: parent.width
+                                placeholderText: "回复该人"
+                                placeholderTextColor: "#777777"
+                                color: "white"
+                                font.pixelSize: 14
+                                wrapMode: Text.Wrap // 自动换行
+                                selectByMouse: true // 允许鼠标选择文本
+                                background: Rectangle {
+                                        id: rreplyInputBg
+                                        color: "#1E1E1E"
+                                        radius: 5
+                                        border.width: 1
+                                        border.color: "transparent" // 初始透明边框
+
+                                        // 添加边框颜色动画
+                                        Behavior on border.color {
+                                            ColorAnimation { duration: 200 }
+                                        }
+                                    }
+
+                                    // 添加高度动画
+                                    Behavior on implicitHeight {
+                                        NumberAnimation { duration: 200; easing.type: Easing.OutQuad }
+                                    }
+
+                                    // 聚焦变化处理
+                                    onFocusChanged: {
+                                        if (focus) {
+                                            // 获得焦点时：显示粉色边框，增加高度
+                                            rreplyInputBg.border.color = "#FF6699"; // 粉色边框
+                                            implicitHeight = widthNum.height * 0.8; // 增加高度
+                                        } else {
+                                            // 失去焦点时：隐藏边框，恢复高度
+                                            rreplyInputBg.border.color = "transparent";
+                                            implicitHeight = widthNum.height * 0.6;
+                                        }
+                                    }
+
+                                    onTextChanged: {
+                                            if (activeFocus) {
+                                                implicitHeight = Math.max(widthNum.height * 0.8, contentHeight + 25);
+                                            } else {
+                                                implicitHeight = Math.max(widthNum.height * 0.6, contentHeight + 15);
+                                            }
+                                        }
+
+                            }
+
+                            // 回复操作区域
+                            RowLayout {
+                                width: parent.width
+                                spacing: 10
+
+                                Button {
+                                    Layout.preferredWidth: widthNum.width * 0.1
+                                    Layout.preferredHeight: widthNum.height * 0.65
+                                    HoverHandler {
+                                             cursorShape: Qt.PointingHandCursor
+                                         }
+                                    text: "😊"
+                                    font.pixelSize: 20
+                                    background: Rectangle {
+                                        color: "transparent"
+                                    }
+                                }
+
+                                Item {
+                                    Layout.fillWidth: true
+                                }
+
+                                Button {
+                                    Layout.preferredWidth: widthNum.width * 0.2
+                                    Layout.preferredHeight: widthNum.height * 0.65
+                                    Layout.rightMargin: 20
+                                    text: "发送"
+                                    font.pixelSize: 14
+                                    font.bold: true
+
+                                    HoverHandler {
+                                             cursorShape: Qt.PointingHandCursor
+                                         }
+
+                                    contentItem: Text {
+                                        text: parent.text
+                                        color: "white"
+                                        horizontalAlignment: Text.AlignHCenter
+                                        verticalAlignment: Text.AlignVCenter
+                                    }
+
+                                    background: Rectangle {
+                                        radius: 5
+                                        color: parent.down ? "#FF5252" : "#FF6699"
+                                    }
+
+                                    onClicked: {
+                                        if (rreplyPerson.text.trim() !== "") {
+                                            // 获取当前评论的回复模型ID
+                                            var commentId = commentModel.get(replyInput.commentIndex).replyModelId;
+
+                                            var content = "回复 @" + rreplyInput.targetUserName + ": " + rreplyPerson.text.trim();
+
+                                            // 添加新回复
+                                            addReply(commentId, "当前用户", content);
+
+                                            rreplyPerson.text = ""
+                                            rreplyInput.donhua = false
+                                            // console.log("这是儿：" + replyInput.commentIndex)
+                                            // console.log("这是儿：" + commentId)
+
+
+
+                                        }
+                                        else
+                                            rreplyInput.donhua = false
+                                    }
+                                }
+                            }
+                        }  //回复的回复
+
+                    }   //评论项
 
                     // 分隔线
                     Rectangle {
@@ -821,6 +1004,7 @@ Item {
                     }
                 }   //delegate
             }
-        }
+        }  //评论部分
+
     }
 }
