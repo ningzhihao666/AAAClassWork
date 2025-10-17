@@ -62,6 +62,7 @@ private:
     QString m_likes;            //获赞数
     bool m_isPremiunMembership; //是否为大会员
     QString m_account;
+    QString m_headportraitTempFile;
 
     User *_owner;
 };

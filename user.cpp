@@ -6,11 +6,14 @@
 
 User::User(QObject *parent)
     : QObject(parent)
-{}
+{
+    _uinfo = new UserInfo("", this);
+}
 User::User(const QString &nickname, const QString &account, const QString &password, QObject *parent)
 {
     // 初始化用户资料
     _uinfo = new UserInfo(nickname, this);
+    signalConnect();
 }
 
 User::~User()
@@ -58,7 +61,7 @@ QString User::getSign()
 
 QString User::getHeadportrait()
 {
-    return _uinfo->getHeadportrait();
+    return _uinfo ? _uinfo->getHeadportrait() : "";
 }
 
 QString User::getLevel()

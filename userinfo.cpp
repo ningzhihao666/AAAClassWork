@@ -1,6 +1,7 @@
 #include <QFile>
 #include <QStandardPaths>
 #include <QUrl>
+#include <QIODevice>
 
 #include "userinfo.h"
 #include "user.h"
@@ -9,6 +10,15 @@ UserInfo::UserInfo(QString nickname, User *parent)
     : QObject(parent)
     , _owner(parent)
     , m_nickname(nickname)
+    , m_sign("")
+    , m_headportrait("")
+    , m_level("1")
+    , m_followingCount("0")
+    , m_fansCount("0")
+    , m_likes("0")
+    , m_isPremiunMembership(false)
+    , m_account("")
+    , m_headportraitTempFile("")
 {}
 
 UserInfo::~UserInfo() {}
@@ -80,11 +90,11 @@ void UserInfo::setFollowingCount(const QString &followingCount)
     }
 }
 
-void UserInfo::setFansCount(const QString &followingCount)
+void UserInfo::setFansCount(const QString &fansCount)
 {
-    if (followingCount != m_followingCount) {
-        m_followingCount = followingCount;
-        emit followingCountChanged();
+    if (fansCount != m_fansCount) {
+        m_fansCount = fansCount;
+        emit fansCountChanged();
     }
 }
 
