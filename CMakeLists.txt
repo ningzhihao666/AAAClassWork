@@ -7,14 +7,14 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
-
 # 查找Qt6包
 find_package(Qt6 REQUIRED COMPONENTS Quick)
-
 find_package(Qt6 REQUIRED COMPONENTS Quick Sql)
 
+# find_package(Qt6 REQUIRED COMPONENTS Quick Sql)
 
-find_package(Qt6 REQUIRED COMPONENTS Quick Sql)
+
+# find_package(Qt6 REQUIRED COMPONENTS Quick Sql)
 
 
 # Qt标准项目设置
@@ -29,6 +29,10 @@ qt_add_qml_module(appbili
     VERSION 1.0
 
     SOURCES main.cpp  # 主要的C++源文件
+    SOURCES
+    SOURCES user.h user.cpp
+    SOURCES userinfo.h userinfo.cpp
+    SOURCES databaseuser.h databaseuser.cpp
     # 将所有QML文件列在一个QML_FILES参数下
     QML_FILES
         Main.qml
@@ -50,10 +54,6 @@ qt_add_qml_module(appbili
         QML_FILES Commit.qml
         Send_videos/server.js
         QML_FILES DamuSystem.qml
-    SOURCES
-    SOURCES user.h user.cpp
-    SOURCES userinfo.h userinfo.cpp
-    SOURCES databaseuser.h databaseuser.cpp
 )
 
 # 链接必要的Qt模块
