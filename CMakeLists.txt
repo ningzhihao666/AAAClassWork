@@ -41,6 +41,7 @@ qt_add_qml_module(appbili
         QML_FILES Commit.qml
         Send_videos/server.js
         QML_FILES DamuSystem.qml
+        QML_FILES Message_Page.qml
 )
 
 # 链接必要的Qt模块

@@ -263,8 +263,6 @@ FrameLessWindow {
                         function getBackgroundColor() {
                             if (root.currentLeftMenuItem === modelData.text) {
                                 return "#e0e0e0"
-                            } else if (bottomTapHandler.pressed) {
-                                return "#d8d8d8"
                             }
                             return "transparent"
                         }
@@ -288,14 +286,12 @@ FrameLessWindow {
                             }
                         }
 
-                        TapHandler {
-                            id: bottomTapHandler
-                            acceptedDevices: PointerDevice.Mouse | PointerDevice.Touch
-                            gesturePolicy: TapHandler.ReleaseWithinBounds
-
-                            onTapped: {
-                                videoUploadPopup.open()
-                                console.log("点击菜单项:", modelData.text)
+                        Button{
+                            anchors.fill:parent
+                            background: Rectangle{ color:"transparent" }
+                            onClicked: {
+                                if(modelData.text==="上传视频") videoUploadPopup.open()
+                                if(modelData.text==="消息") messagePopup.open()
                                 root.currentLeftMenuItem = modelData.text
                                 root.showPersonInfo = false
                             }
@@ -315,35 +311,68 @@ FrameLessWindow {
         }
     }
     // 视频上传弹窗
-       Popup {
-           id: videoUploadPopup
-           width: 800
-           height: 600
-           x: (parent.width - width) / 2
-           y: (parent.height - height) / 2
-           modal: true
-           focus: true
-           closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+    Popup {
+       id: videoUploadPopup
+       width: 800
+       height: 600
+       x: (parent.width - width) / 2
+       y: (parent.height - height) / 2
+       modal: true
+       focus: true
+       closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
-           // 加载视频上传页面
-           Loader {
-               id: videoLoader
-               anchors.fill: parent
-               source: "Send_videos/VideoLode.qml"
+       // 加载视频上传页面
+       Loader {
+           id: videoLoader
+           anchors.fill: parent
+           source: "Send_videos/VideoLode.qml"
 
-               onLoaded: {
-                   // 连接关闭信号
-                   if (item) {
-                       item.uploadFinished.connect(function() {
-                           videoUploadPopup.close()
-                       })
-                       item.uploadCancelled.connect(function() {
-                           videoUploadPopup.close()
-                       })
-                   }
+           onLoaded: {
+               // 连接关闭信号
+               if (item) {
+                   item.uploadFinished.connect(function() {
+                       videoUploadPopup.close()
+                   })
+                   item.uploadCancelled.connect(function() {
+                       videoUploadPopup.close()
+                   })
                }
            }
        }
+    }
+
+    // 消息弹窗
+    FrameLessWindow {
+        id: messagePopup
+        width: 1200
+        height: 800
+        visible: false
+        flags: Qt.Dialog
+        title: "消息中心"
+
+        // 加载消息页面
+        Loader {
+            id: messageLoader
+            anchors.fill: parent
+            source: "Message_Page.qml"
+
+            onLoaded: {
+                // 连接关闭信号
+                if (item && item.closeRequested) {
+                    item.closeRequested.connect(function() {
+                        messagePopup.close()
+                    })
+                }
+            }
+        }
+
+        // 打开时居中显示
+        function open() {
+            messagePopup.show()
+            messagePopup.x = (Screen.width - width) / 2
+            messagePopup.y = (Screen.height - height) / 2
+        }
+    }
 
     // 顶部区域
     Rectangle {
