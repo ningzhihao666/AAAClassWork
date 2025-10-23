@@ -1,12 +1,18 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QQmlContext>
 #include "databaseuser.h"
+#include "Chat_messagehandler.h"
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
     DatabaseUser db;
     QQmlApplicationEngine engine;
+
+    MessageHandler *msgHandler = new MessageHandler(&engine);
+    engine.rootContext()->setContextProperty("msgHandler", msgHandler);
+
     QObject::connect(
         &engine,
         &QQmlApplicationEngine::objectCreationFailed,

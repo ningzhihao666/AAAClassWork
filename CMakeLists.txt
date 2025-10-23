@@ -18,7 +18,7 @@ find_package(Qt6 REQUIRED COMPONENTS Quick Sql)
 
 
 # Qt标准项目设置
-qt_standard_project_setup(REQUIRES 6.9)
+qt_standard_project_setup(REQUIRES 5)
 
 # 1. 首先创建可执行文件目标
 qt_add_executable(appbili)
@@ -54,6 +54,9 @@ qt_add_qml_module(appbili
         QML_FILES Commit.qml
         Send_videos/server.js
         QML_FILES DamuSystem.qml
+        SOURCES Chat_clienthandler.h Chat_clienthandler.cpp
+        SOURCES Chat_messagehandler.h Chat_messagehandler.cpp
+        SOURCES Chat_serverhandler.h Chat_serverhandler.cpp
 )
 
 # 链接必要的Qt模块
