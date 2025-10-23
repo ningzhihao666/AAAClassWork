@@ -3,6 +3,7 @@
 #include <QQmlContext>
 #include "databaseuser.h"
 #include "Chat_messagehandler.h"
+#include "videomanager.h"
 
 int main(int argc, char *argv[])
 {
@@ -12,6 +13,8 @@ int main(int argc, char *argv[])
 
     MessageHandler *msgHandler = new MessageHandler(&engine);
     engine.rootContext()->setContextProperty("msgHandler", msgHandler);
+    VideoManager videoManager;
+    engine.rootContext()->setContextProperty("videoManager", &videoManager); //TODO
 
     QObject::connect(
         &engine,
