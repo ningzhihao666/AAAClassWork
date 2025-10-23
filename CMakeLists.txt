@@ -20,6 +20,9 @@ qt_add_qml_module(appbili
     SOURCES user.h user.cpp
     SOURCES userinfo.h userinfo.cpp
     SOURCES databaseuser.h databaseuser.cpp
+    SOURCES
+    SOURCES videoitem.h videoitem.cpp
+    SOURCES videomanager.h videomanager.cpp
 )
 
 target_compile_features(appbili PRIVATE cxx_std_23)
