@@ -6,7 +6,7 @@
 #include "userinfo.h"
 #include "user.h"
 
-UserInfo::UserInfo(QString nickname, User *parent)
+UserInfo::UserInfo(QString nickname,QString account,QString password, User *parent)
     : QObject(parent)
     , _owner(parent)
     , m_nickname(nickname)
@@ -17,11 +17,21 @@ UserInfo::UserInfo(QString nickname, User *parent)
     , m_fansCount("0")
     , m_likes("0")
     , m_isPremiunMembership(false)
-    , m_account("")
+    , m_account(account)
+    ,m_password(password)
     , m_headportraitTempFile("")
 {}
 
 UserInfo::~UserInfo() {}
+
+void UserInfo::setPassword(const QString &password)
+{
+    if (password != m_password) {
+        m_password = password;
+        emit passwordChanged();
+
+    }
+}
 
 void UserInfo::setNickname(const QString &nickname)
 {
@@ -72,6 +82,14 @@ void UserInfo::setHeadportraitFromFile(const QString &filePath)
     QString formattedBase64 = QString("data:image/%1;base64,%2").arg(imageType, base64);
 
     setHeadportrait(formattedBase64);
+}
+
+void UserInfo::setAccount(const QString &account) {
+    if (account != m_account) {
+        m_account = account;
+        // 如果需要，可以发出账户改变信号
+        //emit accountChanged();
+    }
 }
 
 void UserInfo::setLevel(const QString &level)

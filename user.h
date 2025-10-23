@@ -1,3 +1,5 @@
+//接口类
+
 #pragma once
 
 #include <QObject>
@@ -24,6 +26,7 @@ public:
     User(const QString &nickName, const QString &account, const QString &password, QObject *parent = nullptr);
     ~User();
 
+    // 属性获取
     QString getNickname();
     QString getAccount();
     QString getPassword();
@@ -36,6 +39,9 @@ public:
     QString getLikes();
     bool getIsPremiunMembership();
 
+    //属性更新,实际是用userinfo中的属性设置
+    void setPassword(const QString &password);
+    void setAccount(const QString &account);
     void setNickname(const QString &nickname);
     void setSign(const QString &sign);
     void setHeadportrait(const QString &base64);
@@ -46,6 +52,8 @@ public:
     void setIsPremiunMembership(const bool isPremiunMembership);
 
 signals:
+    void passwordChanged();
+    void accountChanged();
     void nicknameChanged();
     void signChanged();
     void headportraitChanged();
@@ -60,3 +68,4 @@ private:
 
     void signalConnect();
 };
+

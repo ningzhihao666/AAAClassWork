@@ -23,6 +23,7 @@ qt_add_qml_module(appbili
     SOURCES
     SOURCES videoitem.h videoitem.cpp
     SOURCES videomanager.h videomanager.cpp
+    QML_FILES db.js
 )
 
 target_compile_features(appbili PRIVATE cxx_std_23)

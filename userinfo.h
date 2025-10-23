@@ -1,3 +1,4 @@
+//数据存储类
 #pragma once
 
 #include <QObject>
@@ -18,9 +19,11 @@ class UserInfo : public QObject
 {
     Q_OBJECT
 public:
-    UserInfo(QString nickname, User *parent = nullptr);
+    UserInfo(QString nickname,QString account,QString password, User *parent = nullptr);
     ~UserInfo();
 
+    //暴露给user,让user可以获取属性
+    QString getPassword() {return m_password;}
     QString getNickname() { return m_nickname; }
     QString getSign() { return m_sign; }
     QString getHeadportrait() { return m_headportrait; }
@@ -31,6 +34,9 @@ public:
     QString getAccount() { return m_account; }
     QString getHeadportraitTempFile() { return m_headportraitTempFile; }
 
+    // 设置属性
+    void setAccount(const QString &account);
+    void setPassword(const QString &password);
     bool getIsPremiunMembership() { return m_isPremiunMembership; }
     void setNickname(const QString &nickname);
     void setSign(const QString &sign);
@@ -43,6 +49,8 @@ public:
     void setIsPremiunMembership(const bool isPremiunMembership);
 
 signals:
+    void passwordChanged();
+    void accoutChanged();
     void nicknameChanged();
     void signChanged();
     void headportraitChanged();
@@ -53,6 +61,7 @@ signals:
     void isPremiunMembershipChanged();
 
 private:
+    QString m_password;
     QString m_nickname;
     QString m_sign;
     QString m_headportrait;
@@ -66,3 +75,4 @@ private:
 
     User *_owner;
 };
+
