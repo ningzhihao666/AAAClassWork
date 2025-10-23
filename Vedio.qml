@@ -357,6 +357,7 @@ FrameLessWindow {
         //=======内容部分=========
         Rectangle
         {
+
             id:content
             anchors
             {
@@ -375,6 +376,13 @@ FrameLessWindow {
 
                 Rectangle
                 {
+                    Connections {
+                        target: videoManager
+                        function onRequestPlayVideo(videoUrl) {
+                                vedio.videoUrl = videoUrl
+                        }
+                    }
+                    property url videoUrl: ""//TODO
                     id:vedio
                     Layout.fillWidth: true
                     Layout.fillHeight: true
@@ -384,7 +392,7 @@ FrameLessWindow {
                     MediaPlayer
                     {
                         id:mediaPlayer
-                        source:"file:///root/text.mp4"
+                        source:vedio.videoUrl//TODO
                         autoPlay: true
                         videoOutput: videoOutput
                         audioOutput: AudioOutput{}
@@ -1436,7 +1444,7 @@ FrameLessWindow {
                     }  //视频控制栏
 
 
-                }
+                }//TODO
 
                 //==================================视频区域====================================//
 
@@ -2229,3 +2237,5 @@ FrameLessWindow {
     }
 
 }
+
+

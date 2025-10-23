@@ -616,7 +616,9 @@ FrameLessWindow {
 
                         TapHandler {
                             // onTapped: console.log("点击视频项:", index + 1)
-                             onTapped: stackView.replace("Vedio.qml")
+                             onTapped: {stackView.replace("Vedio.qml")
+                             videoManager.playVideo(index)}
+                             //TODO
                         }
                     }
                 }
@@ -640,6 +642,7 @@ FrameLessWindow {
                     }
                 }
             }
+
         }
 
         Loader {
@@ -655,5 +658,13 @@ FrameLessWindow {
                 personInfoLoader.item.setMainAvatarUrl(root.globalAvatarUrl)
             }
         }
+        // 视频播放器连接
+        //TODO
+        // Connections {
+        //     target: videoManager
+        //     function onRequestPlayVideo(videoUrl) {
+
+        //     }
+        // }
     }
 }
