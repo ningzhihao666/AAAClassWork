@@ -33,6 +33,8 @@ qt_add_qml_module(appbili
     SOURCES user.h user.cpp
     SOURCES userinfo.h userinfo.cpp
     SOURCES databaseuser.h databaseuser.cpp
+    SOURCES videoitem.h videoitem.cpp
+    SOURCES videomanager.h videomanager.cpp
     # 将所有QML文件列在一个QML_FILES参数下
     QML_FILES
         Main.qml
