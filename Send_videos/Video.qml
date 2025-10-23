@@ -27,7 +27,7 @@ Item {
     property int lastProgress: 0
 
     // 上传视频方法
-    function uploadVideo(filePath, title, description) {
+    function uploadVideo(filePath, title, description,coverPath = "") {
         console.log("🚀 开始上传视频 - 参数:");
         console.log("  filePath:", filePath);
         console.log("  title:", title);
@@ -54,7 +54,16 @@ Item {
         initWebSocket();
 
         // 开始上传
-        uploadViaPath(filePath, currentTitle, currentDescription);
+        if (coverPath) {
+            // 如果有封面路径，先上传封面
+            uploadCover(coverPath, function(coverUrl) {
+                // 封面上传完成后上传视频
+                uploadViaPath(filePath, title, description, coverUrl);
+            });
+        } else {
+            // 没有封面直接上传视频
+            uploadViaPath(filePath, title, description);
+        }
     }
 
     // 初始化WebSocket连接 - 修正版本
@@ -159,7 +168,7 @@ Item {
     }
 
     // 通过文件路径上传
-    function uploadViaPath(filePath, title, description) {
+    function uploadViaPath(filePath, title, description, existingCoverUrl = "") {
         console.log("📤 使用文件路径上传方案");
 
         // 等待WebSocket连接建立
@@ -183,7 +192,26 @@ Item {
                 uploadId: currentUploadId
             };
 
+            // 如果有预先上传的封面URL，一并发送
+            if (existingCoverUrl) {
+                requestData.coverUrl = existingCoverUrl;
+            }
             console.log("发送请求数据:", JSON.stringify(requestData));
+
+            if (xhr.upload) {
+                xhr.upload.onprogress = function(event) {
+                    if (event.lengthComputable) {
+                        var percent = Math.round((event.loaded / event.total) * 100);
+                        console.log("上传进度:", percent + "%");
+                        uploadProgress(event.loaded, event.total);
+                    }
+                };
+            } else {
+                console.log("⚠️ xhr.upload 不支持，使用模拟进度");//暂时还没实！！！
+
+                // 如果没有 upload 支持，使用模拟进度
+                //startSimulatedProgress();
+            }
 
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === XMLHttpRequest.DONE) {

@@ -154,11 +154,11 @@ app.get('/', (req, res) => {
 
 // 通过文件路径上传（支持WebSocket进度）
 app.post('/api/upload/by-path', (req, res) => {
-    const { filePath, fileName, title, description, uploadId } = req.body;
+    // 接收文件路径、文件名、标题和描述参数
+    const { filePath, coverPath, title, description } = req.body;
 
     console.log('📤 通过文件路径上传:', filePath);
-    console.log('📋 上传ID:', uploadId);
-
+    // 检查文件是否存在
     if (!filePath || !fs.existsSync(filePath)) {
         return res.status(400).json({
             code: 1,
@@ -166,75 +166,96 @@ app.post('/api/upload/by-path', (req, res) => {
         });
     }
 
-    // 生成唯一的uploadId（如果客户端没有提供）
-    const currentUploadId = uploadId || `upload_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-    // 通知开始上传
-    notifyProgress(currentUploadId, 0, '开始处理文件', 'started');
-
-    const fileKey = `videos/${Date.now()}_${fileName || path.basename(filePath)}`;
+    // 生成 COS 存储的文件键名，获取文件统计信息
+    const fileKey = `videos/${Date.now()}_${path.basename(filePath)}`;
     const fileStats = fs.statSync(filePath);
 
     console.log('   文件大小:', (fileStats.size / 1024 / 1024).toFixed(2) + 'MB');
     console.log('   COS Key:', fileKey);
 
-    // 延迟一下，确保WebSocket连接建立
-    setTimeout(() => {
-        notifyProgress(currentUploadId, 5, '准备上传到云存储', 'uploading');
+    // 上传视频到腾讯云COS
+    cos.putObject({
+        Bucket: cosConfig.Bucket,
+        Region: cosConfig.Region,
+        Key: fileKey,
+        Body: fs.createReadStream(filePath),
+        ContentLength: fileStats.size,
+        onProgress: function(progressData) {
+            var percent = Math.round(progressData.percent * 100);
+            console.log(`   📊 视频上传进度: ${percent}%`);
+        }
+    }, (err, data) => {
+        if (err) {
+            console.error('❌ 视频COS上传失败:', err);
+            return res.status(500).json({
+                code: 1,
+                message: '视频上传失败: ' + err.message
+            });
+        }
 
-        // 上传到腾讯云COS
-        cos.putObject({
-            Bucket: cosConfig.Bucket,
-            Region: cosConfig.Region,
-            Key: fileKey,
-            Body: fs.createReadStream(filePath),
-            ContentLength: fileStats.size,
-            onProgress: function(progressData) {
-                var percent = Math.round(progressData.percent * 100);
-                console.log(`   📊 COS上传进度: ${percent}%`);
+        // 生成视频 URL
+        const videoUrl = `https://${cosConfig.Bucket}.cos.${cosConfig.Region}.myqcloud.com/${fileKey}`;
+        let coverUrl = null;
 
-                // 映射到更平滑的进度（5%到95%）
-                var mappedProgress = 5 + (percent * 0.9);
-                notifyProgress(currentUploadId, Math.round(mappedProgress), `上传中: ${percent}%`, 'uploading');
-            }
-        }, (err, data) => {
-            if (err) {
-                console.error('❌ COS上传失败:', err);
-                notifyProgress(currentUploadId, 0, `上传失败: ${err.message}`, 'error');
+        // 如果有封面路径，上传封面图
+        if (coverPath) {
+            if (!fs.existsSync(coverPath)) {
+                console.warn('⚠️ 封面文件不存在:', coverPath);
+            } else {
+                const coverKey = `covers/${Date.now()}_${path.basename(coverPath)}`;
+                const coverStats = fs.statSync(coverPath);
 
-                return res.status(500).json({
-                    code: 1,
-                    message: '上传失败: ' + err.message
+                console.log('   🖼️ 上传封面图:', coverPath);
+                console.log('   封面大小:', (coverStats.size / 1024).toFixed(2) + 'KB');
+                console.log('   COS Key:', coverKey);
+
+                // 上传封面图
+                cos.putObject({
+                    Bucket: cosConfig.Bucket,
+                    Region: cosConfig.Region,
+                    Key: coverKey,
+                    Body: fs.createReadStream(coverPath),
+                    ContentLength: coverStats.size,
+                    onProgress: function(progressData) {
+                        var percent = Math.round(progressData.percent * 100);
+                        console.log(`   📊 封面上传进度: ${percent}%`);
+                    }
+                }, (coverErr, coverData) => {
+                    if (coverErr) {
+                        console.error('❌ 封面COS上传失败:', coverErr);
+                    } else {
+                        coverUrl = `https://${cosConfig.Bucket}.cos.${cosConfig.Region}.myqcloud.com/${coverKey}`;
+                        console.log('   封面URL:', coverUrl);
+                    }
+                    completeUpload();
                 });
             }
+        } else {
+            // 如果没有封面路径，直接完成上传
+            completeUpload();
+        }
 
-            // 生成URL
-            const videoUrl = `https://${cosConfig.Bucket}.cos.${cosConfig.Region}.myqcloud.com/${fileKey}`;
-            const coverUrl = videoUrl.replace(/\.(mp4|avi|mov|mkv)$/i, '.jpg');
-
+        function completeUpload() {
             console.log('✅ 上传成功!');
             console.log('   视频URL:', videoUrl);
-
-            // 通知上传完成
-            notifyProgress(currentUploadId, 100, '上传完成', 'completed');
 
             res.json({
                 code: 0,
                 message: '上传成功',
                 data: {
-                    uploadId: currentUploadId,
                     videoId: 'video_' + Date.now(),
                     title: title || '未命名视频',
                     description: description || '暂无描述',
                     videoUrl: videoUrl,
-                    coverUrl: coverUrl,
+                    coverUrl: coverUrl, // 可能是null或上传成功的URL
                     fileSize: fileStats.size,
                     uploadTime: new Date().toISOString()
                 }
             });
-        });
-    }, 500);
+        }
+    });
 });
+
 
 // 传统文件上传（支持进度）
 app.post('/api/upload/complete', upload.single('file'), (req, res) => {
@@ -326,6 +347,95 @@ app.get('/api/upload/status/:uploadId', (req, res) => {
         }
     });
 });
+
+// 封面上传接口
+app.post('/api/upload/cover', (req, res) => {
+    const { filePath, fileName } = req.body;
+
+    if (!filePath || !fs.existsSync(filePath)) {
+        return res.status(400).json({
+            code: 1,
+            message: '封面文件不存在'
+        });
+    }
+
+    const fileKey = `covers/${Date.now()}_${fileName || path.basename(filePath)}`;
+    const fileStats = fs.statSync(filePath);
+
+    cos.putObject({
+        Bucket: cosConfig.Bucket,
+        Region: cosConfig.Region,
+        Key: fileKey,
+        Body: fs.createReadStream(filePath),
+        ContentLength: fileStats.size
+    }, (err, data) => {
+        if (err) {
+            return res.status(500).json({
+                code: 1,
+                message: '封面上传失败: ' + err.message
+            });
+        }
+
+        const coverUrl = `https://${cosConfig.Bucket}.cos.${cosConfig.Region}.myqcloud.com/${fileKey}`;
+        res.json({
+            code: 0,
+            message: '封面上传成功',
+            data: { url: coverUrl }
+        });
+    });
+});
+
+
+
+// 存储视频和封面的映射关系
+const videoCoverMap = {};
+
+// 关联视频和封面的接口
+app.post('/api/associate-video-cover', (req, res) => {
+    const { videoUrl, coverUrl } = req.body;
+
+    if (!videoUrl || !coverUrl) {
+        return res.status(400).json({
+            code: 1,
+            message: '视频URL和封面URL都不能为空'
+        });
+    }
+
+    // 提取视频ID（假设视频URL格式为 https://bucket.cos.region.myqcloud.com/videos/123_video.mp4）
+    const videoId = videoUrl.split('/').pop().split('_')[0];
+
+    // 存储关联关系
+    videoCoverMap[videoId] = coverUrl;
+
+    res.json({
+        code: 0,
+        message: '关联成功',
+        data: {
+            videoId,
+            videoUrl,
+            coverUrl
+        }
+    });
+});
+
+// 获取视频信息的接口（包含关联的封面）
+app.get('/api/video/:videoId', (req, res) => {
+    const { videoId } = req.params;
+
+    // 这里应该是从数据库查询，但示例中使用内存存储
+    const videoInfo = {
+        videoId,
+        videoUrl: `https://${cosConfig.Bucket}.cos.${cosConfig.Region}.myqcloud.com/videos/${videoId}_sample.mp4`,
+        coverUrl: videoCoverMap[videoId]
+    };
+
+    res.json({
+        code: 0,
+        message: '获取成功',
+        data: videoInfo
+    });
+});
+
 
 // 启动服务器
 app.listen(port, () => {

@@ -14,6 +14,8 @@ Item {
     property alias progressValue: progressBar.value
     property alias progressText: progressText.text
     property alias statusText: statusText.text
+    property string selectedVideoPath: ""
+    property string selectedImagePath: ""
 
     // 信号
     signal uploadStarted(string filePath, string title, string description)
@@ -82,25 +84,50 @@ Item {
         anchors.margins: 20
         spacing: 20
 
-        Button {
-            id: uploadButton
-            text: qsTr("选择并上传视频")
-            Layout.alignment: Qt.AlignCenter
+        RowLayout{
+            Button {
+                id: uploadButton
+                text: qsTr("选择并上传视频")
+                // Layout.alignment: Qt.AlignCenter
 
-            background: Rectangle {
-                color: uploadButton.down ? "#0091c2" : "#00a1d6"
-                radius: 5
-            }
-            contentItem: Text {
-                text: uploadButton.text
-                color: "white"
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
+                background: Rectangle {
+                    color: uploadButton.down ? "#0091c2" : "#00a1d6"
+                    radius: 5
+                }
+                contentItem: Text {
+                    text: uploadButton.text
+                    color: "white"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                onClicked: {
+                    fileDialog.open();
+                }
             }
 
-            onClicked: {
-                fileDialog.open()
+            Button {
+                id: uploadCoverButton
+                text: qsTr("选择并上传封面")
+                // Layout.alignment: Qt.AlignCenter
+                anchors.left: uploadButton.right
+                anchors.margins: 200
+
+                background: Rectangle {
+                    color: uploadButton.down ? "#0091c2" : "#00a1d6"
+                    radius: 5
+                }
+                contentItem: Text {
+                    text: uploadCoverButton.text
+                    color: "white"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                onClicked: {
+                    fileDialog1.open()
+                }
             }
+
         }
 
         // 进度条
@@ -259,7 +286,7 @@ Item {
             console.log("处理后的文件路径:", filePath);
             fileSelected(filePath)
             statusLog.text += "选择了文件: " + filePath + "\n"
-            startUpload(filePath);
+            selectedVideoPath = filePath;
         }
 
         onRejected: {
@@ -268,7 +295,58 @@ Item {
         }
     }
 
-    function startUpload(filePath) {
+    FileDialog {
+        id: fileDialog1
+        title: "选择文件"
+        nameFilters: ["文件 (*.png *.jpg)"]
+        currentFolder: StandardPaths.standardLocations(StandardPaths.HomeLocation)[0]
+
+        onAccepted: {
+            console.log("文件对话框选择完成");
+            console.log("selectedFile:", selectedFile);
+            console.log("selectedFiles:", selectedFiles);
+
+            var fileUrl = selectedFile;
+            if (!fileUrl) {
+                if (selectedFiles.length > 0) {
+                    fileUrl = selectedFiles[0];
+                } else {
+                    console.error("没有选择文件");
+                    return;
+                }
+            }
+
+            var filePath = fileUrl.toString();
+            if (filePath.startsWith("file://")) {
+                filePath = filePath.substring(7);
+            }
+
+            console.log("处理后的文件路径:", filePath);
+            fileSelected(filePath)
+            statusLog.text += "选择了文件: " + filePath + "\n"
+            // startUpload(filePath);
+            selectedImagePath = filePath;
+        }
+
+        onRejected: {
+            console.log("用户取消了文件选择");
+            statusLog.text += "用户取消了文件选择\n"
+        }
+    }
+    Button {
+
+        text: "开始上传"
+
+        onClicked: {
+            if (selectedVideoPath && selectedImagePath) {
+                startUpload(selectedVideoPath, selectedImagePath);
+            } else {
+                statusLog.text += "请先选择视频和图片文件！\n";
+            }
+        }
+    }
+
+    function startUpload(filePath,coverPath) {
         var title = "我的视频_" + new Date().toLocaleString(Qt.locale(), "yyyyMMdd_hhmmss")
         var description = "通过B站风格上传器上传的视频"
 
@@ -289,7 +367,7 @@ Item {
         statusLog.text += "开始上传: " + filePath + "\n"
 
         // 开始上传
-        uploader.uploadVideo(filePath, title, description)
+        uploader.uploadVideo(filePath, title, description,coverPath)
     }
 
     // 公共方法
