@@ -6,15 +6,18 @@
 
 User::User(QObject *parent)
     : QObject(parent)
-
 {
-    _uinfo = new UserInfo("", this);
+    //_uinfo = new UserInfo("", this);
 }
-
 User::User(const QString &nickname, const QString &account, const QString &password, QObject *parent)
 {
     // 初始化用户资料
-    _uinfo = new UserInfo(nickname, this);
+    _uinfo = new UserInfo(nickname,account,password, this);  //其他属性用userinfo的初始化
+
+    //_uinfo->setAccount(account);
+
+    //_uinfo->setPassword(password);
+
     signalConnect();
 }
 
@@ -25,7 +28,8 @@ User::~User()
 
 void User::signalConnect()
 {
-    connect(_uinfo, &UserInfo::nicknameChanged, this, &User::nicknameChanged);
+    connect(_uinfo, &UserInfo::passwordChanged, this, &User::passwordChanged);
+    connect(_uinfo, &UserInfo::nicknameChanged, this, &User::nicknameChanged);  //User::nicknameChanged发送后，QML引擎响应信号，并重新读取user.nickname 属性值
     connect(_uinfo, &UserInfo::signChanged, this, &User::signChanged);
     connect(_uinfo, &UserInfo::headportraitChanged, this, &User::headportraitChanged);
     connect(_uinfo, &UserInfo::levelChanged, this, &User::levelChanged);
@@ -46,10 +50,10 @@ QString User::getAccount()
     return _uinfo->getAccount();
 }
 
-// QString User::getPassword()
-// {
-//     return _uinfo->getPassword();
-// }
+QString User::getPassword()
+{
+    return _uinfo->getPassword();
+}
 
 bool User::isPremiunMembership()
 {
@@ -87,6 +91,14 @@ QString User::getLikes()
 }
 
 // 属性更新
+void User::setPassword(const QString &password) {
+    _uinfo->setPassword(password);
+}
+
+void User::setAccount(const QString &account)
+{
+    _uinfo->setAccount(account);
+}
 void User::setNickname(const QString &nickname)
 {
     _uinfo->setNickname(nickname);
@@ -126,3 +138,4 @@ void User::setIsPremiunMembership(const bool isPremiunMembership)
 {
     _uinfo->setIsPremiunMembership(isPremiunMembership);
 }
+

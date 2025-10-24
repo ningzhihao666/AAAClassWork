@@ -59,6 +59,7 @@ qt_add_qml_module(appbili
         SOURCES Chat_clienthandler.h Chat_clienthandler.cpp
         SOURCES Chat_messagehandler.h Chat_messagehandler.cpp
         SOURCES Chat_serverhandler.h Chat_serverhandler.cpp
+        QML_FILES db.js
 )
 
 # 链接必要的Qt模块
