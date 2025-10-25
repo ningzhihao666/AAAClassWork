@@ -34,6 +34,8 @@ qt_add_qml_module(appbili
         Moments.qml
         Send_videos/Video.qml
         Send_videos/VideoLode.qml
+        Login/LoginDialog.qml
+        Login/LoginPage.qml
     # 将所有资源文件（.qrc）列在一个RESOURCES参数下
     RESOURCES
         Img.qrc

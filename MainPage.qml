@@ -7,13 +7,39 @@ FrameLessWindow {
     width: 1100
     height: 800
 
-    // 全局头像URL属性
     property string globalAvatarUrl: "https://i0.hdslb.com/bfs/face/member/noface.jpg@40w_40h.webp"
-
-    // 状态管理属性
+    property bool isLoggedIn: false
+    property string username: ""
     property string currentLeftMenuItem: ""
     property string currentTopNavItem: "推荐"
     property bool showPersonInfo: false
+
+    LoginDialog {
+        id: loginDialog
+
+        // 通过内部组件的信号来连接
+        Connections {
+            target: loginDialog.loginDialog // 连接到内部的loginDialog组件
+            onLoginSuccess: {
+                console.log("登录成功:", username, avatarUrl)
+                root.isLoggedIn = true
+                root.username = username
+                root.globalAvatarUrl = avatarUrl
+            }
+
+            onLogout: {
+                console.log("退出登录")
+                root.isLoggedIn = false
+                root.username = ""
+                root.globalAvatarUrl = "https://i0.hdslb.com/bfs/face/member/noface.jpg@40w_40h.webp"
+            }
+        }
+    }
+
+    function openLoginDialog() {
+        loginDialog.open()
+    }
+
 
     // 头像路径处理函数
     function processAvatarUrl(url) {
