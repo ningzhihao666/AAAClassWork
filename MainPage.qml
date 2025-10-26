@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Window
 
 FrameLessWindow {
     id: root
@@ -13,6 +14,135 @@ FrameLessWindow {
     property string currentLeftMenuItem: ""
     property string currentTopNavItem: "推荐"
     property bool showPersonInfo: false
+    property string apiBaseUrl: "http://localhost:3000"       //服务器基网址
+
+    // 视频数据模型
+    ListModel {
+        id: videoModel
+    }
+
+    // 网络管理器
+    NetworkManager {               //左侧的红色符号不用管，这个是正常能加载的
+        id: networkManager
+        baseUrl: apiBaseUrl
+    }
+
+    // 加载视频列表
+    function loadVideos() {
+        console.log("开始加载视频列表...");
+        loadingIndicator.visible = true;
+        emptyText.visible = false;
+
+        networkManager.get("/api/videos", function(success, response) {
+            loadingIndicator.visible = false;
+
+            if (success) {
+                if (response.code === 0) {
+                    console.log("成功加载", response.data.length, "个视频");
+                    videoModel.clear();
+
+                    // 添加视频到模型
+                    for (var i = 0; i < response.data.length; i++) {
+                        var video = response.data[i];
+                        videoModel.append(video);
+                    }
+
+                    // 如果没有视频，显示空状态
+                    emptyText.visible = videoModel.count === 0;
+                } else {
+                    console.error("API返回错误:", response.message);
+                    showError("加载失败: " + response.message);
+                }
+            } else {
+                console.error("网络请求失败");
+                showError("网络连接失败，请检查服务器状态");
+            }
+        });
+    }
+
+    // 显示错误信息
+    function showError(message) {
+        errorPopup.message = message;
+        errorPopup.open();
+    }
+
+    Component.onCompleted: {
+        loadVideos();
+    }
+
+    // 顶部刷新按钮
+    Button {
+        id: refreshButton
+        anchors {
+            bottom: parent.bottom;     bottomMargin: 10
+            right:parent.right;        rightMargin: 10;
+        }
+        width: 100;      height: 36;     z:100
+        text: "刷新";       font.pixelSize: 14
+
+        background: Rectangle {
+            color: refreshButton.down ? "#e6f7ff" :
+                   refreshButton.enabled ? "#00aeec" : "#cccccc"
+            border.color: refreshButton.enabled ? "#00aeec" : "#cccccc"
+            border.width: 1
+            radius: 4
+        }
+
+        contentItem: Text {
+            text: refreshButton.text
+            color: refreshButton.enabled ? "white" : "#999999"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            font: refreshButton.font
+        }
+
+        onClicked: {
+            console.log("手动刷新视频列表");
+            loadVideos();
+        }
+    }
+
+    // 加载指示器
+    Rectangle {
+        id: loadingIndicator
+        anchors.centerIn: parent
+        width: 100
+        height: 100
+        color: "#ccffffff"
+        radius: 8
+        visible: false
+        z: 2
+
+        ColumnLayout {
+            anchors.centerIn: parent
+            spacing: 10
+
+            BusyIndicator {
+                Layout.alignment: Qt.AlignHCenter
+                running: true
+                width: 40
+                height: 40
+            }
+
+            Text {
+                text: "加载中..."
+                font.pixelSize: 14
+                color: "#666666"
+                Layout.alignment: Qt.AlignHCenter
+            }
+        }
+    }
+
+    // 空状态提示
+    Text {
+        id: emptyText
+        anchors.centerIn: parent
+        text: "暂无视频内容\n点击刷新按钮加载视频"
+        font.pixelSize: 16
+        color: "#999999"
+        horizontalAlignment: Text.AlignHCenter
+        visible: false
+    }
 
     LoginDialog {
         id: loginDialog
@@ -608,7 +738,7 @@ FrameLessWindow {
                     cellWidth: (width - 30) / 4
                     cellHeight: 220
                     clip: true
-                    model: 12
+                    model: videoModel
 
                     delegate: Rectangle {
                         width: videoGrid.cellWidth - 10
@@ -630,16 +760,35 @@ FrameLessWindow {
                                 color: "lightgray"
                                 radius: 4
 
-                                Text {
-                                    text: "封面图 " + (index + 1)
-                                    anchors.centerIn: parent
-                                    color: "gray"
+                                Image {
+                                    id: coverImage
+                                    anchors.fill: parent
+                                    source: coverUrl
+                                    fillMode: Image.PreserveAspectCrop
+                                    asynchronous: true
+
+                                    // 加载中显示
+                                    BusyIndicator {
+                                        anchors.centerIn: parent
+                                        running: coverImage.status === Image.Loading
+                                        width: 30
+                                        height: 30
+                                    }
+
+                                    // 加载失败显示
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "封面加载失败"
+                                        font.pixelSize: 12
+                                        color: "#999999"
+                                        visible: coverImage.status === Image.Error
+                                    }
                                 }
                             }
 
                             Text {
                                 width: parent.width
-                                text: "【超燃】这是第 " + (index + 1) + " 个推荐视频标题"
+                                text: title
                                 font.pixelSize: 14
                                 wrapMode: Text.Wrap
                                 elide: Text.ElideRight
@@ -671,7 +820,27 @@ FrameLessWindow {
 
                         TapHandler {
                             // onTapped: console.log("点击视频项:", index + 1)
-                             onTapped: stackView.replace("Vedio.qml")
+                            onTapped: {
+                                console.log("点击视频:", videoId, title);
+                                // 打开视频播放页面
+                                var component = Qt.createComponent("Video_Playback/Vedio.qml");
+                                if (component.status === Component.Ready) {
+                                    var player = component.createObject(Vedio, {
+                                        videoData: {
+                                            videoId: videoId,
+                                            title: title,
+                                            description: description,
+                                            videoUrl: videoUrl,
+                                            coverUrl: coverUrl,
+                                            duration: duration,
+                                            views: views
+                                        }
+                                    });
+                                    player.show();
+                                } else {
+                                    console.error("无法加载视频播放器组件:", component.errorString());
+                                }
+                            }
                         }
                     }
                 }

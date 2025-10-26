@@ -9,7 +9,7 @@ import QtQuick.Window
 Item {
     id: videoLode
     width: 800
-    height: 600
+    height: 700  // 增加高度以容纳新控件
 
     // 公共属性
     property alias buttonText: uploadButton.text
@@ -19,17 +19,24 @@ Item {
     property alias statusText: statusText.text
 
     // 信号
-    signal uploadStarted(string filePath, string title, string description)
+    signal uploadStarted(string filePath, string title, string description, string coverPath)
     signal uploadCancelled() //取消上传时触发
     signal fileSelected(string filePath) // 文件选择完成时触发
+    signal coverSelected(string coverPath) // 封面选择完成时触发
     signal uploadFinished(string videoUrl, string coverUrl) //
     signal uploadError(string error) // 上传过程中发生错误时触发
+
+    // 选择的文件路径
+    property string selectedVideoPath: ""
+    property string selectedCoverPath: ""
+    property string videoTitle: ""
+    property string videoDescription: ""
 
     // 视频上传器组件
     Video {
         id: uploader
 
-        // 更新进度条的值和最大值(不可以为0) 还没实现！！！！！！！！！！！！！！！！！！！！！！！！！
+        // 更新进度条的值和最大值
         onUploadProgress: function(bytesSent, bytesTotal) {
             progressBar.value = bytesSent
             progressBar.to = bytesTotal
@@ -46,6 +53,9 @@ Item {
             cancelButton.visible = false //取消按钮
             statusLog.text += "上传完成! 视频URL: " + videoUrl + "\n"
             videoLode.uploadFinished(videoUrl, coverUrl)
+
+            // 重置表单
+            resetForm()
         }
 
         // 错误处理
@@ -59,7 +69,7 @@ Item {
             videoLode.uploadError(error)
         }
 
-        // 取消处理 还没实现！！！！！！！！！！！！！！！！！！！！！！！！！
+        // 取消处理
         onUploadCancelled: {
             progressText.text = "上传已取消"
             statusText.text = ""
@@ -73,26 +83,205 @@ Item {
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 20
-        spacing: 20
+        spacing: 15
 
+        // 视频文件选择区域
+        GroupBox {
+            title: "选择视频文件"
+            Layout.fillWidth: true
+
+            ColumnLayout {
+                width: parent.width
+                spacing: 10
+
+                Button {
+                    id: selectVideoButton
+                    text: selectedVideoPath ? "重新选择视频文件" : "选择视频文件"
+                    Layout.fillWidth: true
+
+                    background: Rectangle {
+                        color: selectVideoButton.down ? "#e6f7ff" : "#f0f0f0"
+                        border.color: "#d9d9d9"
+                        radius: 4
+                    }
+
+                    onClicked: {
+                        videoFileDialog.open()
+                    }
+                }
+
+                Text {
+                    id: videoFileInfo
+                    text: selectedVideoPath ? "已选择: " + getFileName(selectedVideoPath) : "未选择视频文件"
+                    font.pixelSize: 12
+                    color: selectedVideoPath ? "green" : "gray"
+                    Layout.fillWidth: true
+                    elide: Text.ElideLeft
+                }
+            }
+        }
+
+        // 封面图片选择区域
+        GroupBox {
+            title: "选择封面图片（可选）"
+            Layout.fillWidth: true
+
+            ColumnLayout {
+                width: parent.width
+                spacing: 10
+
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    Button {
+                        id: selectCoverButton
+                        text: selectedCoverPath ? "重新选择封面" : "选择封面图片"
+                        Layout.fillWidth: true
+
+                        background: Rectangle {
+                            color: selectCoverButton.down ? "#e6f7ff" : "#f0f0f0"
+                            border.color: "#d9d9d9"
+                            radius: 4
+                        }
+
+                        onClicked: {
+                            coverFileDialog.open()
+                        }
+                    }
+
+                    Button {
+                        id: clearCoverButton
+                        text: "清除封面"
+                        visible: selectedCoverPath
+                        onClicked: {
+                            selectedCoverPath = ""
+                            coverImage.source = ""
+                            statusLog.text += "已清除封面选择\n"
+                        }
+
+                        background: Rectangle {
+                            color: clearCoverButton.down ? "#fff2f0" : "#ffccc7"
+                            border.color: "#ffa39e"
+                            radius: 4
+                        }
+                    }
+                }
+
+                // 封面预览
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 120
+                    border.color: "#d9d9d9"
+                    border.width: 1
+                    radius: 4
+                    color: "#fafafa"
+
+                    Image {
+                        id: coverImage
+                        anchors.fill: parent
+                        anchors.margins: 5
+                        fillMode: Image.PreserveAspectFit
+                        source: selectedCoverPath ? "file://" + selectedCoverPath : ""
+                        asynchronous: true
+
+                        onStatusChanged: {
+                            if (status === Image.Error) {
+                                console.log("封面图片加载失败")
+                            }
+                        }
+                    }
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "封面预览"
+                        color: "gray"
+                        visible: !coverImage.source
+                    }
+                }
+
+                Text {
+                    id: coverFileInfo
+                    text: selectedCoverPath ? "已选择封面: " + getFileName(selectedCoverPath) : "未选择封面（将使用默认封面）"
+                    font.pixelSize: 12
+                    color: selectedCoverPath ? "green" : "gray"
+                    Layout.fillWidth: true
+                    elide: Text.ElideLeft
+                }
+            }
+        }
+
+        // 视频信息输入区域
+        GroupBox {
+            title: "视频信息"
+            Layout.fillWidth: true
+
+            ColumnLayout {
+                width: parent.width
+                spacing: 10
+
+                // 标题输入
+                Label {
+                    text: "视频标题 *"
+                    font.bold: true
+                }
+
+                TextField {
+                    id: titleInput
+                    Layout.fillWidth: true
+                    placeholderText: "请输入视频标题..."
+                    onTextChanged: videoTitle = text
+
+                    background: Rectangle {
+                        border.color: titleInput.focus ? "#40a9ff" : "#d9d9d9"
+                        border.width: 1
+                        radius: 4
+                    }
+                }
+
+                // 描述输入
+                Label {
+                    text: "视频描述"
+                    font.bold: true
+                }
+
+                TextArea {
+                    id: descriptionInput
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 80
+                    placeholderText: "请输入视频描述（可选）..."
+                    wrapMode: TextArea.Wrap
+                    onTextChanged: videoDescription = text
+
+                    background: Rectangle {
+                        border.color: descriptionInput.focus ? "#40a9ff" : "#d9d9d9"
+                        border.width: 1
+                        radius: 4
+                    }
+                }
+            }
+        }
+
+        // 上传按钮
         Button {
             id: uploadButton
-            text: qsTr("选择并上传视频")
+            text: qsTr("开始上传视频")
             Layout.alignment: Qt.AlignCenter
+            enabled: selectedVideoPath && videoTitle.trim() !== ""
 
             background: Rectangle {
-                color: uploadButton.down ? "#0091c2" : "#00a1d6"
+                color: uploadButton.enabled ?
+                    (uploadButton.down ? "#0091c2" : "#00a1d6") : "#cccccc"
                 radius: 5
             }
             contentItem: Text {
                 text: uploadButton.text
-                color: "white"
+                color: uploadButton.enabled ? "white" : "#999999"
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
 
             onClicked: {
-                fileDialog.open()
+                startUpload()
             }
         }
 
@@ -159,10 +348,10 @@ Item {
             Layout.topMargin: 20
 
             Button {
-                text: "重置上传器"
+                text: "重置表单"
                 onClicked: {
-                    reset()
-                    statusLog.text += "上传器已重置\n"
+                    resetForm()
+                    statusLog.text += "表单已重置\n"
                 }
 
                 background: Rectangle {
@@ -223,17 +412,14 @@ Item {
         }
     }
 
+    // 视频文件选择对话框
     FileDialog {
-        id: fileDialog
+        id: videoFileDialog
         title: "选择视频文件"
-        nameFilters: ["视频文件 (*.mp4 *.avi *.mov *.mkv)"]
+        nameFilters: ["视频文件 (*.mp4 *.avi *.mov *.mkv *.flv *.wmv)"]
         currentFolder: StandardPaths.standardLocations(StandardPaths.HomeLocation)[0]
 
         onAccepted: {
-            console.log("文件对话框选择完成");
-            console.log("selectedFile:", selectedFile);
-            console.log("selectedFiles:", selectedFiles);
-
             var fileUrl = selectedFile;
             if (!fileUrl) {
                 if (selectedFiles.length > 0) {
@@ -249,50 +435,115 @@ Item {
                 filePath = filePath.substring(7);
             }
 
-            console.log("处理后的文件路径:", filePath);
+            console.log("选择的视频文件路径:", filePath);
+            selectedVideoPath = filePath
             fileSelected(filePath)
-            statusLog.text += "选择了文件: " + filePath + "\n"
-            startUpload(filePath);
+            statusLog.text += "选择了视频文件: " + getFileName(filePath) + "\n"
         }
 
         onRejected: {
-            console.log("用户取消了文件选择");
-            statusLog.text += "用户取消了文件选择\n"
+            console.log("用户取消了视频文件选择");
+            statusLog.text += "用户取消了视频文件选择\n"
         }
     }
 
-    function startUpload(filePath) {
-        var title = "我的视频_" + new Date().toLocaleString(Qt.locale(), "yyyyMMdd_hhmmss")
-        var description = "通过B站风格上传器上传的视频"
+    // 封面文件选择对话框
+    FileDialog {
+        id: coverFileDialog
+        title: "选择封面图片"
+        nameFilters: ["图片文件 (*.jpg *.jpeg *.png *.bmp *.gif)"]
+        currentFolder: StandardPaths.standardLocations(StandardPaths.HomeLocation)[0]
 
-        console.log("开始上传流程 - 文件:", filePath);
-        console.log("标题:", title);
-        console.log("描述:", description);
+        onAccepted: {
+            var fileUrl = selectedFile;
+            if (!fileUrl) {
+                if (selectedFiles.length > 0) {
+                    fileUrl = selectedFiles[0];
+                } else {
+                    console.error("没有选择文件");
+                    return;
+                }
+            }
+
+            var filePath = fileUrl.toString();
+            if (filePath.startsWith("file://")) {
+                filePath = filePath.substring(7);
+            }
+
+            console.log("选择的封面文件路径:", filePath);
+            selectedCoverPath = filePath
+            coverSelected(filePath)
+            statusLog.text += "选择了封面文件: " + getFileName(filePath) + "\n"
+        }
+
+        onRejected: {
+            console.log("用户取消了封面文件选择");
+            statusLog.text += "用户取消了封面文件选择\n"
+        }
+    }
+
+    function startUpload() {
+        if (!selectedVideoPath) {
+            statusText.text = "错误: 请先选择视频文件"
+            return
+        }
+
+        if (!videoTitle.trim()) {
+            statusText.text = "错误: 请输入视频标题"
+            return
+        }
+
+        console.log("开始上传流程 - 文件:", selectedVideoPath);
+        console.log("封面:", selectedCoverPath);
+        console.log("标题:", videoTitle);
+        console.log("描述:", videoDescription);
 
         // 更新UI状态
         uploadButton.enabled = false
         progressBar.visible = true
         progressBar.value = 0
         progressText.text = "准备上传..."
-        statusText.text = "文件: " + filePath + "\n标题: " + title
+        statusText.text = "文件: " + getFileName(selectedVideoPath) + "\n标题: " + videoTitle
         cancelButton.visible = true
 
         // 发出信号
-        uploadStarted(filePath, title, description)
-        statusLog.text += "开始上传: " + filePath + "\n"
+        uploadStarted(selectedVideoPath, videoTitle, videoDescription, selectedCoverPath)
+        statusLog.text += "开始上传: " + getFileName(selectedVideoPath) + "\n"
 
         // 开始上传
-        uploader.uploadVideo(filePath, title, description)
+        uploader.uploadVideo(selectedVideoPath, videoTitle, videoDescription, selectedCoverPath)
     }
 
-    // 公共方法
-    function reset() {
+    // 工具函数：从文件路径中提取文件名
+    function getFileName(filePath) {
+        var path = filePath.toString();
+        if (path.startsWith("file://")) {
+            path = path.substring(7);
+        }
+        var lastSlash = path.lastIndexOf("/");
+        return lastSlash >= 0 ? path.substring(lastSlash + 1) : path;
+    }
+
+    // 重置表单
+    function resetForm() {
+        selectedVideoPath = ""
+        selectedCoverPath = ""
+        videoTitle = ""
+        videoDescription = ""
+        titleInput.text = ""
+        descriptionInput.text = ""
+        coverImage.source = ""
         uploadButton.enabled = true
         progressBar.visible = false
         progressBar.value = 0
         progressText.text = "等待上传..."
         statusText.text = ""
         cancelButton.visible = false
+    }
+
+    // 公共方法
+    function reset() {
+        resetForm()
     }
 
     function setProgress(percent) {

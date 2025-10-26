@@ -1,13 +1,13 @@
-cmake_minimum_required(VERSION 3.16)  # Qt6 推荐至少 3.16
+cmake_minimum_required(VERSION 4.1.1)
 
 project(bili VERSION 0.1 LANGUAGES CXX)
 
 # 设置C++标准，确保与Qt6兼容（Qt6需要C++17或更高）
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "d0edc3af-4c50-42ea-a356-e2862fe7a444")
+set(CMAKE_CXX_MODULE_STD ON)
 
 # 查找Qt6包
-find_package(Qt6 REQUIRED COMPONENTS Quick)
+find_package(Qt6 REQUIRED COMPONENTS Quick Network Multimedia)
 
 # Qt标准项目设置
 qt_standard_project_setup(REQUIRES 6.9)
@@ -27,27 +27,33 @@ qt_add_qml_module(appbili
         FrameLessWindow.qml
         Mine.qml
         VedioType.qml
-        VedioList.qml
         ToolBars.qml
         PersonInfo.qml
-        Vedio.qml
         Moments.qml
         Send_videos/Video.qml
         Send_videos/VideoLode.qml
         Login/LoginDialog.qml
         Login/LoginPage.qml
+        Video_Playback/NetworkManager.qml
+        Video_Playback/Vedio.qml
+        Video_Playback/VedioList.qml
     # 将所有资源文件（.qrc）列在一个RESOURCES参数下
     RESOURCES
         Img.qrc
         images.qrc
         QML_FILES Commit.qml
-        Send_videos/server.js
+
         QML_FILES DamuSystem.qml
         QML_FILES Message_Page.qml
 )
 
 # 链接必要的Qt模块
-target_link_libraries(appbili PRIVATE Qt6::Quick)
+target_link_libraries(appbili
+    PRIVATE
+        Qt6::Quick
+        Qt6::Network
+        Qt6::Multimedia
+)
 
 # 设置平台相关的属性
 set_target_properties(appbili PROPERTIES
@@ -63,4 +69,16 @@ install(TARGETS appbili
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+
+# 忽略 JavaScript 文件的语法检查
+set(CMAKE_CXX_CLANG_TIDY "")  # 禁用 clang-tidy
+set(CMAKE_CXX_CPPCHECK "")    # 禁用 cppcheck
+
+# 或者针对特定文件
+set_source_files_properties(server.js PROPERTIES
+    SKIP_AUTOMOC TRUE
+    SKIP_AUTOUIC TRUE
+    SKIP_AUTORCC TRUE
 )

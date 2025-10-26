@@ -16,15 +16,17 @@ Item {
     property string currentFilePath: ""
     property string currentTitle: ""
     property string currentDescription: ""
+    property string currentCoverPath: ""
     property bool isUploading: false
     property var currentRequest: null
 
-    // 上传视频方法
-    function uploadVideo(filePath, title, description) {
+    // 上传视频方法 - 修改：添加封面路径参数
+    function uploadVideo(filePath, title, description, coverPath = "") {
         console.log("🚀 开始上传视频 - 参数:");
         console.log("  filePath:", filePath);
         console.log("  title:", title);
         console.log("  description:", description);
+        console.log("  coverPath:", coverPath);
 
         if (isUploading) {
             uploadError("已有文件正在上传");
@@ -35,35 +37,36 @@ Item {
         currentFilePath = filePath;
         currentTitle = title || "未命名视频";
         currentDescription = description || "暂无描述";
+        currentCoverPath = coverPath || "";
         isUploading = true;
 
         console.log("设置属性完成:");
         console.log("  currentFilePath:", currentFilePath);
         console.log("  currentTitle:", currentTitle);
         console.log("  currentDescription:", currentDescription);
+        console.log("  currentCoverPath:", currentCoverPath);
 
-        // 使用模拟上传进行测试（先确保基础功能正常）
-        //uploadSimulate(filePath, currentTitle, currentDescription);
-
-        // 如果需要真实上传，取消下面这行的注释
-        uploadViaPath(filePath, currentTitle, currentDescription);
+        // 调用上传方法，传递封面路径
+        uploadViaPath(filePath, currentTitle, currentDescription, currentCoverPath);
     }
 
-    // 通过文件路径上传 - 修正版本
-    function uploadViaPath(filePath, title, description) {
+    // 通过文件路径上传 - 修改：添加封面路径参数
+    function uploadViaPath(filePath, title, description, coverPath = "") {
         console.log("📤 使用文件路径上传方案");
+        console.log("  封面路径:", coverPath || "未提供封面");
 
         // 创建 XMLHttpRequest 对象，配置 POST 请求和 JSON 内容类型
         var xhr = new XMLHttpRequest();
         xhr.open("POST", apiBaseUrl + "/upload/by-path");
         xhr.setRequestHeader("Content-Type", "application/json");
 
-        // 构建请求数据对象，包含文件路径、元数据和文件名
+        // 构建请求数据对象，包含文件路径、元数据、文件名和封面路径
         var requestData = {
             filePath: filePath,
             title: title,
             description: description,
-            fileName: getFileName(filePath)
+            fileName: getFileName(filePath),
+            coverPath: coverPath  // 新增封面路径参数
         };
 
         console.log("发送请求数据:", JSON.stringify(requestData));
@@ -78,10 +81,9 @@ Item {
                 }
             };
         } else {
-            console.log("⚠️ xhr.upload 不支持，使用模拟进度");//暂时还没实！！！
-
+            console.log("⚠️ xhr.upload 不支持，使用模拟进度");
             // 如果没有 upload 支持，使用模拟进度
-            //startSimulatedProgress();
+            startSimulatedProgress();
         }
 
         // 状态变化监听
@@ -143,14 +145,16 @@ Item {
                 uploadProgress(current, total);
             } else {
                 progressTimer.stop();
+                progressTimer.destroy();
             }
         });
         progressTimer.start();
     }
 
-    // 模拟上传（用于测试）
-    function uploadSimulate(filePath, title, description) {
+    // 模拟上传（用于测试）- 修改：添加封面路径参数
+    function uploadSimulate(filePath, title, description, coverPath = "") {
         console.log("🎭 使用模拟上传");
+        console.log("  封面路径:", coverPath || "未提供封面");
 
         isUploading = true;
 
@@ -167,9 +171,12 @@ Item {
                 console.log("模拟进度:", current + "%");
             } else {
                 timer.stop();
+                timer.destroy();
                 // 模拟上传完成
                 var videoUrl = "https://example.com/videos/" + Date.now() + ".mp4";
-                var coverUrl = "https://example.com/covers/" + Date.now() + ".jpg";
+                var coverUrl = coverPath ?
+                    "https://example.com/covers/" + getFileName(coverPath) :
+                    "https://example.com/covers/default.jpg";
                 console.log("✅ 模拟上传成功");
                 uploadFinished(videoUrl, coverUrl);
                 isUploading = false;
@@ -188,11 +195,11 @@ Item {
             uploadCancelled();
         }
 
-        // 如果是模拟上传，也需要停止计时器
+        // 清理模拟进度计时器
         // 这里需要额外的逻辑来停止模拟计时器
     }
 
-    // 工具函数.从文件路径中提取文件名
+    // 工具函数：从文件路径中提取文件名
     function getFileName(filePath) {
         // 处理文件路径格式
         var path = filePath.toString();
@@ -202,7 +209,25 @@ Item {
         var lastSlash = path.lastIndexOf("/");
         return lastSlash >= 0 ? path.substring(lastSlash + 1) : path;
     }
+
+    // 新增：获取文件扩展名
+    function getFileExtension(filePath) {
+        var fileName = getFileName(filePath);
+        var lastDot = fileName.lastIndexOf(".");
+        return lastDot >= 0 ? fileName.substring(lastDot + 1).toLowerCase() : "";
+    }
+
+    // 新增：验证文件类型
+    function isValidVideoFile(filePath) {
+        var ext = getFileExtension(filePath);
+        var videoExtensions = ["mp4", "avi", "mov", "mkv", "flv", "wmv", "webm"];
+        return videoExtensions.includes(ext);
+    }
+
+    function isValidImageFile(filePath) {
+        var ext = getFileExtension(filePath);
+        var imageExtensions = ["jpg", "jpeg", "png", "bmp", "gif"];
+        return imageExtensions.includes(ext);
+    }
 }
-
-
 

@@ -3,8 +3,9 @@ import QtQuick.Window
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtMultimedia
+import Qt.labs.platform
 
-FrameLessWindow {
+FrameLessWindow{
     id: videoPlayerPage
     color: "transparent"
     width: 1300
@@ -16,8 +17,6 @@ FrameLessWindow {
     property string currentCommit: "close"  //获取当前展开或者关闭
     property bool attention: false;     //获取关注的up
     property bool forceControlBarVisible: false //状态栏打开或者关闭
-
-
 
     property var danmuList: [
             {time: 5.2, text: "前方高能预警！", color: "#FF6699", duration: 25},
@@ -34,6 +33,8 @@ FrameLessWindow {
 
 
     property bool isAlwaysOnTop: false   //置顶窗口
+    property var videoData: ({})
+    
     flags: {
             var baseFlags = Qt.Window | Qt.FramelessWindowHint;
             if (isAlwaysOnTop) {
@@ -42,6 +43,10 @@ FrameLessWindow {
                 return baseFlags;
             }
         }//用于固定窗口
+
+    Component.onCompleted: {
+        mediaPlayer.play()
+    }
 
     // 主容器 - 添加圆角效果
     Rectangle {
@@ -54,8 +59,7 @@ FrameLessWindow {
         // 顶部标题栏
         Rectangle {
             id: titleBar
-            width: parent.width
-            height:60
+            width: parent.width;     height:60
             topLeftRadius: 10
             topRightRadius: 10
             bottomLeftRadius: 0
@@ -119,7 +123,8 @@ FrameLessWindow {
 
                     onClicked:
                     {
-                        //点击操作
+                        stackView.pop()
+                        videoPlayerPage.close()
                     }
                 }
 
@@ -346,7 +351,8 @@ FrameLessWindow {
                         opacity:closeButton.hovered? 0.5 : 0
                     }
                     onClicked: {
-                        Qt.quit();
+                        stackView.pop()
+                        videoPlayerPage.close()
                     }
 
                  }
@@ -370,9 +376,7 @@ FrameLessWindow {
             RowLayout
             {
                 anchors.fill: parent
-
                 //==================================视频区域====================================//
-
                 Rectangle
                 {
                     id:vedio
@@ -381,35 +385,26 @@ FrameLessWindow {
                     Layout.preferredWidth: parent.width * 5/7
                     color: "transparent"
 
-                    MediaPlayer
-                    {
-                        id:mediaPlayer
-                        source:"file:///root/text.mp4"
-                        autoPlay: true
+                    // 媒体播放器
+                    MediaPlayer {
+                        id: mediaPlayer
+                        source: videoData.videoUrl
                         videoOutput: videoOutput
-                        audioOutput: AudioOutput{}
-
+                        audioOutput: AudioOutput {}
                     }
+                
                     VideoOutput
                     {
                         id:videoOutput
                         anchors.fill: parent
-
-                        HoverHandler
-                        {
-                            cursorShape: Qt.PointingHandCursor
-                        }
-
+                        HoverHandler{  cursorShape: Qt.PointingHandCursor  }
                         TapHandler
                         {
                             acceptedButtons: Qt.LeftButton
                             onTapped:
                             {
-                                if(mediaPlayer.playbackState === MediaPlayer.PlayingState) {
-                                    mediaPlayer.pause()
-                                } else {
-                                    mediaPlayer.play()
-                                }
+                                if(mediaPlayer.playbackState === MediaPlayer.PlayingState) mediaPlayer.pause()
+                                else  mediaPlayer.play()
                                 buttonAnimation.start()
                             }
                         }
@@ -518,7 +513,7 @@ FrameLessWindow {
                                             videoPlayerPage.danmuList[j].displayed = false;
                                         }
                                     }
-                                }
+                    }
 
                     TapHandler
                         {
