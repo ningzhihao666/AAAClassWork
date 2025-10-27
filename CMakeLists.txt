@@ -8,6 +8,7 @@ set(CMAKE_CXX_MODULE_STD ON)
 
 # 查找Qt6包
 find_package(Qt6 REQUIRED COMPONENTS Quick Network Multimedia)
+find_package(Qt6 REQUIRED COMPONENTS Quick Sql)
 
 # Qt标准项目设置
 qt_standard_project_setup(REQUIRES 6.9)
@@ -45,6 +46,8 @@ qt_add_qml_module(appbili
 
         QML_FILES DamuSystem.qml
         QML_FILES Message_Page.qml
+SOURCES userinfo.h userinfo.cpp user.h user.cpp databaseuser.h databaseuser.cpp
+QML_FILES db.js
 )
 
 # 链接必要的Qt模块
@@ -53,6 +56,7 @@ target_link_libraries(appbili
         Qt6::Quick
         Qt6::Network
         Qt6::Multimedia
+        Qt6::Sql
 )
 
 # 设置平台相关的属性
