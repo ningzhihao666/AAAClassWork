@@ -48,6 +48,8 @@ qt_add_qml_module(appbili
         QML_FILES Message_Page.qml
 SOURCES userinfo.h userinfo.cpp user.h user.cpp databaseuser.h databaseuser.cpp
 QML_FILES db.js
+
+RESOURCES a站需求文档.odt
 )
 
 # 链接必要的Qt模块
