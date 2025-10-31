@@ -31,6 +31,18 @@ qt_add_qml_module(appbili
         ToolBars.qml
         PersonInfo.qml
         Moments.qml
+
+        # Setting_Page/SettingsPage.qml
+        # Setting_Page/AboutSettings.qml
+        # Setting_Page/CacheSettings.qml
+        # Setting_Page/DownloadSettings.qml
+        # Setting_Page/GamepadSettings.qml
+        # Setting_Page/GeneralSettings.qml
+        # Setting_Page/PlaySettings.qml
+        # Setting_Page/PushSettings.qml
+        # Setting_Page/SectionDivider.qml
+        # Setting_Page/ShortcutKey.qml
+
         Send_videos/Video.qml
         Send_videos/VideoLode.qml
         Login/LoginDialog.qml
@@ -38,6 +50,7 @@ qt_add_qml_module(appbili
         Video_Playback/NetworkManager.qml
         Video_Playback/Vedio.qml
         Video_Playback/VedioList.qml
+
     # 将所有资源文件（.qrc）列在一个RESOURCES参数下
     RESOURCES
         Img.qrc
@@ -50,6 +63,16 @@ SOURCES userinfo.h userinfo.cpp user.h user.cpp databaseuser.h databaseuser.cpp
 QML_FILES db.js
 
 RESOURCES a站需求文档.odt
+QML_FILES SettingsPage.qml
+QML_FILES AboutSettings.qml
+QML_FILES CacheSettings.qml
+QML_FILES DownloadSettings.qml
+QML_FILES GamepadSettings.qml
+QML_FILES GeneralSettings.qml
+QML_FILES PlaySettings.qml
+QML_FILES PushSettings.qml
+QML_FILES SectionDivider.qml
+QML_FILES ShortcutKey.qml
 )
 
 # 链接必要的Qt模块

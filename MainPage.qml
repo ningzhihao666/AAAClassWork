@@ -448,6 +448,13 @@ FrameLessWindow {
                             onClicked: {
                                 if(modelData.text==="上传视频") videoUploadPopup.open()
                                 if(modelData.text==="消息") messagePopup.open()
+                                if(modelData.text==="设置"){
+                                    //TODO
+                                    root.showPersonInfo = false
+                                    root.currentLeftMenuItem = "设置"
+                                    settingsLoader.active = true
+                                }
+
                                 root.currentLeftMenuItem = modelData.text
                                 root.showPersonInfo = false
                             }
@@ -562,8 +569,8 @@ FrameLessWindow {
                 id: funcRegion
                 spacing: 10
                 Layout.fillWidth: true
-                visible: !root.showPersonInfo
-
+                // visible: !root.showPersonInfo
+                visible: !root.showPersonInfo && root.currentLeftMenuItem !== "设置"//TODO
                 property real itemWidth: (width - (navRepeater.count - 1) * spacing) / navRepeater.count
 
                 Repeater {
@@ -878,6 +885,14 @@ FrameLessWindow {
                 // 直接设置头像URL，确保同步
                 personInfoLoader.item.setMainAvatarUrl(root.globalAvatarUrl)
             }
+        }
+
+        Loader {//TODO
+            id: settingsLoader
+            anchors.fill: parent
+            visible: root.currentLeftMenuItem === "设置"
+            source: "SettingsPage.qml"
+            active: false
         }
     }
 }
