@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QFile>
+#include <QQmlContext>
 #include "databaseuser.h"
 
 int main(int argc, char *argv[])
@@ -39,6 +40,8 @@ int main(int argc, char *argv[])
 
 
     QQmlApplicationEngine engine;
+    //暴露给qml
+    engine.rootContext()->setContextProperty("databaseUser", db);
 
     // 创建 QProcess 实例来启动 Node.js 服务器
     QProcess *nodeProcess = new QProcess(&app);

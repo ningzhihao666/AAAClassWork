@@ -144,30 +144,18 @@ FrameLessWindow {
         visible: false
     }
 
-    LoginDialog {
-        id: loginDialog
-
-        // 通过内部组件的信号来连接
-        Connections {
-            target: loginDialog.loginDialog // 连接到内部的loginDialog组件
-            onLoginSuccess: {
-                console.log("登录成功:", username, avatarUrl)
-                root.isLoggedIn = true
-                root.username = username
-                root.globalAvatarUrl = avatarUrl
-            }
-
-            onLogout: {
-                console.log("退出登录")
-                root.isLoggedIn = false
-                root.username = ""
-                root.globalAvatarUrl = "https://i0.hdslb.com/bfs/face/member/noface.jpg@40w_40h.webp"
-            }
+    LoginPage {
+        id: loginPage
+        visible: false
+        onLoginSuccess: {
+            root.isLoggedIn = true
+            root.username = username
+            root.globalAvatarUrl = avatarUrl
+            loginPage.close()
         }
     }
-
     function openLoginDialog() {
-        loginDialog.open()
+        loginPage.open()
     }
 
 
@@ -396,14 +384,15 @@ FrameLessWindow {
                             spacing: 2
 
                             Text {
-                                id:username
-                                text: "用户名"
+                                id: usernameText
+                                text: root.isLoggedIn ? root.username : "点击登录"  // 修改这里
                                 font.pixelSize: 14
                                 font.bold: true
+                                color: root.isLoggedIn ? "#333" : "#FB7299"  // 未登录时显示粉色
                             }
 
                             Text {
-                                text: "查看个人主页"
+                                text: root.isLoggedIn ? "查看个人主页" : "立即登录享受更多功能"  // 修改这里
                                 font.pixelSize: 12
                                 color: "#666"
                             }
@@ -412,9 +401,14 @@ FrameLessWindow {
 
                     TapHandler {
                         onTapped: {
-                            console.log("点击用户信息")
-                            root.currentLeftMenuItem = "用户信息"
-                            root.showPersonInfo = true
+                            if (!root.isLoggedIn) {
+                                console.log("用户未登录，打开登录对话框")
+                                root.openLoginDialog()  // 调用登录函数
+                            } else {
+                                console.log("点击用户信息")
+                                root.currentLeftMenuItem = "用户信息"
+                                root.showPersonInfo = true
+                            }
                         }
                     }
                 }

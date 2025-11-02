@@ -11,6 +11,7 @@ class User : public QObject
 {
     Q_OBJECT
     QML_ELEMENT
+    Q_PROPERTY(QString password READ getPassword CONSTANT)  // 添加 password 属性
     Q_PROPERTY(QString nickname READ getNickname WRITE setNickname NOTIFY nicknameChanged)
     Q_PROPERTY(QString account READ getAccount CONSTANT)
     Q_PROPERTY(bool PremiunMembership READ isPremiunMembership NOTIFY isPremiunMembershipChanged)

@@ -35,7 +35,7 @@ qt_add_qml_module(appbili
 
         Send_videos/Video.qml
         Send_videos/VideoLode.qml
-        Login/LoginDialog.qml
+
         Login/LoginPage.qml
         Video_Playback/NetworkManager.qml
         Video_Playback/Vedio.qml

@@ -230,6 +230,22 @@ User* DatabaseUser::jsonToUser(const QJsonObject &json)
 
     return user;
 }
+bool DatabaseUser::registerUser(const QString &username, const QString &phone, const QString &password)
+{
+    // 在 C++ 端创建 User 对象
+    DatabaseUser *db = DatabaseUser::instance();
+    User *newUser = new User(username, phone, password);
+
+    // 将用户添加到数据库或缓存
+    //m_users.insert(phone, newUser);
+    db->AddNetizen(newUser);
+    return true; // 注册成功
+}
+User* DatabaseUser::getuser( const QString& phone){
+    DatabaseUser *db = DatabaseUser::instance();
+    return  getUser(phone);
+}
+
 
 
 

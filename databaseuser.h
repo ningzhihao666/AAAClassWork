@@ -32,6 +32,9 @@ public:
     bool loadFromDatabase();
     bool saveToDatabase();
     bool initDatabase();
+    Q_INVOKABLE bool registerUser(const QString& username, const QString& phone, const QString& password);
+    Q_INVOKABLE User* getuser( const QString& phone);
+
 
     // 基本查询功能
     User* getUser(const QString &account);
