@@ -273,9 +273,9 @@ FrameLessWindow {
                         function getBackgroundColor() {
                             if (root.currentLeftMenuItem === modelData.text) {
                                 return "#e0e0e0"
-                            } else if (tapHandler.pressed) {
+                            } /*else if (tapHandler.pressed) {
                                 return "#d8d8d8"
-                            }
+                            }*/
                             return "transparent"
                         }
 
@@ -298,7 +298,7 @@ FrameLessWindow {
                             }
                         }
 
-                        TapHandler {
+                        /*TapHandler {
                             id: tapHandler
                             acceptedDevices: PointerDevice.Mouse | PointerDevice.Touch
                             gesturePolicy: TapHandler.ReleaseWithinBounds
@@ -315,7 +315,26 @@ FrameLessWindow {
                                     root.currentLeftMenuItem = ""
                                 }
                             }
-                        }
+                        }*/
+                        Button {
+                            anchors.fill: parent
+                            background: Rectangle {
+                                color: "transparent"
+                            }
+
+                            onClicked: {
+                                console.log("点击菜单项:", modelData.text)
+                                root.currentLeftMenuItem = modelData.text
+                                if (modelData.text === "我的") {
+                                    myPagePopup.open()
+                                }
+                                if(modelData.text === "首页"){
+                                    root.showPersonInfo = false
+                                    root.currentLeftMenuItem = ""
+                                }
+                            }
+
+                                }
 
                         Behavior on color {
                             ColorAnimation { duration: 150 }
@@ -473,6 +492,97 @@ FrameLessWindow {
             }
         }
     }
+
+    // 我的页面弹窗
+    Popup {
+        id: myPagePopup
+        width: 1000
+        height: 700
+        x: (parent.width - width) / 2
+        y: (parent.height - height) / 2
+        modal: true
+        focus: true
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+
+        background: Rectangle {
+            color: "#ffffff"  // 先使用固定颜色，确保能显示
+            radius: 8
+            border.color: "#e0e0e0"
+            border.width: 1
+        }
+
+        // 标题栏
+        Rectangle {
+            id: popupHeader
+            width: parent.width
+            height: 50
+            color: "transparent"
+
+            Text {
+                text: "个人中心"
+                font.pixelSize: 18
+                font.bold: true
+                color: "#333333"
+                anchors.left: parent.left
+                anchors.leftMargin: 20
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            // 关闭按钮
+            Button {
+                width: 30
+                height: 30
+                anchors.right: parent.right
+                anchors.rightMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                background: Rectangle {
+                    color: closeBtn.hovered ? "#f0f0f0" : "transparent"
+                    radius: 4
+                }
+                contentItem: Text {
+                    text: "×"
+                    font.pixelSize: 20
+                    color: "#333333"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                onClicked: {
+                    console.log("关闭我的页面弹窗")
+                    myPagePopup.close()
+                }
+            }
+
+            // 分隔线
+            Rectangle {
+                width: parent.width
+                height: 1
+                color: "#e0e0e0"
+                anchors.bottom: parent.bottom
+            }
+        }
+
+        // 内容区域
+        Loader {
+            id: myContentLoader
+            anchors {
+                top: popupHeader.bottom
+                left: parent.left
+                right: parent.right
+                bottom: parent.bottom
+            }
+            source: "My.qml"
+
+            onLoaded: {
+                console.log("我的页面内容加载完成")
+                // 设置主窗口引用
+                if (myContentLoader.item && myContentLoader.item.setMainWindow) {
+                    myContentLoader.item.setMainWindow(root)
+                }
+            }
+        }
+    }
+
     // 视频上传弹窗
     Popup {
        id: videoUploadPopup

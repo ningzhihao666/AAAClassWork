@@ -13,10 +13,10 @@ find_package(Qt6 REQUIRED COMPONENTS Quick Sql)
 # Qt标准项目设置
 qt_standard_project_setup(REQUIRES 6.9)
 
-# 1. 首先创建可执行文件目标
+
 qt_add_executable(appbili)
 
-# 2. 然后正确配置QML模块，将所有资源集中声明
+
 qt_add_qml_module(appbili
     URI bili
     VERSION 1.0
@@ -32,16 +32,6 @@ qt_add_qml_module(appbili
         PersonInfo.qml
         Moments.qml
 
-        # Setting_Page/SettingsPage.qml
-        # Setting_Page/AboutSettings.qml
-        # Setting_Page/CacheSettings.qml
-        # Setting_Page/DownloadSettings.qml
-        # Setting_Page/GamepadSettings.qml
-        # Setting_Page/GeneralSettings.qml
-        # Setting_Page/PlaySettings.qml
-        # Setting_Page/PushSettings.qml
-        # Setting_Page/SectionDivider.qml
-        # Setting_Page/ShortcutKey.qml
 
         Send_videos/Video.qml
         Send_videos/VideoLode.qml
@@ -73,6 +63,7 @@ QML_FILES PlaySettings.qml
 QML_FILES PushSettings.qml
 QML_FILES SectionDivider.qml
 QML_FILES ShortcutKey.qml
+QML_FILES My.qml
 )
 
 # 链接必要的Qt模块

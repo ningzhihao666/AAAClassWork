@@ -10,7 +10,7 @@ class DatabaseManager {
         this.connection = null;
         this.isConnected = false;
         this.server = null;
-        this.port = 3000;
+        this.port = 3001;
     }
 
     // 连接数据库
@@ -24,11 +24,11 @@ class DatabaseManager {
             }
 
             self.connection = mysql.createConnection({
-                host: 'gz-cdb-dc5b0mxb.sql.tencentcdb.com',//云数据库外网地址
+                host: 'cq-cdb-6k0yhvtf.sql.tencentcdb.com',//云数据库外网地址
                 user: 'root',
-                password: 'lsy02282725',
-                database: 'userinfo',
-                port: 27455,
+                password: '12345678n',
+                database: 'user',
+                port: 23082,
                 connectTimeout: 15000,
                 timeout: 15000,
                 charset: 'utf8mb4'

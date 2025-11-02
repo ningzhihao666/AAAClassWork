@@ -45,7 +45,7 @@ private:
 
     // API 客户端功能
     QNetworkAccessManager *m_networkManager;
-    QString m_apiBaseUrl = "http://localhost:3000/api";
+    QString m_apiBaseUrl = "http://localhost:3001/api";
 
     // API 请求方法
     bool checkServerHealth();
