@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QFile>
+#include <QQmlContext>
 #include "databaseuser.h"
 
 int main(int argc, char *argv[])
@@ -90,6 +91,9 @@ int main(int argc, char *argv[])
         }
     }
 
+
+    //暴露给qml文件
+    engine.rootContext()->setContextProperty("databaseUser", db);
     engine.loadFromModule("bili", "Main");
 
     return app.exec();
