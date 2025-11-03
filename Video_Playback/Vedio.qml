@@ -1882,7 +1882,7 @@ FrameLessWindow{
                             {
                                 Layout.leftMargin: 15
                                 Text {
-                                    text: "视频标题"
+                                    text: videoData.title
                                     color:"white"
                                     font.bold: true;
                                     font.pixelSize: 18
@@ -1977,7 +1977,7 @@ FrameLessWindow{
 
                                 // 这里添加展开后的内容
                                 Text {
-                                    text: "这里是展开后的内容"
+                                    text: videoData.description
                                     color: "grey"
                                     }
                         }
@@ -2153,7 +2153,7 @@ FrameLessWindow{
                                                         id:titleText
                                                         Layout.bottomMargin: 10
                                                         Layout.fillWidth: true
-                                                        text: "视频标题"
+                                                        text: videoData.title
                                                         color: "white"
                                                         font.pixelSize: 16
                                                         wrapMode: Text.Wrap    //单词边界换行

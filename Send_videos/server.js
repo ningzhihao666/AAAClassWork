@@ -6,6 +6,7 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const COS = require('cos-nodejs-sdk-v5');//腾讯云对象存储 SDK
+const mysql = require('mysql'); // 添加MySQL模块
 
 //创建 Express应用实例，设置服务端口为 3000
 const app = express();
@@ -15,6 +16,66 @@ const port = 3000;
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
+
+// ==================== 数据库配置 ====================
+//数据库连接配置
+const dbConfig = {
+    host: 'cq-cdb-6k0yhvtf.sql.tencentcdb.com',//云数据库外网地址
+    user: 'root',
+    password: '12345678n',
+    database: 'video_info',
+    port: 23082,
+    connectTimeout: 15000,
+    timeout: 15000,
+    charset: 'utf8mb4'
+};
+
+// 创建数据库连接池
+const dbPool = mysql.createPool({
+    ...dbConfig,
+    connectionLimit: 10, // 连接池大小
+    acquireTimeout: 30000,
+    timeout: 60000 // 查询超时时间
+});
+
+//初始化视频表
+function initVideoTable() {
+    return new Promise((resolve, reject) => {
+        const createTableSQL = `
+        CREATE TABLE IF NOT EXISTS videos (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            video_id VARCHAR(255) UNIQUE NOT NULL,
+            title VARCHAR(500) NOT NULL,
+            description TEXT,
+            video_url TEXT NOT NULL,
+            cover_url TEXT,
+            file_size VARCHAR(50),
+            original_filename TEXT,
+            cos_key VARCHAR(500),
+            duration VARCHAR(20),
+            views INT DEFAULT 0,
+            upload_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX idx_video_id (video_id),
+            INDEX idx_upload_time (upload_time)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        `;
+
+        dbPool.query(createTableSQL, (error, results) => {
+            if (error) {
+                console.error('❌ 创建视频表失败:', error);
+                reject(error);
+            } else {
+                console.log('✅ 视频表初始化完成');
+                resolve(results);
+            }
+        });
+    });
+}
+
+//在应用启动时初始化数据库表
+initVideoTable().catch(console.error);
 
 // 创建上传目录
 const uploadDir = path.join(__dirname, 'uploads');
@@ -55,8 +116,143 @@ const upload = multer({
     }
 });
 
-// 存储视频元数据（在实际项目中应该使用数据库）
+// 存储视频元数据
 let videoMetadata = {};
+
+// ==================== 数据库操作函数 ====================
+// 存储视频元数据到数据库
+function saveVideoToDatabase(videoData) {
+    console.log("进入存储视频元数据到数据库")
+    return new Promise((resolve, reject) => {
+        const sql = `
+        INSERT INTO videos
+        (video_id, title, description, video_url, cover_url, duration, views, file_size, original_filename, cos_key)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+        title = VALUES(title),
+        description = VALUES(description),
+        cover_url = VALUES(cover_url),
+        file_size = VALUES(file_size),
+        updated_at = CURRENT_TIMESTAMP
+        `;
+
+        const params = [
+            videoData.videoId,
+            videoData.title,
+            videoData.description,
+            videoData.videoUrl,
+            videoData.coverUrl,
+            videoData.duration || '00:00',
+            videoData.views || 0,
+            videoData.fileSize || '0MB',
+            videoData.originalFileName || 'unknown',
+            videoData.cosKey || ''
+        ];
+
+        console.log('📝 SQL参数:', params);
+
+        dbPool.query(sql, params, (error, results) => {
+            if (error) {
+                console.error('❌ 保存视频到数据库失败:', error);
+                console.error('❌ 错误详情:', error.code, error.sqlMessage);
+                console.error('❌ 执行的SQL:', sql);
+                reject(error);
+            } else {
+                console.log('✅ 视频数据已保存到数据库');
+                console.log('📋 插入结果:', {
+                    insertId: results.insertId,
+                    affectedRows: results.affectedRows,
+                    changedRows: results.changedRows
+                });
+                resolve(results);
+            }
+        });
+    });
+}
+
+// 从数据库获取视频列表
+function getVideosFromDatabase() {
+    return new Promise((resolve, reject) => {
+        const sql = `
+        SELECT
+        video_id as videoId,
+        title,
+        description,
+        video_url as videoUrl,
+        cover_url as coverUrl,
+        duration,
+        views,
+        file_size as fileSize,
+        original_filename as originalFileName,
+        cos_key as cosKey,
+        upload_time as uploadTime
+        FROM videos
+        ORDER BY upload_time DESC
+        `;
+
+        dbPool.query(sql, (error, results) => {
+            if (error) {
+                console.error('❌ 从数据库获取视频列表失败:', error);
+                reject(error);
+            } else {
+                console.log(`✅ 从数据库获取到 ${results.length} 个视频`);
+                resolve(results);
+            }
+        });
+    });
+}
+
+// 根据videoId获取单个视频信息
+function getVideoFromDatabase(videoId) {
+    return new Promise((resolve, reject) => {
+        const sql = `
+        SELECT
+        video_id as videoId,
+        title,
+        description,
+        video_url as videoUrl,
+        cover_url as coverUrl,
+        duration,
+        views,
+        file_size as fileSize,
+        original_filename as originalFileName,
+        cos_key as cosKey,
+        upload_time as uploadTime
+        FROM videos
+        WHERE video_id = ?
+        `;
+
+        dbPool.query(sql, [videoId], (error, results) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(results.length > 0 ? results[0] : null);
+            }
+        });
+    });
+}
+
+// 更新视频信息（标题、描述等）
+function updateVideoMetadata(videoId, updateData) {
+    return new Promise((resolve, reject) => {
+        const sql = `
+        UPDATE videos
+        SET title = ?, description = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE video_id = ?
+        `;
+
+        dbPool.query(sql, [updateData.title, updateData.description, videoId], (error, results) => {
+            if (error) {
+                console.error('❌ 更新视频信息失败:', error);
+                reject(error);
+            } else {
+                console.log('✅ 视频信息已更新');
+                resolve(results);
+            }
+        });
+    });
+}
+
 
 // ==================== API 路由 ====================
 
@@ -73,28 +269,19 @@ app.get('/api/videos', async (req, res) => {
     console.log('📋 获取视频列表请求');
 
     try {
-        // 从COS获取视频文件列表
-        const videoFiles = await listCOSVideos();
+        // 直接从数据库获取视频列表
+        const videos = await getVideosFromDatabase();
 
-        console.log(`✅ 从COS获取到 ${videoFiles.length} 个视频`);
-
-        res.json({
-            code: 0,
-            message: '获取成功',
-            data: videoFiles
-        });
+        if (videos.length > 0) {
+            console.log(`✅ 从数据库获取到 ${videos.length} 个视频`);
+            return res.json({
+                code: 0,
+                message: '获取成功',
+                data: videos
+            });
+        }
     } catch (error) {
         console.error('❌ 获取视频列表失败:', error);
-
-        // 如果COS获取失败，返回模拟数据
-        const mockVideos = getMockVideos();
-        console.log(`🔄 使用模拟数据: ${mockVideos.length} 个视频`);
-
-        res.json({
-            code: 0,
-            message: '获取成功（模拟数据）',
-            data: mockVideos
-        });
     }
 });
 
@@ -269,8 +456,23 @@ app.post('/api/upload/by-path', (req, res) => {
         // 生成最终的URL
         const videoUrl = `https://${cosConfig.Bucket}.cos.${cosConfig.Region}.myqcloud.com/${videoFileKey}`;
         const coverUrl = `https://${cosConfig.Bucket}.cos.${cosConfig.Region}.myqcloud.com/${coverFileKey}`;
+        // 准备视频数据
+        const videoData = {
+            videoId: 'video_' + timestamp,
+            title: title || '未命名视频',
+            description: description || '暂无描述',
+            videoUrl: videoUrl,
+            coverUrl: coverUrl,
+            fileSize: formatFileSize(fileStats.size),
+            originalFileName: path.basename(filePath),
+            cosKey: videoFileKey, // 存储COS路径
+            duration: getRandomDuration(),
+            views: getRandomViews()
+        };
 
+        saveVideoToDatabase(videoData);
         console.log('✅ 上传成功!');
+        console.log('✅ 上传成功并保存到数据库!');
         console.log('   视频URL:', videoUrl);
         console.log('   封面URL:', coverUrl);
 
