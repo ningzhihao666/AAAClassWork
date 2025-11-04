@@ -25,10 +25,13 @@ public:
     Q_INVOKABLE bool connectToServer(const QString &host, quint16 port = 8080);
     Q_INVOKABLE void disconnectFromServer();
     Q_INVOKABLE void sendToClient(const QString &name, const QString &message);
-    Q_INVOKABLE void setActiveChat(const QString &clientId);
+    Q_INVOKABLE void setActiveChat(const QString &clientName);
     Q_INVOKABLE QString getClientIdByName(const QString &name);
     Q_INVOKABLE void reconnect();
     Q_INVOKABLE void setName(const QString &name);
+    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    Q_INVOKABLE void requestChatHistory(const QString &contactName);
+    Q_INVOKABLE void loadChatHistory(const QString &contactName);
 
     QStringList clientList() const { return m_clientList; }
     QString chatHistory() const { return m_chatHistory; }
@@ -49,6 +52,8 @@ signals:
     void connectionChanged();
     void connectingChanged(bool connecting);
     void connectionError(const QString &errorMessage);
+    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    void historyReceived(const QString &contactName, const QString &history);
 
 private slots:
     void handleDataReceived();

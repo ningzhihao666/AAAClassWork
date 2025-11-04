@@ -6,6 +6,7 @@ ServerHandler::ServerHandler(QObject *parent) : QObject(parent), m_port(0)
 {
     m_server = new QTcpServer(this);
     connect(m_server, &QTcpServer::newConnection, this, &ServerHandler::handleNewConnection);
+     initDatabase();
 }
 
 ServerHandler::~ServerHandler()
@@ -166,11 +167,103 @@ void ServerHandler::handleClientData()
 
             QJsonDocument msgDoc(msgObj);
             sendToClient(to, msgDoc.toJson());
+            //                                    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            //QString to = obj["to"].toString();
+            QString content = obj["content"].toString();
+            QString fromName = obj["name"].toString();
+            // 保存到数据库
+            saveMessageToDatabase(fromName, m_clientMap[to].name, content);
 
             std::cout << "Message from " << fromName.toStdString() << " to " << m_clientMap[to].name.toStdString()
                       << ": " << content.toStdString() << std::endl;
         } else {
             std::cerr << "Attempt to send message to unknown client: " << to.toStdString() << std::endl;
         }
+    } else if (type == "request_history") {//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // 处理客户端请求历史记录
+        QString contactName = obj["contact"].toString();
+        QString currentClientName = m_clientMap[clientId].name;
+
+        // 从数据库查询聊天历史
+        QSqlQuery query;
+        query.prepare("SELECT sender_name, receiver_name, content, timestamp "
+                      "FROM messages "
+                      "WHERE (sender_name = ? AND receiver_name = ?) OR (sender_name = ? AND receiver_name = ?) "
+                      "ORDER BY timestamp ASC");
+        query.addBindValue(currentClientName);
+        query.addBindValue(contactName);
+        query.addBindValue(contactName);
+        query.addBindValue(currentClientName);
+
+        if (query.exec()) {
+            QJsonArray historyArray;
+            while (query.next()) {
+                QJsonObject msgObj;
+                msgObj["sender_name"] = query.value("sender_name").toString();
+                msgObj["receiver_name"] = query.value("receiver_name").toString();
+                msgObj["content"] = query.value("content").toString();
+                msgObj["timestamp"] = query.value("timestamp").toString();
+                historyArray.append(msgObj);
+            }
+
+            // 发送历史记录给客户端
+            QJsonObject responseObj;
+            responseObj["type"] = "chat_history";
+            responseObj["contact"] = contactName;
+            responseObj["history"] = historyArray;
+
+            QJsonDocument doc(responseObj);
+            sendToClient(clientId, doc.toJson());
+
+            std::cout << "Sent chat history to " << currentClientName.toStdString()
+                      << " for contact " << contactName.toStdString()
+                      << " (" << historyArray.size() << " messages)" << std::endl;
+        } else {
+            std::cerr << "Failed to query chat history: " << query.lastError().text().toStdString() << std::endl;
+        }
     }
 }
+
+void ServerHandler::initDatabase()
+{
+    m_db = QSqlDatabase::addDatabase("QMYSQL");
+    m_db.setHostName("cq-cdb-6k0yhvtf.sql.tencentcdb.com");
+    m_db.setDatabaseName("message");
+    m_db.setUserName("root");
+    m_db.setPassword("12345678n");
+    m_db.setPort(23082);
+
+    if (!m_db.open()) {
+        std::cerr << "Database connection failed: " << m_db.lastError().text().toStdString() << std::endl;
+        //return false;
+    }
+
+    // 创建消息表
+    QSqlQuery query;
+    query.exec("CREATE TABLE IF NOT EXISTS messages ("
+               "id BIGINT AUTO_INCREMENT PRIMARY KEY,"
+               "sender_name VARCHAR(255) NOT NULL,"
+               "receiver_name VARCHAR(255) NOT NULL,"
+               "content TEXT NOT NULL,"
+               "timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,"
+               "client_sender_id VARCHAR(255)"
+               ")");
+
+    std::cout << "Database initialized successfully" << std::endl;
+    //return true;
+}
+
+void ServerHandler::saveMessageToDatabase(const QString &from, const QString &to, const QString &content)
+{
+    QSqlQuery query;
+    query.prepare("INSERT INTO messages (sender_name, receiver_name, content) VALUES (?, ?, ?)");
+    query.addBindValue(from);
+    query.addBindValue(to);
+    query.addBindValue(content);
+
+    if (!query.exec()) {
+        std::cerr << "Failed to save message to database: " << query.lastError().text().toStdString() << std::endl;
+    }
+}
+
+

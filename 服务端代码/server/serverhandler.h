@@ -9,6 +9,9 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
+#include <QSqlDatabase>
+#include <QSqlQuery>
+#include <QSqlError>
 struct ClientInfo
 {
     QTcpSocket *socket;
@@ -42,6 +45,12 @@ private slots:
     void handleClientData();
 
 private:
+    // 添加数据库相关成员
+    QSqlDatabase m_db;
+    void initDatabase();
+    void saveMessageToDatabase(const QString &from, const QString &to, const QString &content);
+
+
     QTcpServer *m_server;
     quint16 m_port;
     QMap<QString, ClientInfo> m_clientMap;

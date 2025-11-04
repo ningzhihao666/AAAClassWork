@@ -244,6 +244,26 @@ void ClientHandler::processJson(const QJsonObject &obj)
         QString fromName = obj["name"].toString();
         QString content = obj["content"].toString();
         addChatMessage(fromName + ": " + content);
+    } else if (type == "chat_history") {
+        // 处理服务器返回的聊天历史
+        QString contactName = obj["contact"].toString();
+        QJsonArray history = obj["history"].toArray();
+
+        QString historyText;
+        for (const auto &item : history) {
+            if (item.isObject()) {
+                QJsonObject msgObj = item.toObject();
+                QString timestamp = msgObj["timestamp"].toString();
+                QString sender = msgObj["sender_name"].toString();
+                QString content = msgObj["content"].toString();
+
+                historyText += timestamp + " " + sender + ": " + content + "\n";
+            }
+        }
+
+        m_chatHistory = historyText;
+        emit chatHistoryChanged();
+        emit historyReceived(contactName, historyText);
     }
 }
 
@@ -277,20 +297,50 @@ QString ClientHandler::getClientIdByName(const QString &name)
 
 void ClientHandler::addChatMessage(const QString &message)
 {
+    /*if (!message.trimmed().isEmpty()) {
+        QString timestamp = QDateTime::currentDateTime().toString("[hh:mm:ss] ");
+        m_chatHistory += timestamp + message + "\n";
+        emit chatHistoryChanged();
+    }*/
     QString timestamp = QDateTime::currentDateTime().toString("[hh:mm:ss] ");
     m_chatHistory += timestamp + message + "\n";
     emit chatHistoryChanged();
 }
 
-void ClientHandler::setActiveChat(const QString &clientId)
+void ClientHandler::setActiveChat(const QString &clientName) //原来是id！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
 {
-    // 这里可以添加设置活动聊天的逻辑
-    // 例如：m_activeChat = clientId;
 
     // 清空聊天历史
     m_chatHistory = "";
     emit chatHistoryChanged();
+    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // 加载与该联系人的历史消息
+    if (!clientName.isEmpty()) {
+        loadChatHistory(clientName);
+    }
+}
 
-    // 如果需要，可以在这里请求该聊天对象的历史消息
-    // requestChatHistory(clientId);
+
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+void ClientHandler::requestChatHistory(const QString &contactName)
+{
+    if (!isConnected()) {
+        addChatMessage("Not connected to server");
+        return;
+    }
+
+    QJsonObject obj;
+    obj["type"] = "request_history";
+    obj["contact"] = contactName;
+    m_socket->write(QJsonDocument(obj).toJson());
+}
+
+void ClientHandler::loadChatHistory(const QString &contactName)
+{
+    // 清空当前聊天记录，准备加载历史记录
+    m_chatHistory = "";
+    emit chatHistoryChanged();
+
+    // 请求服务器发送该联系人的历史记录
+    requestChatHistory(contactName);
 }

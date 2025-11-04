@@ -19,9 +19,13 @@ public:
 public slots:
     void addMessage(const QString &msg);
 
+    void onHistoryReceived(const QString &contactName, const QString &history);//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 signals:
     void messageChanged();
     void serverInfoChanged();
+
+    void historyReceived(const QString &contactName, const QString &history);//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 private:
     ClientHandler m_clientHandler;

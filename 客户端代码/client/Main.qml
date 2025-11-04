@@ -150,7 +150,13 @@ ApplicationWindow {
                         width: ListView.view.width
                         text: modelData
                         highlighted: modelData === activeChatTarget
-                        onClicked: activeChatTarget = modelData
+                        onClicked: {
+                            activeChatTarget = modelData
+
+                             //!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                            // 加载与该联系人的聊天历史
+                            msgHandler.clientHandler.setActiveChat(modelData)
+                        }
                     }
                     ScrollBar.vertical: ScrollBar {}
                 }
@@ -293,6 +299,32 @@ ApplicationWindow {
         function onConnectionError(errorMessage) {
             errorMessageLabel.text = errorMessage
             reconnectDialog.open()
+        }
+    }
+
+    // 在连接成功后自动加载聊天历史（如果有活动聊天对象）!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    Connections {
+        target: msgHandler.clientHandler
+        function onConnected() {
+            console.log("连接成功，检查是否需要加载历史记录")
+            if (activeChatTarget) {
+                // 延迟一下，确保客户端列表已经更新
+                Qt.callLater(function() {
+                    msgHandler.clientHandler.setActiveChat(activeChatTarget)
+                })
+            }
+        }
+    }
+
+    // 监听历史记录接收信号!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    Connections {
+        target: msgHandler.clientHandler
+        function onHistoryReceived(contactName, history) {
+            console.log("收到", contactName, "的历史记录，消息数量:", history.split('\n').length - 1)
+            // 如果当前活动聊天对象匹配，则更新显示
+            if (contactName === activeChatTarget) {
+                // 聊天记录会自动通过 chatHistory 属性更新
+            }
         }
     }
 

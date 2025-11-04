@@ -8,6 +8,8 @@ ClientMessageHandler::ClientMessageHandler(QObject *parent) : QObject(parent)
     connect(&m_clientHandler, &ClientHandler::connected, this, [this]() { addMessage("Connected to server"); });
     connect(&m_clientHandler, &ClientHandler::disconnected, this, [this]() { addMessage("Disconnected from server"); });
 
+    connect(&m_clientHandler, &ClientHandler::historyReceived, this, &ClientMessageHandler::onHistoryReceived);//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
     updateHostInfo();
 }
 
@@ -22,3 +24,8 @@ void ClientMessageHandler::updateHostInfo()
     m_hostname = QHostInfo::localHostName();
     emit serverInfoChanged();
 }
+
+void ClientMessageHandler::onHistoryReceived(const QString &contactName, const QString &history)
+{
+    emit historyReceived(contactName, history);
+}//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

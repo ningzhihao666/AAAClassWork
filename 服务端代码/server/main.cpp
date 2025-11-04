@@ -3,10 +3,16 @@
 #include <QNetworkInterface>
 #include <iostream>
 #include "serverhandler.h"
+#include <QDir>
+#include <QPluginLoader>
 
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
+
+    //app.addLibraryPath("./plugins");
+    //app.addLibraryPath("./sqldrivers");
+
 
     // 设置应用程序元数据
     app.setApplicationName("AppSocket Server");
@@ -44,7 +50,7 @@ int main(int argc, char *argv[])
     }
 
     // 启动服务
-    ServerHandler server;
+    /*ServerHandler server;
     if (server.startServer(port)) {
         std::cout << "Server started on port " << port << std::endl;
         std::cout << "Press Ctrl+C to stop" << std::endl;
@@ -52,5 +58,19 @@ int main(int argc, char *argv[])
     } else {
         std::cerr << "Failed to start server" << std::endl;
         return 1;
+    }*/
+
+    // 尝试多个端口启动服务器
+    ServerHandler server;
+    for (quint16 tryPort = port; tryPort < port + 10; ++tryPort) {
+        if (server.startServer(tryPort)) {
+            std::cout << "Server started successfully on port " << tryPort << std::endl;
+            std::cout << "Press Ctrl+C to stop" << std::endl;
+            return app.exec();
+        } else {
+            //std::cout << "Port " << tryPort << " is busy, trying next port..." << std::endl;
+        }
     }
+
+    //std::cerr << "Failed to start server on any port from " << port << " to " << (port + 9) << std::endl;
 }
