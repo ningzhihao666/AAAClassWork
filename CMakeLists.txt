@@ -64,6 +64,7 @@ QML_FILES PushSettings.qml
 QML_FILES SectionDivider.qml
 QML_FILES ShortcutKey.qml
 QML_FILES My.qml
+QML_FILES Dynamic.qml
 )
 
 # 链接必要的Qt模块

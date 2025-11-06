@@ -320,6 +320,7 @@ FrameLessWindow {
                                     root.showPersonInfo = false
                                     root.currentLeftMenuItem = ""
                                 }
+                                if(modelData.text==="动态") dynamicUploadPopup.active=true
                             }
 
                                 }
@@ -461,6 +462,7 @@ FrameLessWindow {
                             onClicked: {
                                 if(modelData.text==="上传视频") videoUploadPopup.open()
                                 if(modelData.text==="消息") messagePopup.open()
+
                                 if(modelData.text==="设置"){
                                     //TODO
                                     root.showPersonInfo = false
@@ -473,9 +475,11 @@ FrameLessWindow {
                             }
                         }
 
+
                         Behavior on color {
                             ColorAnimation { duration: 150 }
                         }
+
                     }
                 }
             }
@@ -639,6 +643,36 @@ FrameLessWindow {
             messagePopup.x = (Screen.width - width) / 2
             messagePopup.y = (Screen.height - height) / 2
         }
+    }
+    // 视频上传弹窗
+    // Popup {
+    //    // id: dynamicUploadPopup
+    //    width: 800
+    //    height: 600
+    //    x: (parent.width - width) / 2
+    //    y: (parent.height - height) / 2
+    //    modal: true
+    //    focus: true
+    //    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+
+       Loader {
+           id: dynamicUploadPopup
+           anchors.fill: parent
+           source: "Dynamic.qml"
+           active:false
+           onLoaded: {
+               if (item && item.closeRequested) {
+                   item.closeRequested.connect(function() {
+                       dynamicUploadPopup.close()
+                   })
+               }
+           }
+           function open() {
+               dynamicUploadPopup.show()
+               // dynamicUploadPopup.x = (Screen.width - width) / 2
+               // dynamicUploadPopup.y = (Screen.height - height) / 2
+           }
+       // }
     }
 
     // 顶部区域
@@ -999,4 +1033,5 @@ FrameLessWindow {
             active: false
         }
     }
+
 }
