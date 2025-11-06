@@ -9,7 +9,46 @@ Item {
     width: 1200
     height: 800
 
+    property string activeChatTarget: ""
+    property bool connected: msgHandler && msgHandler.clientHandler ?
+                              msgHandler.clientHandler.connected : false
+    property bool connecting: msgHandler && msgHandler.clientHandler ?
+                               msgHandler.clientHandler.connecting : false
+
     signal closeRequested()
+
+
+    //自动连接
+    Component.onCompleted: {
+         if (msgHandler && msgHandler.clientHandler) {
+             generateRandomUsername()
+             autoConnectToServer()
+         } else {
+             console.error("msgHandler is not available")
+         }
+     }
+
+        // 生成随机用户名
+        function generateRandomUsername() {
+            var adjectives = ["快乐的", "聪明的", "勇敢的", "优雅的", "神秘的", "热情的", "冷静的", "活泼的"]
+            var nouns = ["熊猫", "狮子", "海豚", "老鹰", "狐狸", "鲸鱼", "蝴蝶", "猎豹"]
+            var randomAdj = adjectives[Math.floor(Math.random() * adjectives.length)]
+            var randomNoun = nouns[Math.floor(Math.random() * nouns.length)]
+            var randomNum = Math.floor(Math.random() * 1000)
+            var randomName = randomAdj + randomNoun + randomNum
+
+            msgHandler.clientHandler.setName(randomName)
+            console.log("生成随机用户名:", randomName)
+        }
+
+        // 自动连接到服务器
+        function autoConnectToServer() {
+            var serverAddress = "49.232.73.239" // 默认服务器地址
+            var serverPort = 8080
+
+            console.log("尝试自动连接到服务器:", serverAddress + ":" + serverPort)
+            msgHandler.clientHandler.connectToServer(serverAddress, serverPort)
+        }
 
     RowLayout {
         anchors.fill: parent
@@ -142,247 +181,433 @@ Item {
             }
         }
 
-        // 右侧内容区域
-        Rectangle {
-            id: rightContent
-            Layout.preferredWidth: 1000
-            Layout.fillHeight: true
-            visible: true
-            color: "#ffffff"
-
-            ColumnLayout {
-                anchors.fill: parent
-                spacing: 0
-
-                // 顶部标题栏
+        // 右侧内容区域 - 集成聊天功能
                 Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 60
-                    color: "#f5f5f5"
-                    border.color: "#e0e0e0"
-                    border.width: 1
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "我的消息"
-                        font.bold: true
-                        font.pixelSize: 18
-                        color: "#333333"
-                    }
-                }
-
-                // 主要内容区域
-                RowLayout {
-                    Layout.fillWidth: true
+                    id: rightContent
+                    Layout.preferredWidth: 1000
                     Layout.fillHeight: true
-                    spacing: 0
+                    visible: true
+                    color: "#ffffff"
 
-                    // 左侧联系人列表
-                    Rectangle {
-                        Layout.preferredWidth: 250
-                        Layout.fillHeight: true
-                        color: "#fafafa"
-                        border.color: "#e0e0e0"
-                        border.width: 1
+                    property string activeChatTarget: ""
+                    property bool connected: msgHandler.clientHandler.connected
+                    property bool connecting: msgHandler.clientHandler.connecting
 
-                        ColumnLayout {
-                            anchors.fill: parent
-                            spacing: 0
+                    ColumnLayout {
+                        anchors.fill: parent
+                        spacing: 0
 
-                            // 联系人列表标题
-                            Rectangle {
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: 50
-                                color: "#f0f0f0"
+                        // 顶部状态栏
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 50
+                            color: "#f5f5f5"
+                            border.color: "#e0e0e0"
+                            border.width: 1
 
-                                Text {
-                                    anchors.left: parent.left
-                                    anchors.leftMargin: 15
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: "消息列表"
-                                    font.bold: true
-                                    font.pixelSize: 16
-                                    color: "#333333"
-                                }
-                            }
+                            RowLayout {
+                                anchors.fill: parent
+                                spacing: 15
+                                anchors.margins: 10
 
-                            // 联系人列表
-                            ListView {
-                                id: contactList
-                                Layout.fillWidth: true
-                                Layout.fillHeight: true
-                                model: ListModel {
-                                    ListElement { name: "张三"; avatar: "👦"; lastMessage: "你好，最近怎么样？" }
-                                    ListElement { name: "李四"; avatar: "👧"; lastMessage: "项目进展如何？" }
-                                    ListElement { name: "王五"; avatar: "👨"; lastMessage: "晚上一起吃饭吗？" }
-                                    ListElement { name: "赵六"; avatar: "👩"; lastMessage: "会议资料已发送" }
-                                }
-                                currentIndex: 0  // 默认选中第一个联系人
-                                delegate: Rectangle {
-                                    width: contactList.width
-                                    height: 70
-                                    color: contactList.currentIndex === index ? "#e3f2fd" : "transparent"
-                                    border.color: "#f0f0f0"
-                                    border.width: 1
+                                // 连接状态指示器
+                                Rectangle {
+                                    Layout.preferredWidth: 120
+                                    Layout.preferredHeight: 30
+                                    radius: 15
+                                    color: {
+                                        if (rightContent.connecting) return "#f39c12"
+                                        else if (rightContent.connected) return "#2ecc71"
+                                        else return "#e74c3c"
+                                    }
 
                                     RowLayout {
-                                        anchors.fill: parent
-                                        anchors.margins: 10
-                                        spacing: 10
+                                        anchors.centerIn: parent
+                                        spacing: 5
 
-                                        // 用户头像
-                                        Rectangle {
-                                            Layout.preferredWidth: 40
-                                            Layout.preferredHeight: 40
-                                            radius: 20
-                                            color: "#e3f2fd"
-
-                                            Text {
-                                                anchors.centerIn: parent
-                                                text: avatar
-                                                font.pixelSize: 18
+                                        Text {
+                                            text: {
+                                                if (rightContent.connecting) return "🔄"
+                                                else if (rightContent.connected) return "✅"
+                                                else return "❌"
                                             }
+                                            font.pixelSize: 12
+                                            color: "white"
                                         }
 
-                                        // 用户信息
-                                        ColumnLayout {
-                                            Layout.fillWidth: true
-                                            Layout.fillHeight: true
-                                            spacing: 4
-
-                                            Text {
-                                                text: name
-                                                font.bold: true
-                                                font.pixelSize: 14
-                                                color: "#333333"
-                                                Layout.fillWidth: true
-                                                elide: Text.ElideRight
+                                        Text {
+                                            text: {
+                                                if (rightContent.connecting) return "连接中"
+                                                else if (rightContent.connected) return "已连接"
+                                                else return "未连接"
                                             }
-
-                                            Text {
-                                                text: lastMessage
-                                                font.pixelSize: 12
-                                                color: "#666666"
-                                                Layout.fillWidth: true
-                                                elide: Text.ElideRight
-                                            }
+                                            font.bold: true
+                                            font.pixelSize: 12
+                                            color: "white"
                                         }
                                     }
 
                                     MouseArea {
                                         anchors.fill: parent
                                         onClicked: {
-                                            contactList.currentIndex = index
-                                            chatArea.visible = true
+                                            if (!rightContent.connected && !rightContent.connecting) {
+                                                autoConnectToServer()
+                                            }
                                         }
                                     }
                                 }
 
-                                // 组件加载完成后自动显示聊天区域
-                                Component.onCompleted: {
-                                    if (count > 0) {
-                                        chatArea.visible = true
+                                // 当前用户信息
+                                Text {
+                                    text: "用户: " + msgHandler.clientHandler.name
+                                    font.pixelSize: 14
+                                    color: "#666666"
+                                }
+
+                                // 服务器信息
+                                Text {
+                                    text: "服务器: " + (msgHandler.clientHandler.connected ?
+                                        (msgHandler.clientHandler.serverIp + ":" + msgHandler.clientHandler.serverPort) : "未连接")
+                                    font.pixelSize: 14
+                                    color: "#666666"
+                                }
+
+                                Item { Layout.fillWidth: true } // 占位
+
+                                // 手动连接按钮
+                                Button {
+                                    text: rightContent.connected ? "已连接" : "重新连接"
+                                    enabled: !rightContent.connecting
+                                    onClicked: {
+                                        if (!rightContent.connected) {
+                                            autoConnectToServer()
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
 
-                    // 右侧聊天区域
-                    Rectangle {
-                        id: chatArea
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        visible: true
-                        color: "#ffffff"
-
-                        ColumnLayout {
-                            anchors.fill: parent
+                        // 主要内容区域
+                        RowLayout {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
                             spacing: 0
 
-                            // 聊天标题栏
+                            // 左侧联系人列表
                             Rectangle {
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: 60
-                                color: "#f8f9fa"
+                                Layout.preferredWidth: 300
+                                Layout.fillHeight: true
+                                color: "#fafafa"
                                 border.color: "#e0e0e0"
                                 border.width: 1
 
-                                RowLayout {
+                                ColumnLayout {
                                     anchors.fill: parent
-                                    anchors.margins: 10
-                                    spacing: 10
+                                    spacing: 0
 
-                                    Text {
-                                        text: contactList.currentIndex >= 0 ? contactList.model.get(contactList.currentIndex).avatar : "👦"
-                                        font.pixelSize: 20
-                                    }
-
-                                    Text {
-                                        text: contactList.currentIndex >= 0 ? contactList.model.get(contactList.currentIndex).name : "用户名"
-                                        font.bold: true
-                                        font.pixelSize: 16
+                                    // 联系人列表标题
+                                    Rectangle {
                                         Layout.fillWidth: true
-                                    }
-                                }
-                            }
+                                        Layout.preferredHeight: 50
+                                        color: "#f0f0f0"
 
-                            // 聊天消息区域
-                            ScrollView {
-                                Layout.fillWidth: true
-                                Layout.fillHeight: true
-                                background: Rectangle { color: "#f5f5f5" }
+                                        RowLayout {
+                                            anchors.fill: parent
+                                            spacing: 10
+                                            anchors.margins: 10
 
-                                TextArea {
-                                    id: messageDisplay
-                                    readOnly: true
-                                    text: {
-                                        if (contactList.currentIndex >= 0) {
-                                            var contactName = contactList.model.get(contactList.currentIndex).name
-                                            return "与 " + contactName + " 的对话\n\n" +
-                                                   contactName + ": " + contactList.model.get(contactList.currentIndex).lastMessage + "\n" +
-                                                   "我: 你好！"
-                                        } else {
-                                            return "这里是聊天消息区域\n\n点击左侧联系人开始聊天"
+                                            Text {
+                                                text: "在线用户 (" + msgHandler.clientHandler.clientList.length + ")"
+                                                font.bold: true
+                                                font.pixelSize: 16
+                                                color: "#333333"
+                                                Layout.fillWidth: true
+                                            }
+
+                                            Button {
+                                                text: "刷新"
+                                                flat: true
+                                                onClicked: {
+                                                    // 刷新联系人列表
+                                                }
+                                            }
                                         }
                                     }
-                                    wrapMode: TextArea.Wrap
-                                    background: null
-                                    font.pixelSize: 14
-                                    color: "#333333"
+
+                                    // 联系人列表
+                                    ListView {
+                                        id: contactListView
+                                        Layout.fillWidth: true
+                                        Layout.fillHeight: true
+                                        model: msgHandler.clientHandler.clientList
+                                        clip: true
+
+                                        delegate: Rectangle {
+                                            width: contactListView.width
+                                            height: 70
+                                            color: contactListView.currentIndex === index ? "#e3f2fd" :
+                                                   (modelData === rightContent.activeChatTarget ? "#e8f5e9" : "transparent")
+                                            border.color: "#f0f0f0"
+                                            border.width: 1
+
+                                            RowLayout {
+                                                anchors.fill: parent
+                                                anchors.margins: 10
+                                                spacing: 10
+
+                                                // 用户头像
+                                                Rectangle {
+                                                    Layout.preferredWidth: 40
+                                                    Layout.preferredHeight: 40
+                                                    radius: 20
+                                                    color: "#" + Math.floor(Math.random()*16777215).toString(16)
+
+                                                    Text {
+                                                        anchors.centerIn: parent
+                                                        text: modelData ? modelData.charAt(0) : "?"
+                                                        font.pixelSize: 16
+                                                        color: "white"
+                                                        font.bold: true
+                                                    }
+                                                }
+
+                                                // 用户信息
+                                                ColumnLayout {
+                                                    Layout.fillWidth: true
+                                                    Layout.fillHeight: true
+                                                    spacing: 4
+
+                                                    Text {
+                                                        text: modelData
+                                                        font.bold: true
+                                                        font.pixelSize: 14
+                                                        color: "#333333"
+                                                        Layout.fillWidth: true
+                                                        elide: Text.ElideRight
+                                                    }
+
+                                                    Text {
+                                                        text: "在线"
+                                                        font.pixelSize: 12
+                                                        color: "#2ecc71"
+                                                    }
+                                                }
+                                            }
+
+                                            MouseArea {
+                                                anchors.fill: parent
+                                                onClicked: {
+                                                    contactListView.currentIndex = index
+                                                    rightContent.activeChatTarget = modelData
+                                                    msgHandler.clientHandler.setActiveChat(modelData)
+                                                }
+                                            }
+                                        }
+
+                                        // 空白状态提示
+                                        Rectangle {
+                                            visible: contactListView.count === 0
+                                            anchors.centerIn: parent
+                                            width: 200
+                                            height: 100
+                                            color: "transparent"
+
+                                            ColumnLayout {
+                                                anchors.centerIn: parent
+                                                spacing: 10
+
+                                                Text {
+                                                    text: "暂无在线用户"
+                                                    font.pixelSize: 14
+                                                    color: "#999999"
+                                                    Layout.alignment: Qt.AlignHCenter
+                                                }
+
+                                                Text {
+                                                    text: "等待其他用户加入..."
+                                                    font.pixelSize: 12
+                                                    color: "#cccccc"
+                                                    Layout.alignment: Qt.AlignHCenter
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
 
-                            // 消息输入区域
+                            // 右侧聊天区域
                             Rectangle {
+                                id: chatArea
                                 Layout.fillWidth: true
-                                Layout.preferredHeight: 80
+                                Layout.fillHeight: true
+                                visible: true
                                 color: "#ffffff"
-                                border.color: "#e0e0e0"
-                                border.width: 1
 
-                                RowLayout {
+                                ColumnLayout {
                                     anchors.fill: parent
-                                    anchors.margins: 10
-                                    spacing: 10
+                                    spacing: 0
 
-                                    TextField {
-                                        id: messageInput
+                                    // 聊天标题栏
+                                    Rectangle {
                                         Layout.fillWidth: true
-                                        Layout.fillHeight: true
-                                        placeholderText: "输入消息..."
-                                        font.pixelSize: 14
+                                        Layout.preferredHeight: 60
+                                        color: "#f8f9fa"
+                                        border.color: "#e0e0e0"
+                                        border.width: 1
+
+                                        RowLayout {
+                                            anchors.fill: parent
+                                            anchors.margins: 15
+                                            spacing: 10
+
+                                            Text {
+                                                text: rightContent.activeChatTarget ? "💬 与 " + rightContent.activeChatTarget + " 的对话" : "💬 选择联系人开始聊天"
+                                                font.bold: true
+                                                font.pixelSize: 16
+                                                Layout.fillWidth: true
+                                            }
+
+                                            // 聊天操作按钮
+                                            RowLayout {
+                                                spacing: 5
+                                                visible: rightContent.activeChatTarget
+
+                                                Button {
+                                                    text: "清除记录"
+                                                    flat: true
+                                                    onClicked: {
+                                                        msgHandler.clientHandler.chatHistory = ""
+                                                    }
+                                                }
+
+                                                Button {
+                                                    text: "历史记录"
+                                                    flat: true
+                                                    onClicked: {
+                                                        if (rightContent.activeChatTarget) {
+                                                            msgHandler.clientHandler.loadChatHistory(rightContent.activeChatTarget)
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
 
-                                    Button {
-                                        text: "发送"
-                                        Layout.preferredHeight: 40
-                                        Layout.preferredWidth: 80
-                                        onClicked: {
-                                            if (messageInput.text.trim() !== "") {
-                                                var currentTime = new Date().toLocaleTimeString()
-                                                messageDisplay.text += "\n[" + currentTime + "] 我: " + messageInput.text
-                                                messageInput.text = ""
+                                    // 聊天消息区域
+                                    ScrollView {
+                                        id: chatScrollView
+                                        Layout.fillWidth: true
+                                        Layout.fillHeight: true
+                                        background: Rectangle { color: "#f5f5f5" }
+
+                                        TextArea {
+                                            id: messageDisplay
+                                            readOnly: true
+                                            text: msgHandler.clientHandler.chatHistory ||
+                                                  (rightContent.activeChatTarget ?
+                                                   "与 " + rightContent.activeChatTarget + " 的对话\n\n等待消息..." :
+                                                   "欢迎使用聊天功能！\n\n请从左侧选择一个联系人开始聊天。")
+                                            wrapMode: TextArea.Wrap
+                                            background: null
+                                            font.pixelSize: 14
+                                            color: "#333333"
+                                            textFormat: Text.PlainText
+
+                                            // 自动滚动到底部
+                                            onTextChanged: {
+                                                if (msgHandler.clientHandler.chatHistory) {
+                                                    chatScrollView.ScrollBar.vertical.position = 1.0
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // 消息输入区域
+                                    Rectangle {
+                                        Layout.fillWidth: true
+                                        Layout.preferredHeight: 80
+                                        color: "#ffffff"
+                                        border.color: "#e0e0e0"
+                                        border.width: 1
+                                        visible: rightContent.activeChatTarget && rightContent.connected
+
+                                        RowLayout {
+                                            anchors.fill: parent
+                                            anchors.margins: 15
+                                            spacing: 10
+
+                                            TextField {
+                                                id: messageInput
+                                                Layout.fillWidth: true
+                                                Layout.fillHeight: true
+                                                placeholderText: "输入消息..."
+                                                font.pixelSize: 14
+                                                selectByMouse: true
+
+                                                onAccepted: {
+                                                    if (rightContent.activeChatTarget && text.trim() !== "") {
+                                                        msgHandler.clientHandler.sendToClient(rightContent.activeChatTarget, text.trim())
+                                                        messageInput.clear()
+                                                    }
+                                                }
+                                            }
+
+                                            Button {
+                                                text: "发送"
+                                                Layout.preferredHeight: 40
+                                                Layout.preferredWidth: 80
+                                                enabled: messageInput.text.trim() !== "" && rightContent.connected
+                                                onClicked: {
+                                                    if (rightContent.activeChatTarget && messageInput.text.trim() !== "") {
+                                                        msgHandler.clientHandler.sendToClient(rightContent.activeChatTarget, messageInput.text.trim())
+                                                        messageInput.clear()
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // 未选择联系人或未连接提示
+                                    Rectangle {
+                                        Layout.fillWidth: true
+                                        Layout.fillHeight: true
+                                        visible: !rightContent.activeChatTarget || !rightContent.connected
+                                        color: "#fafafa"
+
+                                        ColumnLayout {
+                                            anchors.centerIn: parent
+                                            spacing: 20
+                                            width: parent.width * 0.6
+
+                                            Text {
+                                                text: {
+                                                    if (!rightContent.connected) return "尚未连接到服务器"
+                                                    else if (!rightContent.activeChatTarget) return "请选择聊天对象"
+                                                    else return "准备聊天"
+                                                }
+                                                font.pixelSize: 16
+                                                color: "#666666"
+                                                Layout.alignment: Qt.AlignHCenter
+                                            }
+
+                                            Text {
+                                                text: {
+                                                    if (!rightContent.connected) return "点击顶部\"重新连接\"按钮连接到聊天服务器"
+                                                    else if (!rightContent.activeChatTarget) return "从左侧用户列表中选择一个联系人开始聊天"
+                                                    else return "可以在下方输入框中输入消息"
+                                                }
+                                                font.pixelSize: 14
+                                                color: "#999999"
+                                                Layout.alignment: Qt.AlignHCenter
+                                                wrapMode: Text.Wrap
+                                                horizontalAlignment: Text.AlignHCenter
+                                            }
+
+                                            Button {
+                                                text: "重新连接"
+                                                visible: !rightContent.connected
+                                                Layout.alignment: Qt.AlignHCenter
+                                                onClicked: autoConnectToServer()
                                             }
                                         }
                                     }
@@ -391,8 +616,6 @@ Item {
                         }
                     }
                 }
-            }
-        }
 
         // === 新增：回复我的内容区域 ===
         Rectangle {
@@ -2350,6 +2573,99 @@ Item {
                     }
                 }
             }
+        }
+    }
+
+    // 错误重连弹窗
+       Dialog {
+           id: reconnectDialog
+           title: "连接失败"
+           modal: true
+           standardButtons: Dialog.Retry | Dialog.Cancel
+           closePolicy: Popup.NoAutoClose
+           width: 400
+           x: (parent.width - width) / 2
+           y: (parent.height - height) / 2
+
+           ColumnLayout {
+               width: parent.width
+               spacing: 10
+
+               Label {
+                   text: "⚠️ 无法连接到服务器"
+                   font.bold: true
+                   Layout.fillWidth: true
+               }
+
+               Label {
+                   id: errorMessageLabel
+                   text: "连接服务器时出现错误"
+                   wrapMode: Text.Wrap
+                   Layout.fillWidth: true
+               }
+
+               Label {
+                   text: "是否尝试重新连接？"
+                   color: "gray"
+                   Layout.fillWidth: true
+               }
+           }
+
+           onAccepted: {
+               msgHandler.clientHandler.reconnect()
+           }
+
+           onRejected: {
+               reconnectDialog.close()
+           }
+       }
+
+    // 监听C++信号
+    Connections {
+        target: msgHandler.clientHandler
+        function onConnectionError(errorMessage) {
+            errorMessageLabel.text = errorMessage
+            reconnectDialog.open()
+        }
+    }
+
+    Connections {
+        target: msgHandler.clientHandler
+        function onConnected() {
+            console.log("连接成功，当前用户:", msgHandler.clientHandler.name)
+        }
+    }
+
+    Connections {
+        target: msgHandler.clientHandler
+        function onClientListChanged() {
+            console.log("客户端列表更新，在线用户:", msgHandler.clientHandler.clientList.length)
+        }
+    }
+
+    Connections {
+        target: msgHandler.clientHandler
+        function onNewMessage(message) {
+            console.log("收到新消息:", message)
+        }
+    }
+
+    Connections {
+        target: msgHandler.clientHandler
+        function onHistoryReceived(contactName, history) {
+            console.log("收到", contactName, "的历史记录")
+            if (contactName === rightContent.activeChatTarget) {
+                // 聊天记录会自动通过 chatHistory 属性更新
+            }
+        }
+    }
+    Connections {
+        target: msgHandler.clientHandler
+        function onConnected() {
+            console.log("连接成功")
+        }
+        function onConnectionError(errorMessage) {
+            console.log("连接错误:", errorMessage)
         }
     }
 }

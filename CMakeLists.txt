@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.1.1)
+cmake_minimum_required(VERSION 3.9)
 
 project(bili VERSION 0.1 LANGUAGES CXX)
 
@@ -65,6 +65,10 @@ QML_FILES SectionDivider.qml
 QML_FILES ShortcutKey.qml
 QML_FILES My.qml
 QML_FILES Dynamic.qml
+SOURCES clienthandler.cpp
+SOURCES clientmessagehandler.h
+SOURCES clientmessagehandler.cpp
+SOURCES clienthandler.h
 )
 
 # 链接必要的Qt模块
