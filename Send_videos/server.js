@@ -20,11 +20,11 @@ app.use('/uploads', express.static('uploads'));
 // ==================== 数据库配置 ====================
 //数据库连接配置
 const dbConfig = {
-    host: 'cq-cdb-6k0yhvtf.sql.tencentcdb.com',//云数据库外网地址
+    host: 'cq-cdb-rqdliqih.sql.tencentcdb.com',//云数据库外网地址
     user: 'root',
     password: '12345678n',
     database: 'video_info',
-    port: 23082,
+    port: 27193,
     connectTimeout: 15000,
     timeout: 15000,
     charset: 'utf8mb4'
@@ -597,6 +597,162 @@ app.post('/api/upload/complete', upload.single('file'), (req, res) => {
         });
     });
 });
+// 测试API
+app.get('/api/test-db', (req, res) => {
+    console.log('🧪 测试数据库连接...');
+
+    // 测试基本连接
+    dbPool.query('SELECT 1 as test', (error, results) => {
+        if (error) {
+            console.error('❌ 数据库连接失败:', error);
+            return res.json({
+                code: 1,
+                message: '数据库连接失败',
+                error: error.message
+            });
+        }
+
+        console.log('✅ 数据库连接正常');
+
+        // 测试查询videos表
+        dbPool.query('SELECT COUNT(*) as count FROM videos', (countError, countResult) => {
+            if (countError) {
+                console.error('❌ 查询videos表失败:', countError);
+                return res.json({
+                    code: 1,
+                    message: '查询videos表失败',
+                    error: countError.message
+                });
+            }
+
+            const totalCount = countResult[0].count;
+            console.log(`📊 videos表中共有 ${totalCount} 条记录`);
+
+            // 查询前几条数据
+            dbPool.query('SELECT title FROM videos LIMIT 5', (sampleError, sampleResult) => {
+                if (sampleError) {
+                    console.error('❌ 查询示例数据失败:', sampleError);
+                } else {
+                    console.log('📋 前5条标题:', sampleResult);
+                }
+
+                res.json({
+                    code: 0,
+                    message: '数据库测试完成',
+                    data: {
+                        totalCount: totalCount,
+                        sampleTitles: sampleResult || []
+                    }
+                });
+            });
+        });
+    });
+});
+
+// 在 ==================== API 路由 ==================== 部分添加
+
+// 5. 搜索视频API - 根据标题关键词搜索
+app.get('/api/videos/search', async (req, res) => {  // ← 添加 async
+    const keyword = req.query.keyword;
+
+    if (!keyword) {
+        return res.status(400).json({
+            code: 1,
+            message: '搜索关键词不能为空'
+        });
+    }
+
+    console.log('🔍 搜索视频:', keyword);
+
+    try {
+        const videos = await searchVideosByKeyword(keyword);  // ← 添加 await
+
+        if (videos.length > 0) {
+            console.log(`✅ 找到 ${videos.length} 个匹配的视频`);
+            return res.json({
+                code: 0,
+                message: '搜索成功',
+                data: videos  // ← 返回完整的视频数组
+            });
+        } else {
+            return res.json({
+                code: 0,
+                message: '未找到匹配的视频',
+                data: []
+            });
+        }
+    } catch (error) {
+        console.error('❌ 搜索视频失败:', error);
+        return res.status(500).json({
+            code: 1,
+            message: '搜索失败: ' + error.message
+        });
+    }
+});
+
+// 在 ==================== 数据库操作函数 ==================== 部分添加
+
+// 根据关键词搜索视频
+function searchVideosByKeyword(keyword) {
+    return new Promise((resolve, reject) => {
+        console.log('🔍 搜索关键词:', `"${keyword}"`);
+
+        const sql = `
+        SELECT
+        video_id as videoId,
+        title,
+        description,
+        video_url as videoUrl,
+        cover_url as coverUrl,
+        duration,
+        views,
+        file_size as fileSize,
+        original_filename as originalFileName,
+        cos_key as cosKey,
+        upload_time as uploadTime
+        FROM videos
+        WHERE title LIKE ?
+        ORDER BY upload_time DESC
+        `;
+
+        const searchPattern = `%${keyword}%`;
+        console.log('📝 搜索模式:', `"${searchPattern}"`);
+        console.log('🔧 完整SQL:', sql.replace('?', `"${searchPattern}"`));
+
+        dbPool.query(sql, [searchPattern], (error, results) => {
+            if (error) {
+                console.error('❌ 搜索视频失败:', error);
+                reject(error);
+            } else {
+                console.log(`✅ 搜索到 ${results.length} 个匹配的视频`);
+
+                // 输出找到的标题
+                if (results.length > 0) {
+                    console.log('📋 匹配的标题:');
+                    results.forEach((video, index) => {
+                        console.log(`   ${index + 1}. "${video.title}"`);
+                    });
+                } else {
+                    console.log('⚠️ 没有找到匹配的标题');
+
+                    // 查看数据库中所有的标题
+                    dbPool.query('SELECT title FROM videos LIMIT 10', (err, allTitles) => {
+                        if (!err) {
+                            console.log('📊 数据库中的前10个标题:');
+                            allTitles.forEach((row, index) => {
+                                console.log(`   ${index + 1}. "${row.title}"`);
+                            });
+                        }
+                    });
+                }
+
+                resolve(results);
+            }
+        });
+    });
+}
+
+
 
 // 4. 获取单个视频的详细信息
 app.get('/api/videos/:videoId', (req, res) => {
@@ -618,6 +774,8 @@ app.get('/api/videos/:videoId', (req, res) => {
         });
     }
 });
+
+
 
 // 启动 Express 服务器
 app.listen(port, () => {

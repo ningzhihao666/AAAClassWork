@@ -15,6 +15,8 @@ FrameLessWindow {
     property string currentTopNavItem: "推荐"
     property bool showPersonInfo: false
     property string apiBaseUrl: "http://localhost:3000"       //服务器基网址
+    property bool isSearching: false
+    property bool showSearchResults: false
 
     // 视频数据模型
     ListModel {
@@ -756,6 +758,15 @@ FrameLessWindow {
                 }
             }
 
+            // ListModel {
+            //         id: videoModel11
+            //     }
+
+                // 新增：搜索结果模型
+                ListModel {
+                    id: searchResultModel
+                }
+
             TextField {
                 id: search
                 Layout.preferredWidth: 250
@@ -772,6 +783,26 @@ FrameLessWindow {
                     radius: 4
                 }
 
+                // 添加防抖定时器
+                property var searchTimer: null
+
+                onTextChanged: {
+                        // 清除之前的定时器
+                        if (searchTimer) {
+                            searchTimer.stop();
+                        }
+
+                        if (text.length > 0) {
+                            // 延迟500ms执行搜索
+                            searchTimer = Qt.createQmlObject("import QtQml 2.15; Timer { interval: 500; onTriggered: searchVideos(search.text) }", search);
+                            searchTimer.start();
+                        } else {
+                            // 如果搜索框为空，显示正常视频列表
+                            showSearchResults = false;
+                            searchResultModel.clear();
+                        }
+                    }
+
                 Button{
                     id: clearButton
                     background: Rectangle {
@@ -781,10 +812,17 @@ FrameLessWindow {
                     anchors.rightMargin: 5
                     anchors.verticalCenter: parent.verticalCenter
                     text: "×"
-                    onClicked: search.text = ""
-                    opacity: search.focus ? 1 : 0
-                }
+                    onClicked: {
+                                search.text = ""
+                                showSearchResults = false;
+                                searchResultModel.clear();
+                            }
+                            opacity: search.focus ? 1 : 0
+                        }
             }
+
+
+
 
             Rectangle {
                 id: line
@@ -864,10 +902,11 @@ FrameLessWindow {
             bottom: parent.bottom
         }
 
+        // 正常视频列表
         ScrollView {
             id: contentScrollView
             anchors.fill: parent
-            visible: !root.showPersonInfo
+            visible: !root.showSearchResults && !root.showPersonInfo
             contentWidth: availableWidth
             clip: true
             padding: 20
@@ -885,109 +924,7 @@ FrameLessWindow {
                     clip: true
                     model: videoModel
 
-                    delegate: Rectangle {
-                        width: videoGrid.cellWidth - 10
-                        height: videoGrid.cellHeight - 10
-                        color: "white"
-                        radius: 4
-                        border.color: "#E5E9EF"
-
-                        Column {
-                            anchors {
-                                fill: parent
-                                margins: 10
-                            }
-                            spacing: 8
-
-                            Rectangle {
-                                width: parent.width
-                                height: 120
-                                color: "lightgray"
-                                radius: 4
-
-                                Image {
-                                    id: coverImage
-                                    anchors.fill: parent
-                                    source: coverUrl
-                                    fillMode: Image.PreserveAspectCrop
-                                    asynchronous: true
-
-                                    // 加载中显示
-                                    BusyIndicator {
-                                        anchors.centerIn: parent
-                                        running: coverImage.status === Image.Loading
-                                        width: 30
-                                        height: 30
-                                    }
-
-                                    // 加载失败显示
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "封面加载失败"
-                                        font.pixelSize: 12
-                                        color: "#999999"
-                                        visible: coverImage.status === Image.Error
-                                    }
-                                }
-                            }
-
-                            Text {
-                                width: parent.width
-                                text: title
-                                font.pixelSize: 14
-                                wrapMode: Text.Wrap
-                                elide: Text.ElideRight
-                                maximumLineCount: 2
-                            }
-
-                            Row {
-                                spacing: 8
-
-                                Image {
-                                    source:"https://i0.hdslb.com/bfs/face/member/noface.jpg@40w_40h.webp"
-                                    width: 24
-                                    height: 24
-                                }
-
-                                Text {
-                                    text: "UP主名称"
-                                    font.pixelSize: 12
-                                    color: "#999"
-                                }
-
-                                Text {
-                                    text: "▶ 12.3万"
-                                    font.pixelSize: 12
-                                    color: "#999"
-                                }
-                            }
-                        }
-
-                        TapHandler {
-                            // onTapped: console.log("点击视频项:", index + 1)
-                            onTapped: {
-                                console.log("点击视频:", videoId, title);
-                                // 打开视频播放页面
-                                var component = Qt.createComponent("Video_Playback/Vedio.qml");
-                                if (component.status === Component.Ready) {
-                                    var player = component.createObject(Vedio, {
-                                        videoData: {
-                                            videoId: videoId,
-                                            title: title,
-                                            description: description,
-                                            videoUrl: videoUrl,
-                                            coverUrl: coverUrl,
-                                            duration: duration,
-                                            views: views
-                                        }
-                                    });
-                                    player.show();
-                                } else {
-                                    console.error("无法加载视频播放器组件:", component.errorString());
-                                }
-                            }
-                        }
-                    }
+                    delegate: videoDelegate // 使用下面的组件
                 }
 
                 Rectangle {
@@ -1007,6 +944,104 @@ FrameLessWindow {
                     TapHandler {
                         onTapped: console.log("加载更多视频")
                     }
+                }
+            }
+        }
+
+        // 搜索结果视图
+        ScrollView {
+            id: searchScrollView
+            anchors.fill: parent
+            visible: root.showSearchResults && !root.showPersonInfo
+            contentWidth: availableWidth
+            clip: true
+            padding: 20
+
+            ColumnLayout {
+                width: root.width - leftSideBar.width - 15
+                spacing: 20
+
+                // 搜索标题
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+
+                    Text {
+                        text: "搜索结果"
+                        font.pixelSize: 18
+                        font.bold: true
+                        color: "#333"
+                    }
+
+                    Text {
+                        text: "(" + searchResultModel.count + "个视频)"
+                        font.pixelSize: 14
+                        color: "#666"
+                    }
+
+                    Button {
+                        text: "返回首页"
+                        font.pixelSize: 12
+                        background: Rectangle {
+                            color: parent.hovered ? "#f0f0f0" : "transparent"
+                            radius: 4
+                        }
+                        onClicked: {
+                            showSearchResults = false;
+                            search.text = "";
+                            searchResultModel.clear();
+                        }
+                    }
+                }
+
+                // 搜索结果列表
+                GridView {
+                    id: searchResultGrid
+                    Layout.fillWidth: true
+                    height: Math.ceil(searchResultModel.count / 4) * 220 + 50
+                    cellWidth: (width - 30) / 4
+                    cellHeight: 220
+                    clip: true
+                    model: searchResultModel
+
+                    delegate: videoDelegate // 复用视频组件
+
+                    // 空状态
+                    Loader {
+                        anchors.centerIn: parent
+                        active: searchResultModel.count === 0 && !root.isSearching
+                        sourceComponent: emptySearchComponent
+                    }
+                }
+            }
+        }
+
+        // 搜索加载状态
+        Rectangle {
+            anchors.centerIn: searchScrollView
+            width: 200
+            height: 100
+            color: "#ccffffff"
+            radius: 8
+            visible: root.isSearching
+            z: 10
+
+            ColumnLayout {
+                anchors.centerIn: parent
+                spacing: 10
+
+                BusyIndicator {
+                    Layout.alignment: Qt.AlignHCenter
+                    running: true
+                    width: 30
+                    height: 30
+                }
+
+                Text {
+                    text: "搜索中..."
+                    font.pixelSize: 14
+                    color: "#666666"
+                    Layout.alignment: Qt.AlignHCenter
                 }
             }
         }
@@ -1031,6 +1066,206 @@ FrameLessWindow {
             visible: root.currentLeftMenuItem === "设置"
             source: "SettingsPage.qml"
             active: false
+        }
+    }
+    // 修改后的搜索函数
+    function searchVideos(keyword) {
+        console.log("🔍 开始搜索关键词:", keyword);
+
+        // 显示搜索状态
+        isSearching = true;
+        showSearchResults = true;
+
+        // 清空之前的搜索结果
+        searchResultModel.clear();
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "http://localhost:3000/api/videos/search?keyword=" + encodeURIComponent(keyword));
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                // 搜索完成，隐藏加载状态
+                isSearching = false;
+
+                if (xhr.status === 200) {
+                    try {
+                        var response = JSON.parse(xhr.responseText);
+                        console.log("📋 搜索响应:", JSON.stringify(response));
+
+                        if (response.code === 0) {
+                            if (response.data && response.data.length > 0) {
+                                console.log("✅ 搜索成功，找到 " + response.data.length + " 个视频");
+
+                                // 将搜索结果添加到模型中
+                                for (var i = 0; i < response.data.length; i++) {
+                                    var video = response.data[i];
+                                    searchResultModel.append(video);
+
+                                    console.log("📹 添加视频到搜索结果:", video.title);
+                                }
+                            } else {
+                                console.log("⚠️ 未找到匹配的视频");
+                            }
+                        } else {
+                            console.log("❌ 搜索失败:", response.message);
+                            showError("搜索失败: " + response.message);
+                        }
+                    } catch (e) {
+                        console.log("❌ 解析响应失败:", e);
+                        console.log("❌ 原始响应:", xhr.responseText);
+                        showError("数据解析失败");
+                    }
+                } else {
+                    console.log("❌ 请求失败，状态码:", xhr.status);
+                    console.log("❌ 响应内容:", xhr.responseText);
+                    showError("网络请求失败");
+                }
+            }
+        };
+
+        xhr.onerror = function() {
+            isSearching = false;
+            console.log("❌ 网络请求错误");
+            showError("网络连接失败");
+        };
+
+        xhr.send();
+    }
+
+    // 可复用的视频组件
+    Component {
+        id: videoDelegate
+
+        Rectangle {
+            width: GridView.view.cellWidth - 10
+            height: GridView.view.cellHeight - 10
+            color: "white"
+            radius: 4
+            border.color: "#E5E9EF"
+
+            Column {
+                anchors {
+                    fill: parent
+                    margins: 10
+                }
+                spacing: 8
+
+                Rectangle {
+                    width: parent.width
+                    height: 120
+                    color: "lightgray"
+                    radius: 4
+
+                    Image {
+                        id: coverImage
+                        anchors.fill: parent
+                        source: coverUrl
+                        fillMode: Image.PreserveAspectCrop
+                        asynchronous: true
+
+                        // 加载中显示
+                        BusyIndicator {
+                            anchors.centerIn: parent
+                            running: coverImage.status === Image.Loading
+                            width: 30
+                            height: 30
+                        }
+
+                        // 加载失败显示
+                        Text {
+                            anchors.centerIn: parent
+                            text: "封面加载失败"
+                            font.pixelSize: 12
+                            color: "#999999"
+                            visible: coverImage.status === Image.Error
+                        }
+                    }
+                }
+
+                Text {
+                    width: parent.width
+                    text: title
+                    font.pixelSize: 14
+                    wrapMode: Text.Wrap
+                    elide: Text.ElideRight
+                    maximumLineCount: 2
+                }
+
+                Row {
+                    spacing: 8
+
+                    Image {
+                        source:"https://i0.hdslb.com/bfs/face/member/noface.jpg@40w_40h.webp"
+                        width: 24
+                        height: 24
+                    }
+
+                    Text {
+                        text: "UP主名称"
+                        font.pixelSize: 12
+                        color: "#999"
+                    }
+
+                    Text {
+                        text: "▶ " + (views || "0")
+                        font.pixelSize: 12
+                        color: "#999"
+                    }
+                }
+            }
+
+            TapHandler {
+                onTapped: {
+                    console.log("点击视频:", videoId, title);
+                    // 打开视频播放页面
+                    var component = Qt.createComponent("Video_Playback/Vedio.qml");
+                    if (component.status === Component.Ready) {
+                        var player = component.createObject(Vedio, {
+                            videoData: {
+                                videoId: videoId,
+                                title: title,
+                                description: description,
+                                videoUrl: videoUrl,
+                                coverUrl: coverUrl,
+                                duration: duration,
+                                views: views
+                            }
+                        });
+                        player.show();
+                    } else {
+                        console.error("无法加载视频播放器组件:", component.errorString());
+                    }
+                }
+            }
+        }
+    }
+
+    // 空搜索结果组件
+    Component {
+        id: emptySearchComponent
+
+        Column {
+            spacing: 20
+            anchors.centerIn: parent
+
+            Text {
+                text: "🔍"
+                font.pixelSize: 48
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+
+            Text {
+                text: "没有找到相关视频"
+                font.pixelSize: 16
+                color: "#666666"
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+
+            Text {
+                text: "试试其他关键词"
+                font.pixelSize: 14
+                color: "#999999"
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
         }
     }
 
