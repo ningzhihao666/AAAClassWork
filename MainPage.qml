@@ -84,7 +84,7 @@ FrameLessWindow {
 
         background: Rectangle {
             color: refreshButton.down ? "#e6f7ff" :
-                   refreshButton.enabled ? "#00aeec" : "#cccccc"
+                                        refreshButton.enabled ? "#00aeec" : "#cccccc"
             border.color: refreshButton.enabled ? "#00aeec" : "#cccccc"
             border.width: 1
             radius: 4
@@ -204,10 +204,10 @@ FrameLessWindow {
 
         // 强制更新头像的函数
         function forceUpdateAvatar() {
-        console.log("强制更新侧边栏头像")
-        let processedUrl = root.processAvatarUrl(root.globalAvatarUrl)
-        console.log("更新头像为:", processedUrl)
-        userInfoArea.avatarImage.source = processedUrl
+            console.log("强制更新侧边栏头像")
+            let processedUrl = root.processAvatarUrl(root.globalAvatarUrl)
+            console.log("更新头像为:", processedUrl)
+            userInfoArea.avatarImage.source = processedUrl
         }
 
         ColumnLayout {
@@ -325,7 +325,7 @@ FrameLessWindow {
                                 if(modelData.text==="动态") dynamicUploadPopup.active=true
                             }
 
-                                }
+                        }
 
                         Behavior on color {
                             ColorAnimation { duration: 150 }
@@ -472,7 +472,7 @@ FrameLessWindow {
                                     settingsLoader.active = true
                                 }
 
-                                root.currentLeftMenuItem = modelData.text
+                                // root.currentLeftMenuItem = modelData.text
                                 root.showPersonInfo = false
                             }
                         }
@@ -585,33 +585,33 @@ FrameLessWindow {
 
     // 视频上传弹窗
     Popup {
-       id: videoUploadPopup
-       width: 800
-       height: 600
-       x: (parent.width - width) / 2
-       y: (parent.height - height) / 2
-       modal: true
-       focus: true
-       closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        id: videoUploadPopup
+        width: 800
+        height: 600
+        x: (parent.width - width) / 2
+        y: (parent.height - height) / 2
+        modal: true
+        focus: true
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
-       // 加载视频上传页面
-       Loader {
-           id: videoLoader
-           anchors.fill: parent
-           source: "Send_videos/VideoLode.qml"
+        // 加载视频上传页面
+        Loader {
+            id: videoLoader
+            anchors.fill: parent
+            source: "Send_videos/VideoLode.qml"
 
-           onLoaded: {
-               // 连接关闭信号
-               if (item) {
-                   item.uploadFinished.connect(function() {
-                       videoUploadPopup.close()
-                   })
-                   item.uploadCancelled.connect(function() {
-                       videoUploadPopup.close()
-                   })
-               }
-           }
-       }
+            onLoaded: {
+                // 连接关闭信号
+                if (item) {
+                    item.uploadFinished.connect(function() {
+                        videoUploadPopup.close()
+                    })
+                    item.uploadCancelled.connect(function() {
+                        videoUploadPopup.close()
+                    })
+                }
+            }
+        }
     }
 
     // 消息弹窗
@@ -657,24 +657,24 @@ FrameLessWindow {
     //    focus: true
     //    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
-       Loader {
-           id: dynamicUploadPopup
-           anchors.fill: parent
-           source: "Dynamic.qml"
-           active:false
-           onLoaded: {
-               if (item && item.closeRequested) {
-                   item.closeRequested.connect(function() {
-                       dynamicUploadPopup.close()
-                   })
-               }
-           }
-           function open() {
-               dynamicUploadPopup.show()
-               // dynamicUploadPopup.x = (Screen.width - width) / 2
-               // dynamicUploadPopup.y = (Screen.height - height) / 2
-           }
-       // }
+    Loader {
+        id: dynamicUploadPopup
+        anchors.fill: parent
+        source: "Dynamic.qml"
+        active:false
+        onLoaded: {
+            if (item && item.closeRequested) {
+                item.closeRequested.connect(function() {
+                    dynamicUploadPopup.close()
+                })
+            }
+        }
+        function open() {
+            dynamicUploadPopup.show()
+            // dynamicUploadPopup.x = (Screen.width - width) / 2
+            // dynamicUploadPopup.y = (Screen.height - height) / 2
+        }
+        // }
     }
 
     // 顶部区域
@@ -762,10 +762,10 @@ FrameLessWindow {
             //         id: videoModel11
             //     }
 
-                // 新增：搜索结果模型
-                ListModel {
-                    id: searchResultModel
-                }
+            // 新增：搜索结果模型
+            ListModel {
+                id: searchResultModel
+            }
 
             TextField {
                 id: search
@@ -787,21 +787,21 @@ FrameLessWindow {
                 property var searchTimer: null
 
                 onTextChanged: {
-                        // 清除之前的定时器
-                        if (searchTimer) {
-                            searchTimer.stop();
-                        }
-
-                        if (text.length > 0) {
-                            // 延迟500ms执行搜索
-                            searchTimer = Qt.createQmlObject("import QtQml 2.15; Timer { interval: 500; onTriggered: searchVideos(search.text) }", search);
-                            searchTimer.start();
-                        } else {
-                            // 如果搜索框为空，显示正常视频列表
-                            showSearchResults = false;
-                            searchResultModel.clear();
-                        }
+                    // 清除之前的定时器
+                    if (searchTimer) {
+                        searchTimer.stop();
                     }
+
+                    if (text.length > 0) {
+                        // 延迟500ms执行搜索
+                        searchTimer = Qt.createQmlObject("import QtQml 2.15; Timer { interval: 500; onTriggered: searchVideos(search.text) }", search);
+                        searchTimer.start();
+                    } else {
+                        // 如果搜索框为空，显示正常视频列表
+                        showSearchResults = false;
+                        searchResultModel.clear();
+                    }
+                }
 
                 Button{
                     id: clearButton
@@ -813,12 +813,12 @@ FrameLessWindow {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "×"
                     onClicked: {
-                                search.text = ""
-                                showSearchResults = false;
-                                searchResultModel.clear();
-                            }
-                            opacity: search.focus ? 1 : 0
-                        }
+                        search.text = ""
+                        showSearchResults = false;
+                        searchResultModel.clear();
+                    }
+                    opacity: search.focus ? 1 : 0
+                }
             }
 
 
@@ -906,7 +906,9 @@ FrameLessWindow {
         ScrollView {
             id: contentScrollView
             anchors.fill: parent
-            visible: !root.showSearchResults && !root.showPersonInfo
+            // visible: !root.showSearchResults && !root.showPersonInfo
+            //TODO
+            visible: !root.showSearchResults && !root.showPersonInfo && root.currentLeftMenuItem !== "设置"
             contentWidth: availableWidth
             clip: true
             padding: 20
@@ -952,7 +954,9 @@ FrameLessWindow {
         ScrollView {
             id: searchScrollView
             anchors.fill: parent
-            visible: root.showSearchResults && !root.showPersonInfo
+            // visible: root.showSearchResults && !root.showPersonInfo
+            //TODO
+            visible: root.showSearchResults && !root.showPersonInfo && root.currentLeftMenuItem !== "设置"
             contentWidth: availableWidth
             clip: true
             padding: 20
@@ -1049,7 +1053,9 @@ FrameLessWindow {
         Loader {
             id: personInfoLoader
             anchors.fill: parent
-            visible: root.showPersonInfo
+            // visible: root.showPersonInfo
+            //TODO
+            visible: root.showPersonInfo && root.currentLeftMenuItem !== "设置"
             source: root.showPersonInfo ? "PersonInfo.qml" : ""
             active: root.showPersonInfo
 
@@ -1065,7 +1071,8 @@ FrameLessWindow {
             anchors.fill: parent
             visible: root.currentLeftMenuItem === "设置"
             source: "SettingsPage.qml"
-            active: false
+            // active: false
+            active: root.currentLeftMenuItem === "设置"
         }
     }
     // 修改后的搜索函数
@@ -1220,16 +1227,16 @@ FrameLessWindow {
                     var component = Qt.createComponent("Video_Playback/Vedio.qml");
                     if (component.status === Component.Ready) {
                         var player = component.createObject(Vedio, {
-                            videoData: {
-                                videoId: videoId,
-                                title: title,
-                                description: description,
-                                videoUrl: videoUrl,
-                                coverUrl: coverUrl,
-                                duration: duration,
-                                views: views
-                            }
-                        });
+                                                                videoData: {
+                                                                    videoId: videoId,
+                                                                    title: title,
+                                                                    description: description,
+                                                                    videoUrl: videoUrl,
+                                                                    coverUrl: coverUrl,
+                                                                    duration: duration,
+                                                                    views: views
+                                                                }
+                                                            });
                         player.show();
                     } else {
                         console.error("无法加载视频播放器组件:", component.errorString());
