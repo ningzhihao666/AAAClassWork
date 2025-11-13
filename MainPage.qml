@@ -466,7 +466,6 @@ FrameLessWindow {
                                 if(modelData.text==="消息") messagePopup.open()
 
                                 if(modelData.text==="设置"){
-                                    //TODO
                                     root.showPersonInfo = false
                                     root.currentLeftMenuItem = "设置"
                                     settingsLoader.active = true
@@ -571,7 +570,7 @@ FrameLessWindow {
                 right: parent.right
                 bottom: parent.bottom
             }
-            source: "My.qml"
+            source: "Tools_Left/My.qml"
 
             onLoaded: {
                 console.log("我的页面内容加载完成")
@@ -627,7 +626,7 @@ FrameLessWindow {
         Loader {
             id: messageLoader
             anchors.fill: parent
-            source: "Message_Page.qml"
+            source: "Tools_Left/Message_Page.qml"
 
             onLoaded: {
                 // 连接关闭信号
@@ -660,7 +659,7 @@ FrameLessWindow {
     Loader {
         id: dynamicUploadPopup
         anchors.fill: parent
-        source: "Dynamic.qml"
+        source: "Tools_Left/Dynamic.qml"
         active:false
         onLoaded: {
             if (item && item.closeRequested) {
@@ -710,7 +709,7 @@ FrameLessWindow {
                 spacing: 10
                 Layout.fillWidth: true
                 // visible: !root.showPersonInfo
-                visible: !root.showPersonInfo && root.currentLeftMenuItem !== "设置"//TODO
+                visible: !root.showPersonInfo && root.currentLeftMenuItem !== "设置"
                 property real itemWidth: (width - (navRepeater.count - 1) * spacing) / navRepeater.count
 
                 Repeater {
@@ -906,8 +905,6 @@ FrameLessWindow {
         ScrollView {
             id: contentScrollView
             anchors.fill: parent
-            // visible: !root.showSearchResults && !root.showPersonInfo
-            //TODO
             visible: !root.showSearchResults && !root.showPersonInfo && root.currentLeftMenuItem !== "设置"
             contentWidth: availableWidth
             clip: true
@@ -954,8 +951,6 @@ FrameLessWindow {
         ScrollView {
             id: searchScrollView
             anchors.fill: parent
-            // visible: root.showSearchResults && !root.showPersonInfo
-            //TODO
             visible: root.showSearchResults && !root.showPersonInfo && root.currentLeftMenuItem !== "设置"
             contentWidth: availableWidth
             clip: true
@@ -1053,10 +1048,8 @@ FrameLessWindow {
         Loader {
             id: personInfoLoader
             anchors.fill: parent
-            // visible: root.showPersonInfo
-            //TODO
             visible: root.showPersonInfo && root.currentLeftMenuItem !== "设置"
-            source: root.showPersonInfo ? "PersonInfo.qml" : ""
+            source: root.showPersonInfo ? "Tools_Left/PersonInfo.qml" : ""
             active: root.showPersonInfo
 
             onLoaded: {
@@ -1066,11 +1059,11 @@ FrameLessWindow {
             }
         }
 
-        Loader {//TODO
+        Loader {
             id: settingsLoader
             anchors.fill: parent
             visible: root.currentLeftMenuItem === "设置"
-            source: "SettingsPage.qml"
+            source: "Settings/SettingsPage.qml"
             // active: false
             active: root.currentLeftMenuItem === "设置"
         }
@@ -1224,9 +1217,9 @@ FrameLessWindow {
                 onTapped: {
                     console.log("点击视频:", videoId, title);
                     // 打开视频播放页面
-                    var component = Qt.createComponent("Video_Playback/Vedio.qml");
+                    var component = Qt.createComponent("Video_Playback/Video.qml");
                     if (component.status === Component.Ready) {
-                        var player = component.createObject(Vedio, {
+                        var player = component.createObject(Video, {
                                                                 videoData: {
                                                                     videoId: videoId,
                                                                     title: title,

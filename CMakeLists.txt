@@ -26,20 +26,20 @@ qt_add_qml_module(appbili
         Main.qml
         MainPage.qml
         FrameLessWindow.qml
-        Mine.qml
-        VedioType.qml
-        ToolBars.qml
-        PersonInfo.qml
-        Moments.qml
 
 
-        Send_videos/Video.qml
+
+        Tools_Left/PersonInfo.qml
+
+
+
+        Send_videos/VideolodeFunction.qml
         Send_videos/VideoLode.qml
 
         Login/LoginPage.qml
         Video_Playback/NetworkManager.qml
-        Video_Playback/Vedio.qml
-        Video_Playback/VedioList.qml
+        Video_Playback/Video.qml
+
 
     # 将所有资源文件（.qrc）列在一个RESOURCES参数下
     RESOURCES
@@ -48,23 +48,23 @@ qt_add_qml_module(appbili
         QML_FILES Commit.qml
 
         QML_FILES DamuSystem.qml
-        QML_FILES Message_Page.qml
+        QML_FILES Tools_Left/Message_Page.qml
 SOURCES userinfo.h userinfo.cpp user.h user.cpp databaseuser.h databaseuser.cpp
 QML_FILES db.js
 
 RESOURCES a站需求文档.odt
-QML_FILES SettingsPage.qml
-QML_FILES AboutSettings.qml
-QML_FILES CacheSettings.qml
-QML_FILES DownloadSettings.qml
-QML_FILES GamepadSettings.qml
-QML_FILES GeneralSettings.qml
-QML_FILES PlaySettings.qml
-QML_FILES PushSettings.qml
-QML_FILES SectionDivider.qml
-QML_FILES ShortcutKey.qml
-QML_FILES My.qml
-QML_FILES Dynamic.qml
+QML_FILES Settings/SettingsPage.qml
+QML_FILES Settings/AboutSettings.qml
+QML_FILES Settings/CacheSettings.qml
+QML_FILES Settings/DownloadSettings.qml
+QML_FILES Settings/GamepadSettings.qml
+QML_FILES Settings/GeneralSettings.qml
+QML_FILES Settings/PlaySettings.qml
+QML_FILES Settings/PushSettings.qml
+QML_FILES Settings/SectionDivider.qml
+QML_FILES Settings/ShortcutKey.qml
+QML_FILES Tools_Left/My.qml
+QML_FILES Tools_Left/Dynamic.qml
 SOURCES clienthandler.cpp
 SOURCES clientmessagehandler.h
 SOURCES clientmessagehandler.cpp

@@ -33,7 +33,7 @@ Item {
     property string videoDescription: ""
 
     // 视频上传器组件
-    Video {
+    VideolodeFunction {
         id: uploader
 
         // 更新进度条的值和最大值
