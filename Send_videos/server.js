@@ -20,11 +20,11 @@ app.use('/uploads', express.static('uploads'));
 // ==================== 数据库配置 ====================
 //数据库连接配置
 const dbConfig = {
-    host: 'cq-cdb-rqdliqih.sql.tencentcdb.com',//云数据库外网地址
+    host: 'cq-cdb-82wznfkj.sql.tencentcdb.com',//云数据库外网地址
     user: 'root',
     password: '12345678n',
     database: 'video_info',
-    port: 27193,
+    port: 22290,
     connectTimeout: 15000,
     timeout: 15000,
     charset: 'utf8mb4'

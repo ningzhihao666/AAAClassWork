@@ -13,7 +13,7 @@ ApplicationWindow{
     // modal: true
     // focus: true
     // closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-
+    signal closeRequested()
     // 主背景
     Rectangle {
         anchors.fill: parent
@@ -795,7 +795,29 @@ ApplicationWindow{
         }
     }
     onClosing: {
-        console.log("动态窗口关闭")
-        destroy()
-    }
+            console.log("动态窗口关闭")
+            closeRequested()  // 发送信号而不是直接销毁
+        }
+
+        // ✅ 添加关闭按钮（可选但推荐）
+        Rectangle {
+            anchors.top: parent.top
+            anchors.right: parent.right
+            width: 40
+            height: 40
+            color: closeBtn.hovered ? "#f0f0f0" : "transparent"
+
+            Text {
+                anchors.centerIn: parent
+                text: "×"
+                font.pixelSize: 20
+            }
+
+            MouseArea {
+                id: closeBtn
+                anchors.fill: parent
+                hoverEnabled: true
+                onClicked: closeRequested()  // 点击关闭时发送信号
+            }
+        }
 }

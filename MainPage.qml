@@ -322,7 +322,7 @@ FrameLessWindow {
                                     root.showPersonInfo = false
                                     root.currentLeftMenuItem = ""
                                 }
-                                if(modelData.text==="动态") dynamicUploadPopup.active=true
+                                if(modelData.text==="动态") dynamicUploadPopup.open()
                             }
 
                         }
@@ -660,21 +660,23 @@ FrameLessWindow {
         id: dynamicUploadPopup
         anchors.fill: parent
         source: "Tools_Left/Dynamic.qml"
-        active:false
+        active: false  // 初始为false
+
         onLoaded: {
             if (item && item.closeRequested) {
                 item.closeRequested.connect(function() {
-                    dynamicUploadPopup.close()
+                    // ✅ 正确关闭方式：重置Loader状态
+                    dynamicUploadPopup.active = false
                 })
             }
         }
+
+        // 添加open方法
         function open() {
-            dynamicUploadPopup.show()
-            // dynamicUploadPopup.x = (Screen.width - width) / 2
-            // dynamicUploadPopup.y = (Screen.height - height) / 2
+            active = true  // 激活加载
         }
-        // }
     }
+
 
     // 顶部区域
     Rectangle {

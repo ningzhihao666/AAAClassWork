@@ -69,6 +69,7 @@ SOURCES clienthandler.cpp
 SOURCES clientmessagehandler.h
 SOURCES clientmessagehandler.cpp
 SOURCES clienthandler.h
+RESOURCES lll.qrc
 )
 
 # 链接必要的Qt模块
