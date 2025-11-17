@@ -70,6 +70,19 @@ SOURCES clientmessagehandler.h
 SOURCES clientmessagehandler.cpp
 SOURCES clienthandler.h
 RESOURCES lll.qrc
+SOURCES
+SOURCES controllers/videodatabase.h
+SOURCES
+SOURCES
+SOURCES controllers/videodatabase.cpp
+SOURCES
+SOURCES vedio.h
+SOURCES
+SOURCES vedio.cpp
+SOURCES
+SOURCES controllers/eventController.h controllers/eventController.cpp
+SOURCES controllers/videomanager.h controllers/videomanager.cpp
+SOURCES comment.h comment.cpp
 )
 
 # 链接必要的Qt模块

@@ -9,95 +9,101 @@ Item {
     Layout.fillWidth: true
     property bool animationsEnabled: true
 
-    // 全局存储回复模型的容器
-    Item {
-        id: replyModelsContainer
-        property var models: ({}) // 使用JavaScript对象存储回复模型
-    }
+    property int currentCommentCount: 0
 
-    // 创建回复模型的函数
-    function createReplyModel(modelId) {
-        var newModel = Qt.createQmlObject(`
-            import QtQuick
-            ListModel {}
-        `, replyModelsContainer);
-
-        replyModelsContainer.models[modelId] = newModel;
-        return newModel;
-    }
-
-    // 添加新评论的函数
-    function addNewComment(userName, content) {
-        // 生成唯一ID
-        var commentId = "replies_" + Date.now();
-
-        // 创建新的回复模型
-        createReplyModel(commentId);
-
-        // 添加到主评论模型
-        commentModel.insert(0,{
-            userName: userName,
-            time: "刚刚",
-            content: content,
-            likeCount: 0,
-            unlikeCount: 0,
-            isReply: false,
-            replyModelId: commentId
-        });
-    }
-
-    // 添加回复的函数
-    function addReply(commentId, userName, content) {
-        var replyModel = replyModelsContainer.models[commentId];
-        if (replyModel) {
-            replyModel.append({
-                userName: userName,
-                time: "刚刚",
-                content: content,
-                likeCount: 0,
-                unlikeCount: 0,
-                isReply: true
-            });
-        }
-    }
+    signal commentCountChanged(int newCount)
 
     // 评论数据模型
     ListModel {
         id: commentModel
-
-        // 初始示例数据
-        Component.onCompleted: {
-            // 创建第一个评论的回复模型
-            var replyModel1 = createReplyModel("replies_1");
-            replyModel1.append({
-                userName: "用户2",
-                time: "4分钟前",
-                content: "这是一条回复",
-                likeCount: 3,
-                unlikeCount: 0,
-                isReply: true
-            });
-            replyModel1.append({
-                userName: "用户3",
-                time: "3分钟前",
-                content: "另一条回复",
-                likeCount: 1,
-                unlikeCount: 0,
-                isReply: true
-            });
-
-            // 添加主评论
-            commentModel.insert(0,{
-                userName: "用户1",
-                time: "5分钟前",
-                content: "这是一条示例评论",
-                likeCount: 10,
-                unlikeCount: 2,
-                isReply: false,
-                replyModelId: "replies_1"
-            });
-        }
     }
+
+        // 对外接口
+        property var videoManager
+        property var videoData
+
+        function loadComments() {
+                console.log("从C++加载评论数据");
+
+                if (videoManager && videoData && videoData.videoId) {
+                    var comments = videoManager.getVideoComments(videoData.videoId);
+                    console.log("获取到评论数量:", comments.length);
+
+                    var totalCount = 0;
+                            for (var i = 0; i < comments.length; i++) {
+                                totalCount += 1; // 顶层评论
+                                if (comments[i].replies) {
+                                    totalCount += comments[i].replies.length; // 回复
+                                }
+                            }
+
+                            console.log(totalCount)
+
+                    commentCountChanged(totalCount);
+
+                    commentModel.clear();
+
+                    for (var i = 0; i < comments.length; i++) {
+                        var comment = comments[i];
+                        console.log("添加评论:", comment.userName, comment.content);
+
+                        commentModel.append({
+                            id: comment.id,
+                            userName: comment.userName,
+                            time: comment.time,
+                            content: comment.content,
+                            likeCount: comment.likeCount,
+                            unlikeCount: comment.unlikeCount,
+                            isReply: comment.isReply,
+                            parentId: comment.parentId,
+                            replies: comment.replies || []
+                        });
+                    }
+
+                    if (comments.length === 0 ) {
+                                        console.log("C++端无评论数据，添加测试数据");
+                                        addComment("a","cnmd");
+                                    }
+
+                } else {
+                    console.error("无法加载评论: videoManager 或 videoData 不可用");
+                }
+            }
+
+        function addComment(userName, content) {
+                if (videoManager && videoData && videoData.videoId) {
+                    videoManager.addCommentToVideo(videoData.videoId, userName, content);
+
+                    currentCommentCount++;
+                    commentCountChanged(currentCommentCount);
+
+                    // 重新加载评论
+                    Qt.callLater(loadComments);
+                } else {
+                    console.error("无法添加评论: videoManager 或 videoData 不可用");
+                }
+            }
+
+        function addReply(commentId, userName, content) {
+                if (videoManager && videoData && videoData.videoId) {
+                    videoManager.addReplyToComment(videoData.videoId, commentId, userName, content);
+
+                    currentCommentCount++;
+                    commentCountChanged(currentCommentCount);
+
+                    // 重新加载评论
+                    Qt.callLater(loadComments);
+                } else {
+                    console.error("无法添加回复: videoManager 或 videoData 不可用");
+                }
+            }
+
+        Component.onCompleted: {
+                console.log("视频播放器初始化完成");
+                Qt.callLater(function() {
+                       loadComments();
+                });
+            }
 
     ColumnLayout {
         anchors.fill: parent
@@ -266,7 +272,7 @@ Item {
                 onClicked: {
                     if (commentInput.text.trim() !== "") {
                         // 添加新评论
-                        addNewComment("当前用户", commentInput.text.trim());
+                        addComment("当前用户", commentInput.text.trim());
                         commentInput.text = "";
                     }
                 }
@@ -648,7 +654,7 @@ Item {
                                     onClicked: {
                                         if (replyPerson.text.trim() !== "") {
                                             // 获取当前评论的回复模型ID
-                                            var commentId = commentModel.get(replyInput.commentIndex).replyModelId;
+                                            var commentId = commentModel.get(replyInput.commentIndex).id;
 
                                             // 添加新回复
                                             addReply(commentId, "当前用户", replyPerson.text.trim());
@@ -670,7 +676,7 @@ Item {
                             spacing: 8
 
                             // 获取当前评论的回复模型
-                            property var replyModel: replyModelsContainer.models[model.replyModelId] || null
+                            property var replyModel: model.replies || null
 
                             // 根据回复数量决定是否显示
                             visible: replyModel && replyModel.count > 0
@@ -795,7 +801,16 @@ Item {
                                              }
 
                                         contentItem: Text {
-                                            text: "查看更多" + (replyArea.replyModel.count - 3) + "条回复"
+                                            // text: "查看更多" + (replyArea.replyModel.count - 3) + "条回复"
+                                            text:
+                                            {
+                                                if (!replyArea.replyModel) {
+                                                            return "查看更多回复";
+                                                }
+                                                var count = replyArea.replyModel.count || 0;
+                                                return "查看更多" + (count - 3) + "条回复";
+                                            }
+
                                             color: "#AAAAAA"
                                             font.pixelSize: 12
                                             horizontalAlignment: Text.AlignHCenter
@@ -971,7 +986,7 @@ Item {
                                     onClicked: {
                                         if (rreplyPerson.text.trim() !== "") {
                                             // 获取当前评论的回复模型ID
-                                            var commentId = commentModel.get(replyInput.commentIndex).replyModelId;
+                                            var commentId = commentModel.get(replyInput.commentIndex).id;
 
                                             var content = "回复 @" + rreplyInput.targetUserName + ": " + rreplyPerson.text.trim();
 
@@ -982,8 +997,6 @@ Item {
                                             rreplyInput.donhua = false
                                             // console.log("这是儿：" + replyInput.commentIndex)
                                             // console.log("这是儿：" + commentId)
-
-
 
                                         }
                                         else

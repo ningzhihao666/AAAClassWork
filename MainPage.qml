@@ -903,6 +903,8 @@ FrameLessWindow {
             bottom: parent.bottom
         }
 
+        property var videoManager: eventController ? eventController.videoManager : null
+
         // 正常视频列表
         ScrollView {
             id: contentScrollView
@@ -923,7 +925,20 @@ FrameLessWindow {
                     cellWidth: (width - 30) / 4
                     cellHeight: 220
                     clip: true
-                    model: videoModel
+                    model: contentContainer.videoManager ? contentContainer.videoManager.videoList : []
+
+                    // 调试信息
+                                    Component.onCompleted: {
+                                        console.log("视频网格初始化完成");
+                                        console.log("视频管理器:", contentContainer.videoManager);
+                                        console.log("视频列表长度:", videoGrid.count);
+
+                                        if (videoGrid.count > 0) {
+                                            console.log("第一个视频:", videoGrid.model[0]);
+                                        }
+
+                                        console.log("!!!!!!!!!!!!!!!!!!!!!" + contentContainer.videoManager.videoList)
+                                    }
 
                     delegate: videoDelegate // 使用下面的组件
                 }
@@ -1046,6 +1061,36 @@ FrameLessWindow {
                 }
             }
         }
+
+        Loader {
+               id: videoLoaders
+               // 初始状态为空，不加载任何组件
+               sourceComponent: undefined
+
+               // 可选：设置异步加载避免界面卡顿
+               asynchronous: true
+
+               // 组件加载完成后的处理
+               onLoaded: {
+                   if (item) {
+                       console.log("视频播放器加载完成")
+                       // 显示视频播放窗口
+                       item.show()
+
+                       // 连接关闭信号，当播放器关闭时清理Loader
+                       item.closing.connect(function() {
+                           console.log("视频播放器关闭，清理资源")
+                           videoLoaders.sourceComponent = undefined
+                       })
+                   }
+               }
+
+               onStatusChanged: {
+                   if (status === Loader.Error) {
+                       console.error("加载视频播放器失败:", sourceComponent.errorString())
+                   }
+               }
+           }
 
         Loader {
             id: personInfoLoader
@@ -1202,13 +1247,13 @@ FrameLessWindow {
                     }
 
                     Text {
-                        text: "UP主名称"
+                        text: modelData.author
                         font.pixelSize: 12
                         color: "#999"
                     }
 
                     Text {
-                        text: "▶ " + (views || "0")
+                        text: "▶ " + modelData.viewCount
                         font.pixelSize: 12
                         color: "#999"
                     }
@@ -1217,27 +1262,27 @@ FrameLessWindow {
 
             TapHandler {
                 onTapped: {
-                    console.log("点击视频:", videoId, title);
-                    // 打开视频播放页面
-                    var component = Qt.createComponent("Video_Playback/Video.qml");
-                    if (component.status === Component.Ready) {
-                        var player = component.createObject(Video, {
-                                                                videoData: {
-                                                                    videoId: videoId,
-                                                                    title: title,
-                                                                    description: description,
-                                                                    videoUrl: videoUrl,
-                                                                    coverUrl: coverUrl,
-                                                                    duration: duration,
-                                                                    views: views
-                                                                }
-                                                            });
-                        player.show();
-                    } else {
-                        console.error("无法加载视频播放器组件:", component.errorString());
+                    console.log("点击视频:", modelData.videoId, modelData.title,modelData.videoUrl,modelData.viewCount)
+
+                    // 如果已有视频在播放，先停止并清理
+                    if (videoLoaders.item) {
+                        console.log("停止当前播放的视频")
+                        videoLoaders.sourceComponent = undefined
                     }
+
+                    eventController.videoManager.increaseViews(modelData.videoId, modelData.viewCount)
+
+                    var videoData = eventController.videoManager.getVideoData(modelData.videoId)
+
+                    videoLoaders.setSource("Video_Playback/Video.qml", {
+                            videoData: videoData,  // 控制器处理过的数据
+                            videoManager: eventController.videoManager,  // 传递控制器引用
+                            index:index
+                    })
                 }
             }
+
+
         }
     }
 

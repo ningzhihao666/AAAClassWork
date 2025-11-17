@@ -4,6 +4,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtMultimedia
 import Qt.labs.platform
+import ".."
 
 FrameLessWindow{
     id: videoPlayerPage
@@ -17,6 +18,15 @@ FrameLessWindow{
     property string currentCommit: "close"  //获取当前展开或者关闭
     property bool attention: false;     //获取关注的up
     property bool forceControlBarVisible: false //状态栏打开或者关闭
+
+    property int realTimeCommitCount: videoData.commitCount || 0    //用于获取评论数量
+
+    Connections {
+            target: commitComponent
+            onCommentCountChanged: {
+                realTimeCommitCount = newCount;
+            }
+        }
 
     property var danmuList: [
             {time: 5.2, text: "前方高能预警！", color: "#FF6699", duration: 25},
@@ -33,7 +43,10 @@ FrameLessWindow{
 
 
     property bool isAlwaysOnTop: false   //置顶窗口
-    property var videoData: ({})
+    property var videoData: ({})    //所有视频数据类型
+                                    //videoData仅仅用于获得视频的id，以及初始化的信息，如：up主名字、视频url等，无法实时更新后端video类的数据，更无法获得评论数量,因为videoData仅仅在创建视频的时候调用了一次，后续没有更新数据
+    property var videoManager       //视频控制器
+    property var index             //视频索引
     
     flags: {
             var baseFlags = Qt.Window | Qt.FramelessWindowHint;
@@ -410,110 +423,110 @@ FrameLessWindow{
                         }
                     }
 
-                    // 弹幕系统
-                    Item {
-                                    id: danmuSystem
-                                    anchors.fill: parent
-                                    z: 100 // 确保在视频上方
+                    // // 弹幕系统
+                    // Item {
+                    //                 id: danmuSystem
+                    //                 anchors.fill: parent
+                    //                 z: 100 // 确保在视频上方
 
-                                    // 弹幕设置
-                                    property int fontSize: 20
-                                    property int maxCount: 50
-                                    property int rowCount: 20
-                                    property int speed: 100 // 像素/秒
+                    //                 // 弹幕设置
+                    //                 property int fontSize: 20
+                    //                 property int maxCount: 50
+                    //                 property int rowCount: 20
+                    //                 property int speed: 100 // 像素/秒
 
-                                    // 当前弹幕列表
-                                    property var activeDanmus: []
+                    //                 // 当前弹幕列表
+                    //                 property var activeDanmus: []
 
-                                    // 初始化
-                                    Component.onCompleted: {
-                                        mediaPlayer.positionChanged.connect(updateDanmu);
-                                    }
+                    //                 // 初始化
+                    //                 Component.onCompleted: {
+                    //                     mediaPlayer.positionChanged.connect(updateDanmu);
+                    //                 }
 
-                                    // 更新弹幕
-                                    function updateDanmu() {
-                                        var currentTime = mediaPlayer.position / 1000; // 转换为秒
+                    //                 // 更新弹幕
+                    //                 function updateDanmu() {
+                    //                     var currentTime = mediaPlayer.position / 1000; // 转换为秒
 
-                                        // 添加新弹幕
-                                        for (var i = 0; i < videoPlayerPage.danmuList.length; i++) {
-                                            var danmu = videoPlayerPage.danmuList[i];
-                                            if (danmu.time <= currentTime && !danmu.displayed) {
-                                                addDanmu(danmu);
-                                                danmu.displayed = true;
-                                            }
-                                        }
+                    //                     // 添加新弹幕
+                    //                     for (var i = 0; i < videoPlayerPage.danmuList.length; i++) {
+                    //                         var danmu = videoPlayerPage.danmuList[i];
+                    //                         if (danmu.time <= currentTime && !danmu.displayed) {
+                    //                             addDanmu(danmu);
+                    //                             danmu.displayed = true;
+                    //                         }
+                    //                     }
 
-                                        // 移除过期弹幕
-                                        for (var j = activeDanmus.length - 1; j >= 0; j--) {
-                                            var activeDanmu = activeDanmus[j];
-                                            if (activeDanmu.startTime + activeDanmu.duration < currentTime) {
-                                                activeDanmu.destroy();
-                                                activeDanmus.splice(j, 1);
-                                            }
-                                        }
-                                    }
+                    //                     // 移除过期弹幕
+                    //                     for (var j = activeDanmus.length - 1; j >= 0; j--) {
+                    //                         var activeDanmu = activeDanmus[j];
+                    //                         if (activeDanmu.startTime + activeDanmu.duration < currentTime) {
+                    //                             activeDanmu.destroy();
+                    //                             activeDanmus.splice(j, 1);
+                    //                         }
+                    //                     }
+                    //                 }
 
-                                    // 添加弹幕
-                                    function addDanmu(danmuData) {
-                                        if (activeDanmus.length >= maxCount) return;
+                    //                 // 添加弹幕
+                    //                 function addDanmu(danmuData) {
+                    //                     if (activeDanmus.length >= maxCount) return;
 
-                                        var danmu = danmuComponent.createObject(danmuSystem, {
-                                            "text": danmuData.text,
-                                            "color": danmuData.color,
-                                            "fontSize": fontSize,
-                                            "speed": speed,
-                                            "duration": danmuData.duration,
-                                            "startTime": mediaPlayer.position / 1000
-                                        });
+                    //                     var danmu = danmuComponent.createObject(danmuSystem, {
+                    //                         "text": danmuData.text,
+                    //                         "color": danmuData.color,
+                    //                         "fontSize": fontSize,
+                    //                         "speed": speed,
+                    //                         "duration": danmuData.duration,
+                    //                         "startTime": mediaPlayer.position / 1000
+                    //                     });
 
-                                        activeDanmus.push(danmu);
-                                    }
+                    //                     activeDanmus.push(danmu);
+                    //                 }
 
-                                    // 弹幕组件
-                                    Component {
-                                        id: danmuComponent
+                    //                 // 弹幕组件
+                    //                 Component {
+                    //                     id: danmuComponent
 
-                                        Text {
-                                            id: danmuItem
-                                            color: parent.color
-                                            font.pixelSize: parent.fontSize
-                                            font.bold: true
-                                            text: parent.text
-                                            style: Text.Outline
-                                            styleColor: "black"
+                    //                     Text {
+                    //                         id: danmuItem
+                    //                         color: parent.color
+                    //                         font.pixelSize: parent.fontSize
+                    //                         font.bold: true
+                    //                         text: parent.text
+                    //                         style: Text.Outline
+                    //                         styleColor: "black"
 
-                                            property int speed: parent.speed
-                                            property int duration: parent.duration
-                                            property double startTime: parent.startTime
-                                            property int row: Math.floor(Math.random() * danmuSystem.rowCount)
-                                            property int trackHeight: parent.height / danmuSystem.rowCount
+                    //                         property int speed: parent.speed
+                    //                         property int duration: parent.duration
+                    //                         property double startTime: parent.startTime
+                    //                         property int row: Math.floor(Math.random() * danmuSystem.rowCount)
+                    //                         property int trackHeight: parent.height / danmuSystem.rowCount
 
-                                            x: parent.width
-                                            y: row * trackHeight + (trackHeight - height) / 2
+                    //                         x: parent.width
+                    //                         y: row * trackHeight + (trackHeight - height) / 2
 
-                                            // 弹幕移动动画
-                                            NumberAnimation on x {
-                                                from: parent.width
-                                                to: -danmuItem.width
-                                                duration: (parent.width + danmuItem.width) * 1000 / speed
-                                                running: true
-                                            }
-                                        }
-                                    }
+                    //                         // 弹幕移动动画
+                    //                         NumberAnimation on x {
+                    //                             from: parent.width
+                    //                             to: -danmuItem.width
+                    //                             duration: (parent.width + danmuItem.width) * 1000 / speed
+                    //                             running: true
+                    //                         }
+                    //                     }
+                    //                 }
 
-                                    // 清空所有弹幕
-                                    function clearAll() {
-                                        for (var i = 0; i < activeDanmus.length; i++) {
-                                            activeDanmus[i].destroy();
-                                        }
-                                        activeDanmus = [];
+                    //                 // 清空所有弹幕
+                    //                 function clearAll() {
+                    //                     for (var i = 0; i < activeDanmus.length; i++) {
+                    //                         activeDanmus[i].destroy();
+                    //                     }
+                    //                     activeDanmus = [];
 
-                                        // 重置显示状态
-                                        for (var j = 0; j < videoPlayerPage.danmuList.length; j++) {
-                                            videoPlayerPage.danmuList[j].displayed = false;
-                                        }
-                                    }
-                    }
+                    //                     // 重置显示状态
+                    //                     for (var j = 0; j < videoPlayerPage.danmuList.length; j++) {
+                    //                         videoPlayerPage.danmuList[j].displayed = false;
+                    //                     }
+                    //                 }
+                    // }
 
                     TapHandler
                         {
@@ -530,21 +543,34 @@ FrameLessWindow{
                         }
 
                     HoverHandler {
-                           id: videoHoverHandler
-                           acceptedDevices: PointerDevice.Mouse
-                           onHoveredChanged: {
-                               if (forceControlBarVisible) {
-                                           controlBar.opacity = 1.0
-                                           return
-                                       }
+                        id: videoHoverHandler
+                        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                        onHoveredChanged: {
 
-                               if (hovered) {
-                                       controlBar.opacity = 1.0
-                               } else {
-                                       controlBar.opacity = 0.0
-                               }
-                           }
-                       }
+                            if (forceControlBarVisible) {
+                                controlBar.opacity = 1.0;
+                                return;
+                            }
+
+                            if (hovered) {
+                                controlBar.opacity = 1.0;
+                            } else {
+                                // 添加延迟隐藏，避免快速切换时闪烁
+                                hideTimer.restart();
+                            }
+                        }
+                    }
+
+                    // 添加延迟隐藏计时器
+                    Timer {
+                        id: hideTimer
+                        interval: 300 // 300毫秒延迟
+                        onTriggered: {
+                            if (!forceControlBarVisible && !videoHoverHandler.hovered) {
+                                controlBar.opacity = 0.0;
+                            }
+                        }
+                    }
 
                     Rectangle
                     {
@@ -1377,6 +1403,11 @@ FrameLessWindow{
                                                    color: "#FF6699"
                                                    z:3
                                                }
+
+                                               onValueChanged:
+                                               {
+                                                   audio.volume = value
+                                               }
                                            }
                                        }
                                    }
@@ -1509,68 +1540,57 @@ FrameLessWindow{
 
                              }
 
-                            Button {
-                                id: commitButton
-                                Layout.preferredWidth: parent.width * 0.15
-                                Layout.preferredHeight: parent.height * 0.7
-                                anchors.leftMargin: 40
-                                font.pixelSize: 18
-                                text: "评论"
-                                Layout.alignment: Qt.AlignVCenter // 添加垂直居中
+                            Row {
+                                spacing: 1  // 按钮和标签之间的间距
+                                Layout.alignment: Qt.AlignVCenter
 
-                                HoverHandler {
-                                         cursorShape: Qt.PointingHandCursor
-                                     }
+                                Button {
+                                    id: commitButton
+                                    width: parent.parent.width * 0.15  // 注意：现在父级是Row，需要调整引用
+                                    height: parent.parent.height * 0.7
+                                    font.pixelSize: 18
+                                    text: "评论"
 
-                                contentItem: Text {
-                                    text:commitButton.text
-                                    font: commitButton.font
-                                    color:
-                                    {
-                                        if(videoPlayerPage.currentView === "commit" || commitButton.hovered)
-                                            "pink"
-                                        else
-                                            "#F0F0F0"
+                                    HoverHandler {
+                                        cursorShape: Qt.PointingHandCursor
                                     }
-                                    horizontalAlignment: Text.AlignHCenter
-                                    verticalAlignment: Text.AlignVCenter
-                                }  //自定义字体格式
-                                background: Rectangle {
-                                    radius: 5
-                                    color: "transparent"
-                                    // Rectangle {
-                                    //             anchors {
-                                    //                 bottom: parent.bottom
-                                    //                 horizontalCenter: parent.horizontalCenter
-                                    //             }
-                                    //             width: parent.width * 0.8
-                                    //             height: 3
-                                    //             color: "pink"
-                                    //             visible: videoPlayerPage.currentView === "commit"
-                                    //         }
+
+                                    contentItem: Text {
+                                        text: commitButton.text
+                                        font: commitButton.font
+                                        color: {
+                                            if(videoPlayerPage.currentView === "commit" || commitButton.hovered)
+                                                "pink"
+                                            else
+                                                "#F0F0F0"
+                                        }
+                                        horizontalAlignment: Text.AlignHCenter
+                                        verticalAlignment: Text.AlignVCenter
+                                    }
+
+                                    background: Rectangle {
+                                        radius: 5
+                                        color: "transparent"
+                                    }
+
+                                    onClicked: {
+                                        videoPlayerPage.currentView = "commit"
+                                    }
                                 }
-                                onClicked: {
-                                    videoPlayerPage.currentView = "commit"
-                                    //操作
-                                }
 
-                             }
+                                Rectangle {
+                                    radius: 10
+                                    height: commitButton.height * 0.7
+                                    width: te.implicitWidth + 20
+                                    y: +commitButton.height * 0.1
+                                    color: "#3A3A3A"
 
-
-                            Rectangle
-                            {
-
-                                radius: 10
-                                Layout.preferredHeight: commitButton.height * 0.7
-                                implicitWidth: te.implicitWidth + 20
-                                color:"#3A3A3A"
-                                Layout.leftMargin: -30
-
-                                Text {
-                                    id:te
-                                    text: "这里获得评论数"
-                                    color:"#F0F0F0"
-                                    anchors.centerIn: parent
+                                    Text {
+                                        id: te
+                                        text: realTimeCommitCount
+                                        color: "#F0F0F0"
+                                        anchors.centerIn: parent
+                                    }
                                 }
                             }
 
@@ -1780,15 +1800,16 @@ FrameLessWindow{
                             {
                                 Layout.leftMargin: 10
                                 Text {
-                                    text: "UP主名字"
+                                    text: videoData.author
                                     color:"white"
                                 }
 
                                 Text {
-                                    text: "粉丝数量，点赞数"
+                                    text: videoData.followerCount + " 粉丝"
                                     color:"grey"
                                 }
                             }
+
 
                             Item {
                                  Layout.fillWidth: true
@@ -1890,21 +1911,25 @@ FrameLessWindow{
 
                                 RowLayout
                                 {
-                                    spacing: 30
+                                    Layout.topMargin: 5
+                                    spacing: 20
 
                                     Text {
-                                        text: "播放量"
-                                        color:"grey"
+                                        text: "播放: " +videoData.viewCount
+                                        color: "#C0C0C0"
+                                        font.pixelSize: 12
                                     }
 
                                     Text {
-                                        text: "评论数"
-                                        color:"grey"
+                                        text: "评论" + realTimeCommitCount
+                                        color: "#C0C0C0"
+                                        font.pixelSize: 12
                                     }
 
                                     Text {
-                                        text: "日期"
-                                        color:"grey"
+                                        text: videoData.uploadDate
+                                        color: "#C0C0C0"
+                                        font.pixelSize: 12
                                     }
                                 }
                             }
@@ -1990,14 +2015,51 @@ FrameLessWindow{
                               ColumnLayout
                               {
                                 Layout.leftMargin: 25
-                                  spacing: 5
+                                spacing: 20
+                                Layout.alignment: Qt.AlignHCenter
+
+                                  Button
+                                  {
+                                     Layout.preferredHeight: 40
+                                     Layout.preferredWidth: 40
+
+                                     onClicked:
+                                     {
+                                         videoManager.increaseLikes(videoData.videoId,videoManager.videoList[index].likeCount)
+                                     }
+
+                                  }
+
                                   Text {
-                                      text: "图片"
+                                      text:videoManager.videoList[index].likeCount
                                       color: "white"
-                                      }
+                                      horizontalAlignment: Text.AlignHCenter
+                                      Layout.alignment: Qt.AlignHCenter
+                                  }
+
+                              }
+                              Item {
+                                   Layout.fillWidth: true
+                               } //填充
+
+                              ColumnLayout
+                              {
+                                  spacing: 20
+                                  Button
+                                  {
+                                     Layout.preferredHeight: 40
+                                     Layout.preferredWidth: 40
+
+                                     onClicked:
+                                     {
+                                         videoManager.increaseCoin(videoData.videoId,videoManager.videoList[index].coinCount)
+                                     }
+                                  }
                                   Text {
-                                      text:"点赞数"
+                                      text:videoManager.videoList[index].coinCount
                                       color: "white"
+                                      horizontalAlignment: Text.AlignHCenter
+                                      Layout.alignment: Qt.AlignHCenter
                                   }
                               }
 
@@ -2007,14 +2069,22 @@ FrameLessWindow{
 
                               ColumnLayout
                               {
-                                  spacing: 5
+                                  spacing: 20
+                                  Button
+                                  {
+                                     Layout.preferredHeight: 40
+                                     Layout.preferredWidth: 40
+
+                                     onClicked:
+                                     {
+                                         videoManager.increaseCollect(videoData.videoId,videoManager.videoList[index].collectionCount)
+                                     }
+                                  }
                                   Text {
-                                      text: "图片"
+                                      text:videoManager.videoList[index].collectionCount
                                       color: "white"
-                                      }
-                                  Text {
-                                      text:"点赞数"
-                                      color: "white"
+                                      horizontalAlignment: Text.AlignHCenter
+                                      Layout.alignment: Qt.AlignHCenter
                                   }
                               }
 
@@ -2024,33 +2094,25 @@ FrameLessWindow{
 
                               ColumnLayout
                               {
-                                  spacing: 5
+                                  spacing: 20
+                                  Button
+                                  {
+                                     Layout.preferredHeight: 40
+                                     Layout.preferredWidth: 40
+
+                                     onClicked:
+                                     {
+                                         videoManager.increaseDownload(videoData.videoId)
+                                     }
+                                  }
                                   Text {
-                                      text: "图片"
+                                      text:videoManager.videoList[index].downloaded
                                       color: "white"
-                                      }
-                                  Text {
-                                      text:"点赞数"
-                                      color: "white"
+                                      horizontalAlignment: Text.AlignHCenter
+                                      Layout.alignment: Qt.AlignHCenter
                                   }
                               }
 
-                              Item {
-                                   Layout.fillWidth: true
-                               } //填充
-
-                              ColumnLayout
-                              {
-                                  spacing: 5
-                                  Text {
-                                      text: "图片"
-                                      color: "white"
-                                      }
-                                  Text {
-                                      text:"点赞数"
-                                      color: "white"
-                                  }
-                              }
 
                               Item {
                                    Layout.fillWidth: true
@@ -2060,14 +2122,22 @@ FrameLessWindow{
                               ColumnLayout
                               {
                                   Layout.rightMargin: 25
-                                  spacing: 5
+                                  spacing: 20
+                                  Button
+                                  {
+                                     Layout.preferredHeight: 40
+                                     Layout.preferredWidth: 40
+
+                                     onClicked:
+                                     {
+                                         videoManager.increaseForward(videoData.videoId,videoManager.videoList[index].forwardCount)
+                                     }
+                                  }
                                   Text {
-                                      text: "图片"
+                                      text:videoManager.videoList[index].forwardCount
                                       color: "white"
-                                      }
-                                  Text {
-                                      text:"点赞数"
-                                      color: "white"
+                                      horizontalAlignment: Text.AlignHCenter
+                                      Layout.alignment: Qt.AlignHCenter
                                   }
                               }
 
@@ -2208,7 +2278,10 @@ FrameLessWindow{
 
 
                         Commit{
+                            id:commitComponent
                             visible: videoPlayerPage.currentView === "commit"
+                            videoManager: videoPlayerPage.videoManager
+                            videoData: videoPlayerPage.videoData
                         }  //评论部分
 
 
