@@ -3,8 +3,11 @@
 #include <QUrl>
 #include <QIODevice>
 
+
 #include "userinfo.h"
 #include "user.h"
+
+
 
 UserInfo::UserInfo(QString nickname,QString account,QString password, User *parent)
     : QObject(parent)
@@ -13,14 +16,40 @@ UserInfo::UserInfo(QString nickname,QString account,QString password, User *pare
     , m_sign("")
     , m_headportrait("")
     , m_level("1")
-    , m_followingCount("0")
-    , m_fansCount("0")
+    , m_followingCount("")
+    , m_fansCount("")
     , m_likes("0")
     , m_isPremiunMembership(false)
     , m_account(account)
     ,m_password(password)
     , m_headportraitTempFile("")
 {}
+
+UserInfo::UserInfo(const QSqlRecord &record, User *parent)
+    : QObject(parent)
+    , _owner(parent)
+{
+    // 直接从数据库记录初始化所有属性
+    m_account = record.value("account").toString();
+    m_nickname = record.value("nickname").toString();
+    m_password = record.value("password").toString();
+    m_sign = record.value("sign").toString();
+    m_headportrait = record.value("headportrait").toString();
+    m_level = record.value("level").toString();
+    m_followingCount = record.value("followingCount").toString();
+    m_fansCount = record.value("fansCount").toString();
+    m_likes = record.value("likes").toString();
+    m_isPremiunMembership = record.value("isPremiunMembership").toBool();
+    m_headportraitTempFile = "";
+
+    // 添加调试信息
+    // if (m_account == "account123") {
+    //     qDebug() << "🔍 DEBUG - UserInfo 数据库构造函数:";
+    //     qDebug() << "  m_followingCount 设置为:" << m_followingCount;
+    //     qDebug() << "  m_level 设置为:" << m_level;
+    //     qDebug() << "  m_fansCount 设置为:" << m_fansCount;
+    // }
+}
 
 UserInfo::~UserInfo() {}
 
@@ -129,3 +158,181 @@ void UserInfo::setIsPremiunMembership(const bool isPremiunMembership)
         emit isPremiunMembershipChanged();
     }
 }
+
+
+// 收藏视频和历史记录相关方法实现
+void UserInfo::setFavoriteVideos(const QStringList &favoriteVideos)
+{
+    if (favoriteVideos != m_favoriteVideos1) {
+        m_favoriteVideos1 = favoriteVideos;
+        emit favoriteVideosChanged();
+    }
+}
+
+void UserInfo::setWatchHistory(const QStringList &watchHistory)
+{
+    if (watchHistory != m_watchHistory) {
+        m_watchHistory = watchHistory;
+        emit watchHistoryChanged();
+    }
+}
+
+void UserInfo::addFavoriteVideo(const QString &videoId)
+{
+    if (!m_favoriteVideos1.contains(videoId)) {
+        m_favoriteVideos1.append(videoId);
+        emit favoriteVideosChanged();
+    }
+}
+
+void UserInfo::removeFavoriteVideo(const QString &videoId)
+{
+    if (m_favoriteVideos1.removeOne(videoId)) {
+        emit favoriteVideosChanged();
+    }
+}
+
+void UserInfo::addWatchHistory(const QString &videoId)
+{
+    // 如果已经存在，先移除再添加到开头，保持最近观看的在前面
+    m_watchHistory.removeOne(videoId);
+    m_watchHistory.prepend(videoId);
+
+    // 限制历史记录数量，避免无限增长（例如最多100条）
+    if (m_watchHistory.size() > 100) {
+        m_watchHistory = m_watchHistory.mid(0, 100);
+    }
+
+    emit watchHistoryChanged();
+}
+
+void UserInfo::clearWatchHistory()
+{
+    if (!m_watchHistory.isEmpty()) {
+        m_watchHistory.clear();
+        emit watchHistoryChanged();
+    }
+}
+
+
+// 关注关系相关方法实现
+bool UserInfo::follow(UserInfo *user)
+{
+    if (!user || user == this || m_following.contains(user)) {
+        return false;
+    }
+
+    m_following.insert(user);
+    user->addFollower(this);
+
+    // 更新关注数
+    setFollowingCount(QString::number(m_following.size()));
+
+    emit followingChanged();
+    return true;
+}
+
+bool UserInfo::unfollow(UserInfo *user)
+{
+    if (!user || !m_following.contains(user)) {
+        return false;
+    }
+
+    m_following.remove(user);
+    user->removeFollower(this);
+
+    // 更新关注数
+    setFollowingCount(QString::number(m_following.size()));
+
+    emit followingChanged();
+    return true;
+}
+
+void UserInfo::addFollower(UserInfo *user)
+{
+    if (user && user != this) {
+        m_followers.insert(user);
+        // 更新粉丝数
+        setFansCount(QString::number(m_followers.size()));
+        emit followersChanged();
+    }
+}
+
+void UserInfo::removeFollower(UserInfo *user)
+{
+    if (user) {
+        m_followers.remove(user);
+        // 更新粉丝数
+        setFansCount(QString::number(m_followers.size()));
+        emit followersChanged();
+    }
+}
+
+// 收藏
+bool UserInfo::collectVideo(Vedio* video) {
+    // if (!video || m_collectedVideos.contains(video)) {
+    //     return false;
+    // }
+
+    // m_collectedVideos.insert(video);
+
+    // // 使用 video->changeCollect() 来增加收藏数量
+    // int currentCollect = video->collectionCount();
+    // video->changeCollect(currentCollect);
+
+
+
+
+    // qDebug() << "用户" << m_nickname << "收藏视频:" << video->title();
+    // emit collectedVideosChanged();
+    // return true;
+
+    if (!video || m_collectedVideos.contains(video)) {
+        return false;
+    }
+
+    m_collectedVideos.insert(video);
+
+
+    if (EventController::instance() && EventController::instance()->videoManager()) {
+        EventController::instance()->videoManager()->increaseCollect(video->videoId(), video->collectionCount());
+    }else {
+        qWarning() << "❌ EventController 的 VideoManager 为空";
+        // 备用方案：直接使用 video->changeCollect()
+        //int currentCollect = video->collectionCount();
+        //video->changeCollect(currentCollect);
+    }
+
+    qDebug() << "用户" << m_nickname << "收藏视频:" << video->title();
+    emit collectedVideosChanged();
+    return true;
+}
+
+bool UserInfo::uncollectVideo(Vedio* video) {
+    if (!video || !m_collectedVideos.contains(video)) {
+        return false;
+    }
+
+    m_collectedVideos.remove(video);
+
+    // 减少视频的收藏数量
+    //video->decreaseCollection();
+    // 因为 Vedio 类没有提供 decreaseCollect 方法
+    int currentCollect = video->collectionCount();
+    if (currentCollect > 0) {
+        video->setCollectionCount(currentCollect - 1);
+    }
+
+    qDebug() << "用户" << m_nickname << "取消收藏视频:" << video->title();
+    emit collectedVideosChanged();
+    return true;
+}
+
+QStringList UserInfo::getFavoriteVideoIds() const {
+    QStringList ids;
+    for (Vedio* video : m_collectedVideos) {
+        ids.append(video->videoId());
+    }
+    return ids;
+}
+

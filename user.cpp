@@ -14,10 +14,15 @@ User::User(const QString &nickname, const QString &account, const QString &passw
     // 初始化用户资料
     _uinfo = new UserInfo(nickname,account,password, this);  //其他属性用userinfo的初始化
 
-    //_uinfo->setAccount(account);
 
-    //_uinfo->setPassword(password);
+    signalConnect();
+}
 
+User::User(const QSqlRecord &record, QObject *parent)
+    : QObject(parent)
+{
+    // 使用新的 UserInfo 构造函数，直接传入数据库记录
+    _uinfo = new UserInfo(record, this);
     signalConnect();
 }
 
@@ -37,6 +42,14 @@ void User::signalConnect()
     connect(_uinfo, &UserInfo::fansCountChanged, this, &User::fansCountChanged);
     connect(_uinfo, &UserInfo::likesChanged, this, &User::likesChanged);
     connect(_uinfo, &UserInfo::isPremiunMembershipChanged, this, &User::isPremiunMembershipChanged);
+
+    // 新增信号的连接
+    connect(_uinfo, &UserInfo::favoriteVideosChanged, this, &User::favoriteVideosChanged);
+    connect(_uinfo, &UserInfo::watchHistoryChanged, this, &User::watchHistoryChanged);
+
+    // 连接关注关系信号
+    connect(_uinfo, &UserInfo::followingChanged, this, &User::followingChanged);
+    connect(_uinfo, &UserInfo::followersChanged, this, &User::followersChanged);
 }
 
 // 属性获取
@@ -139,3 +152,147 @@ void User::setIsPremiunMembership(const bool isPremiunMembership)
     _uinfo->setIsPremiunMembership(isPremiunMembership);
 }
 
+
+// 收藏视频和历史记录相关方法实现
+QStringList User::getFavoriteVideos()
+{
+    return _uinfo ? _uinfo->getFavoriteVideos() : QStringList();
+}
+
+QStringList User::getWatchHistory()
+{
+    return _uinfo ? _uinfo->getWatchHistory() : QStringList();
+}
+
+void User::setFavoriteVideos(const QStringList &favoriteVideos)
+{
+    if (_uinfo) {
+        _uinfo->setFavoriteVideos(favoriteVideos);
+    }
+}
+
+void User::setWatchHistory(const QStringList &watchHistory)
+{
+    if (_uinfo) {
+        _uinfo->setWatchHistory(watchHistory);
+    }
+}
+
+void User::addFavoriteVideo(const QString &videoId)
+{
+    if (_uinfo) {
+        _uinfo->addFavoriteVideo(videoId);
+    }
+}
+
+void User::removeFavoriteVideo(const QString &videoId)
+{
+    if (_uinfo) {
+        _uinfo->removeFavoriteVideo(videoId);
+    }
+}
+
+void User::addWatchHistory(const QString &videoId)
+{
+    if (_uinfo) {
+        _uinfo->addWatchHistory(videoId);
+    }
+}
+
+void User::clearWatchHistory()
+{
+    if (_uinfo) {
+        _uinfo->clearWatchHistory();
+    }
+}
+
+
+// 关注关系相关方法实现
+bool User::follow(User *user)
+{
+    if (_uinfo && user && user->_uinfo) {
+        if (isFollowing(user)) {
+            qDebug() << "⚠️ 已经关注了该用户:" << user->getAccount();
+            return false;
+        }
+        return _uinfo->follow(user->_uinfo);
+    }
+    return false;
+}
+
+bool User::unfollow(User *user)
+{
+    if (_uinfo && user && user->_uinfo) {
+        return _uinfo->unfollow(user->_uinfo);
+    }
+    return false;
+}
+
+bool User::isFollowing(User *user)
+{
+    if (_uinfo && user && user->_uinfo) {
+        return _uinfo->isFollowing(user->_uinfo);
+    }
+    return false;
+}
+
+bool User::isFollowedBy(User *user)
+{
+    if (_uinfo && user && user->_uinfo) {
+        return _uinfo->isFollowedBy(user->_uinfo);
+    }
+    return false;
+}
+
+QStringList User::getFollowingAccounts()
+{
+    QStringList accounts;
+    if (_uinfo) {
+        for (UserInfo *following : _uinfo->getFollowing()) {
+            accounts.append(following->getAccount());
+        }
+    }
+    return accounts;
+}
+
+QStringList User::getFollowerAccounts()
+{
+    QStringList accounts;
+    if (_uinfo) {
+        for (UserInfo *follower : _uinfo->getFollowers()) {
+            accounts.append(follower->getAccount());
+        }
+    }
+    return accounts;
+}
+
+
+// 收藏
+bool User::collectVideo(Vedio* video) {
+    if (_uinfo && video) {
+        return _uinfo->collectVideo(video);
+    }
+    return false;
+}
+
+bool User::uncollectVideo(Vedio* video) {
+    if (_uinfo && video) {
+        return _uinfo->uncollectVideo(video);
+    }
+    return false;
+}
+
+bool User::hasCollectedVideo(Vedio* video) {
+    if (_uinfo && video) {
+        return _uinfo->hasCollectedVideo(video);
+    }
+    return false;
+}
+
+QSet<Vedio*> User::getCollectedVideos() {
+    return _uinfo ? _uinfo->getCollectedVideos() : QSet<Vedio*>();
+}
+
+QStringList User::getFavoriteVideoIds() {
+    return _uinfo ? _uinfo->getFavoriteVideoIds() : QStringList();
+}
