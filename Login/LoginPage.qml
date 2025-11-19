@@ -183,7 +183,8 @@ Item {
                             // 验证密码
                             if (user.password === inputPassword) {
                                 // 登录成功
-                                var loginUsername = user.username || "用户" + phone.slice(-4)
+                                var loginUsername = user.username ||  phone.slice(-4)
+                                // var loginUsername = user.username || "用户" + phone.slice(-4)
                                 var loginAvatarUrl = user.avatar || "https://i2.hdslb.com/bfs/face/5d35a39f7e8a8b7e17d2e0a0a0a0a0a0a0a0a0.jpg@40w_40h.webp"
 
                                 loginDialog.loginSuccess(loginUsername, loginAvatarUrl)
