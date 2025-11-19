@@ -28,7 +28,7 @@ Item {
         property string username: ""
         property string avatarUrl: "https://i0.hdslb.com/bfs/face/member/noface.jpg@40w_40h.webp"
 
-        signal loginSuccess(string username, string avatarUrl)
+        signal loginSuccess(string username, string avatarUrl,string userAccount)
         signal logout()
 
         background: Rectangle {
@@ -187,7 +187,7 @@ Item {
                                 // var loginUsername = user.username || "用户" + phone.slice(-4)
                                 var loginAvatarUrl = user.avatar || "https://i2.hdslb.com/bfs/face/5d35a39f7e8a8b7e17d2e0a0a0a0a0a0a0a0a0.jpg@40w_40h.webp"
 
-                                loginDialog.loginSuccess(loginUsername, loginAvatarUrl)
+                                loginDialog.loginSuccess(loginUsername, loginAvatarUrl,phone)
                                 errorMessage.visible = false
 
                                 console.log("登录成功:", loginUsername)
@@ -927,15 +927,15 @@ Item {
     }
 
     // 暴露信号给外部
-    signal loginSuccess(string username, string avatarUrl)
+    signal loginSuccess(string username, string avatarUrl,string userAccount)
     signal logout()
 
     // 转发内部信号
     Connections {
         target: loginDialog
 
-        function onLoginSuccess(username, avatarUrl) {
-            container.loginSuccess(username, avatarUrl)
+        function onLoginSuccess(username, avatarUrl,userAccount) {
+            container.loginSuccess(username, avatarUrl,userAccount)
         }
 
         function onLogout() {

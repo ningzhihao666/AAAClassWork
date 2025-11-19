@@ -11,6 +11,7 @@ FrameLessWindow {
     property string globalAvatarUrl: "https://i0.hdslb.com/bfs/face/member/noface.jpg@40w_40h.webp"
     property bool isLoggedIn: false
     property string username: ""
+    property string userAccount: ""
     property string currentLeftMenuItem: ""
     property string currentTopNavItem: "推荐"
     property bool showPersonInfo: false
@@ -152,6 +153,7 @@ FrameLessWindow {
         onLoginSuccess: {
             root.isLoggedIn = true
             root.username = username
+            root.userAccount = userAccount
             root.globalAvatarUrl = avatarUrl
             loginPage.close()
         }
