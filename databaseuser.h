@@ -57,6 +57,9 @@ public:
     // 保持向后兼容的方法
     Q_INVOKABLE bool addFavoriteVideo(const QString &userAccount, const QString &videoId);
     Q_INVOKABLE bool removeFavoriteVideo(const QString &userAccount, const QString &videoId);
+    // 添加观看历史记录
+    Q_INVOKABLE bool addWatchHistory(const QString &userAccount, const QString &videoUrl,const QString &videoTitle, const QString &coverUrl);
+
 
 
 private:

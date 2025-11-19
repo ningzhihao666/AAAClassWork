@@ -1279,7 +1279,13 @@ FrameLessWindow {
                     eventController.videoManager.increaseViews(modelData.videoId, modelData.viewCount)
 
                     var videoData = eventController.videoManager.getVideoData(modelData.videoId)
+                    if (databaseUser.addWatchHistory(root.username,modelData.videoUrl,modelData.title,modelData.coverUrl)) {//TODO
+                        console.log("✅ 历史记录保存成功!")
 
+                    } else {
+                        console.log("❌ 历史记录保存失败!")
+
+                    }
                     videoLoaders.setSource("Video_Playback/Video.qml", {
                                                videoData: videoData,  // 控制器处理过的数据
                                                videoManager: eventController.videoManager,  // 传递控制器引用

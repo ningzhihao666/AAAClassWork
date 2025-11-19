@@ -856,3 +856,34 @@ bool DatabaseUser::removeFavoriteVideo(const QString &userAccount, const QString
     qWarning() << "⚠️ 此方法需要 VideoManager 来获取视频对象，建议使用 removeFavoriteVideo(User*, Vedio*) 方法";
     return false;
 }
+bool DatabaseUser::addWatchHistory(const QString &userAccount, const QString &videoUrl,const QString &videoTitle, const QString &coverUrl)
+{
+    if (!connectToDatabase()) {
+        qWarning() << "没连接数据库.................." << userAccount;
+        return false;
+    }
+
+    // 检查用户是否存在
+    if (!getUser(userAccount)) {
+        qWarning() << "❌ 用户不存在:" << userAccount;
+        return false;
+    }
+
+    QSqlQuery query(m_db);
+    query.prepare(R"(
+        INSERT INTO history (user_account, video_id, video_title, video_cover, video_duration, watch_time)
+        VALUES (?, ?, ?, ?, 0, 0)
+    )");
+
+    query.addBindValue(userAccount);
+    query.addBindValue(videoUrl); // 将视频URL存储在video_id字段
+    query.addBindValue(videoTitle);
+    query.addBindValue(coverUrl);
+
+    if (!executeQuery(query, "添加观看历史失败")) {
+        return false;
+    }
+
+    qDebug() << "✅ 用户" << userAccount << "观看历史已添加:" << videoUrl;
+    return true;
+}
