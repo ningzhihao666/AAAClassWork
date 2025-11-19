@@ -23,9 +23,9 @@ FrameLessWindow{
 
     Connections {
             target: commitComponent
-            onCommentCountChanged: {
-                realTimeCommitCount = newCount;
-            }
+            function onCommentCountChanged(newCount) {
+                    realTimeCommitCount = newCount;
+                }
         }
 
     property var danmuList: [
@@ -47,7 +47,7 @@ FrameLessWindow{
                                     //videoData仅仅用于获得视频的id，以及初始化的信息，如：up主名字、视频url等，无法实时更新后端video类的数据，更无法获得评论数量,因为videoData仅仅在创建视频的时候调用了一次，后续没有更新数据
     property var videoManager       //视频控制器
     property var index             //视频索引
-    
+
     flags: {
             var baseFlags = Qt.Window | Qt.FramelessWindowHint;
             if (isAlwaysOnTop) {
@@ -403,9 +403,13 @@ FrameLessWindow{
                         id: mediaPlayer
                         source: videoData.videoUrl
                         videoOutput: videoOutput
-                        audioOutput: AudioOutput {}
+                        audioOutput: AudioOutput
+                        {
+                            id:audio
+                            volume:0.5
+                        }
                     }
-                
+
                     VideoOutput
                     {
                         id:videoOutput
@@ -1493,8 +1497,8 @@ FrameLessWindow{
 
                             Button {
                                 id: infoButton
-                                Layout.preferredWidth: parent.width * 0.15
-                                Layout.preferredHeight: parent.height * 0.7
+                                Layout.preferredWidth: 80
+                                Layout.preferredHeight: 35
                                 Layout.leftMargin:20
                                 font.pixelSize: 18
                                 text: "简介"
@@ -1546,8 +1550,10 @@ FrameLessWindow{
 
                                 Button {
                                     id: commitButton
-                                    width: parent.parent.width * 0.15  // 注意：现在父级是Row，需要调整引用
-                                    height: parent.parent.height * 0.7
+                                    // width: parent.parent.width * 0.15  // 注意：现在父级是Row，需要调整引用
+                                    // height: parent.parent.height * 0.7
+                                    Layout.preferredWidth: widthNum.width * 0.15
+                                        Layout.preferredHeight: widthNum.height * 0.7
                                     font.pixelSize: 18
                                     text: "评论"
 
@@ -1596,8 +1602,8 @@ FrameLessWindow{
 
                             Button {
                                 id: aButton
-                                Layout.preferredWidth: parent.width * 0.15
-                                Layout.preferredHeight: parent.height * 0.7
+                                Layout.preferredWidth: 35
+                                Layout.preferredHeight: 35
                                 font.pixelSize: 18
                                 Layout.rightMargin: 15
                                 text: "*"
@@ -1752,25 +1758,25 @@ FrameLessWindow{
 
                         }
 
-                        Rectangle {
-                                    id:currentRect
-                                    width: infoButton.width * 0.8
-                                    height: infoButton.height * 0.2
-                                    color: "pink"
-                                    visible: true
-                                    z:500
-                                    x: {
-                                        if (videoPlayerPage.currentView === "info") {
-                                            return infoButton.x + (infoButton.width - width) / 2
-                                        } else {
-                                            return commitButton.x + (commitButton.width - width) / 2
-                                        }
-                                    }
-                                    // 添加动画效果
-                                    Behavior on x {
-                                        NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
-                                    }
-                                }  //简介和评论下标
+                        // Rectangle {
+                        //             id:currentRect
+                        //             width: infoButton.width * 0.8
+                        //             height: infoButton.height * 0.2
+                        //             color: "pink"
+                        //             visible: true
+                        //             z:500
+                        //             x: {
+                        //                 if (videoPlayerPage.currentView === "info") {
+                        //                     return infoButton.x + (infoButton.width - width) / 2
+                        //                 } else {
+                        //                     return commitButton.x + (commitButton.width - width) / 2
+                        //                 }
+                        //             }
+                        //             // 添加动画效果
+                        //             Behavior on x {
+                        //                 NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+                        //             }
+                        //         }  //简介和评论下标
 
          // 简介部分===================//========================
                         Item {
@@ -1819,8 +1825,8 @@ FrameLessWindow{
                             Button {
                                 id:bButton
                                 Layout.rightMargin: 20
-                                Layout.preferredWidth: parent.width * 0.2
-                                Layout.preferredHeight: parent.height * 0.7
+                                Layout.preferredWidth: 80
+                                Layout.preferredHeight: 35
                                 font.pixelSize: 18
                                 font.bold: true
 

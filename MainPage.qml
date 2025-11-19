@@ -315,8 +315,16 @@ FrameLessWindow {
                             onClicked: {
                                 console.log("点击菜单项:", modelData.text)
                                 root.currentLeftMenuItem = modelData.text
-                                if (modelData.text === "我的") {
-                                    myPagePopup.open()
+                                if (modelData.text === "我的") {//TODO
+                                    // myPagePopup.open()
+                                    if (!root.isLoggedIn) {
+                                        console.log("用户未登录，打开登录对话框")
+                                        root.openLoginDialog()  // 调用登录函数
+                                    } else {
+                                        root.showPersonInfo = true
+                                    }
+
+
                                 }
                                 if(modelData.text === "首页"){
                                     root.showPersonInfo = false
@@ -395,7 +403,7 @@ FrameLessWindow {
                             }
 
                             Text {
-                                text: root.isLoggedIn ? "查看个人主页" : "立即登录享受更多功能"  // 修改这里
+                                text: root.isLoggedIn ? "查看个人主页" : "立即登录享受更多功能"  // 修改这里 //TODO
                                 font.pixelSize: 12
                                 color: "#666"
                             }
@@ -529,6 +537,7 @@ FrameLessWindow {
 
             // 关闭按钮
             Button {
+                id:closeBtn
                 width: 30
                 height: 30
                 anchors.right: parent.right
@@ -684,6 +693,7 @@ FrameLessWindow {
         width: parent.width - leftSideBar.width
         height: 60
         color: "white"
+
         anchors {
             top: parent.top
             left: leftSideBar.right
@@ -697,7 +707,7 @@ FrameLessWindow {
 
             Label{
                 id: bili_icon
-                anchors.left: parent.left
+                // anchors.left: parent.left
                 anchors.leftMargin: 10
                 text: "bilibili"
                 color: "pink"
@@ -711,7 +721,9 @@ FrameLessWindow {
                 spacing: 10
                 Layout.fillWidth: true
                 // visible: !root.showPersonInfo
-                visible: !root.showPersonInfo && root.currentLeftMenuItem !== "设置"
+                // visible: !root.showPersonInfo && root.currentLeftMenuItem !== "设置"
+                opacity: (!root.showPersonInfo && root.currentLeftMenuItem !== "设置") ? 1.0 : 0.0
+                enabled: opacity > 0.5
                 property real itemWidth: (width - (navRepeater.count - 1) * spacing) / navRepeater.count
 
                 Repeater {
@@ -772,8 +784,8 @@ FrameLessWindow {
                 id: search
                 Layout.preferredWidth: 250
                 Layout.preferredHeight: 40
-                anchors.rightMargin: 20
-                anchors.right: line.left
+                // anchors.rightMargin: 20
+                // anchors.right: line.left
                 visible: true
 
                 placeholderText: "搜索你感兴趣的视频  🔍"
@@ -822,14 +834,10 @@ FrameLessWindow {
                 }
             }
 
-
-
-
             Rectangle {
                 id: line
-                anchors.right: controls.left
-                anchors.leftMargin: 10
-                anchors.rightMargin: 10
+                Layout.preferredWidth: 20
+                Layout.preferredHeight: 40
                 visible: true
                 Text {
                     anchors.centerIn: parent
@@ -842,8 +850,6 @@ FrameLessWindow {
             RowLayout {
                 id: controls
                 spacing: 10
-                anchors.right: parent.right
-                Layout.rightMargin: 20
                 visible: true
 
                 Button {
@@ -928,17 +934,17 @@ FrameLessWindow {
                     model: contentContainer.videoManager ? contentContainer.videoManager.videoList : []
 
                     // 调试信息
-                                    Component.onCompleted: {
-                                        console.log("视频网格初始化完成");
-                                        console.log("视频管理器:", contentContainer.videoManager);
-                                        console.log("视频列表长度:", videoGrid.count);
+                    Component.onCompleted: {
+                        console.log("视频网格初始化完成");
+                        console.log("视频管理器:", contentContainer.videoManager);
+                        console.log("视频列表长度:", videoGrid.count);
 
-                                        if (videoGrid.count > 0) {
-                                            console.log("第一个视频:", videoGrid.model[0]);
-                                        }
+                        if (videoGrid.count > 0) {
+                            console.log("第一个视频:", videoGrid.model[0]);
+                        }
 
-                                        console.log("!!!!!!!!!!!!!!!!!!!!!" + contentContainer.videoManager.videoList)
-                                    }
+                        console.log("!!!!!!!!!!!!!!!!!!!!!" + contentContainer.videoManager.videoList)
+                    }
 
                     delegate: videoDelegate // 使用下面的组件
                 }
@@ -1063,34 +1069,34 @@ FrameLessWindow {
         }
 
         Loader {
-               id: videoLoaders
-               // 初始状态为空，不加载任何组件
-               sourceComponent: undefined
+            id: videoLoaders
+            // 初始状态为空，不加载任何组件
+            sourceComponent: undefined
 
-               // 可选：设置异步加载避免界面卡顿
-               asynchronous: true
+            // 可选：设置异步加载避免界面卡顿
+            asynchronous: true
 
-               // 组件加载完成后的处理
-               onLoaded: {
-                   if (item) {
-                       console.log("视频播放器加载完成")
-                       // 显示视频播放窗口
-                       item.show()
+            // 组件加载完成后的处理
+            onLoaded: {
+                if (item) {
+                    console.log("视频播放器加载完成")
+                    // 显示视频播放窗口
+                    item.show()
 
-                       // 连接关闭信号，当播放器关闭时清理Loader
-                       item.closing.connect(function() {
-                           console.log("视频播放器关闭，清理资源")
-                           videoLoaders.sourceComponent = undefined
-                       })
-                   }
-               }
+                    // 连接关闭信号，当播放器关闭时清理Loader
+                    item.closing.connect(function() {
+                        console.log("视频播放器关闭，清理资源")
+                        videoLoaders.sourceComponent = undefined
+                    })
+                }
+            }
 
-               onStatusChanged: {
-                   if (status === Loader.Error) {
-                       console.error("加载视频播放器失败:", sourceComponent.errorString())
-                   }
-               }
-           }
+            onStatusChanged: {
+                if (status === Loader.Error) {
+                    console.error("加载视频播放器失败:", sourceComponent.errorString())
+                }
+            }
+        }
 
         Loader {
             id: personInfoLoader
@@ -1275,10 +1281,10 @@ FrameLessWindow {
                     var videoData = eventController.videoManager.getVideoData(modelData.videoId)
 
                     videoLoaders.setSource("Video_Playback/Video.qml", {
-                            videoData: videoData,  // 控制器处理过的数据
-                            videoManager: eventController.videoManager,  // 传递控制器引用
-                            index:index
-                    })
+                                               videoData: videoData,  // 控制器处理过的数据
+                                               videoManager: eventController.videoManager,  // 传递控制器引用
+                                               index:index
+                                           })
                 }
             }
 

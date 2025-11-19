@@ -579,7 +579,7 @@ ApplicationWindow{
 
                     Image {
                         anchors.fill: parent
-                        source: model.image
+                        // source: model.image//TODO
                         fillMode: Image.PreserveAspectCrop
                         asynchronous: true
                     }
@@ -618,7 +618,7 @@ ApplicationWindow{
                         text: "发布时间: " + getDetailedTime(model.timestamp)
                         font.pixelSize: 11
                         color: "#cccccc"
-                        visible: mouseArea.containsMouse
+                        // visible: mouseArea.containsMouse
                     }
                 }
 
@@ -785,12 +785,14 @@ ApplicationWindow{
                 }
 
                 // 用于检测鼠标悬停
-                MouseArea {
-                    id: mouseArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    acceptedButtons: Qt.NoButton // 只接收悬停事件，不接收点击
-                }
+                // MouseArea {
+                //     id: mouseArea
+                //     // anchors.fill: parent
+                //     Layout.fillWidth: true
+                //     Layout.fillHeight: true
+                //     hoverEnabled: true
+                //     acceptedButtons: Qt.NoButton // 只接收悬停事件，不接收点击
+                // }
             }
         }
     }

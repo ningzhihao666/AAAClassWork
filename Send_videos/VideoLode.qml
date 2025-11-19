@@ -5,6 +5,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
 import QtQuick.Window
+import QtCore
 
 Item {
     id: videoLode

@@ -10,6 +10,8 @@ ApplicationWindow {
     StackView {
         id: stackView
         // anchors.fill: parent
-        initialItem: MainPage{}  // 加载外部QML文件作为初始页面
+        initialItem: Component {
+                    MainPage {}
+                }  // 加载外部QML文件作为初始页面
     }
 }

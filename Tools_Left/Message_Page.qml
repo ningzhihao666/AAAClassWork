@@ -10,17 +10,17 @@ Item {
     height: 800
 
     property string activeChatTarget: ""
-    property bool connected: msgHandler && msgHandler.clientHandler ?
-                              msgHandler.clientHandler.connected : false
-    property bool connecting: msgHandler && msgHandler.clientHandler ?
-                               msgHandler.clientHandler.connecting : false
+    property bool connected: clientHandler ?
+                               clientHandler.connected : false
+    property bool connecting: clientHandler ?
+                                clientHandler.connecting : false
 
     signal closeRequested()
 
 
     //自动连接
     Component.onCompleted: {
-         if (msgHandler && msgHandler.clientHandler) {
+         if (clientHandler) {
              generateRandomUsername()
              autoConnectToServer()
          } else {
@@ -37,7 +37,7 @@ Item {
             var randomNum = Math.floor(Math.random() * 1000)
             var randomName = randomAdj + randomNoun + randomNum
 
-            msgHandler.clientHandler.setName(randomName)
+             clientHandler.setName(randomName)
             console.log("生成随机用户名:", randomName)
         }
 
@@ -47,7 +47,7 @@ Item {
             var serverPort = 8080
 
             console.log("尝试自动连接到服务器:", serverAddress + ":" + serverPort)
-            msgHandler.clientHandler.connectToServer(serverAddress, serverPort)
+             clientHandler.connectToServer(serverAddress, serverPort)
         }
 
     RowLayout {
@@ -190,8 +190,8 @@ Item {
                     color: "#ffffff"
 
                     property string activeChatTarget: ""
-                    property bool connected: msgHandler.clientHandler.connected
-                    property bool connecting: msgHandler.clientHandler.connecting
+                    property bool connected:  clientHandler.connected
+                    property bool connecting:  clientHandler.connecting
 
                     ColumnLayout {
                         anchors.fill: parent
@@ -259,15 +259,15 @@ Item {
 
                                 // 当前用户信息
                                 Text {
-                                    text: "用户: " + msgHandler.clientHandler.name
+                                    text: "用户: " +  clientHandler.name
                                     font.pixelSize: 14
                                     color: "#666666"
                                 }
 
                                 // 服务器信息
                                 Text {
-                                    text: "服务器: " + (msgHandler.clientHandler.connected ?
-                                        (msgHandler.clientHandler.serverIp + ":" + msgHandler.clientHandler.serverPort) : "未连接")
+                                    text: "服务器: " + ( clientHandler.connected ?
+                                        ( clientHandler.serverIp + ":" +  clientHandler.serverPort) : "未连接")
                                     font.pixelSize: 14
                                     color: "#666666"
                                 }
@@ -317,7 +317,7 @@ Item {
                                             anchors.margins: 10
 
                                             Text {
-                                                text: "在线用户 (" + msgHandler.clientHandler.clientList.length + ")"
+                                                text: "在线用户 (" +  clientHandler.clientList.length + ")"
                                                 font.bold: true
                                                 font.pixelSize: 16
                                                 color: "#333333"
@@ -339,7 +339,7 @@ Item {
                                         id: contactListView
                                         Layout.fillWidth: true
                                         Layout.fillHeight: true
-                                        model: msgHandler.clientHandler.clientList
+                                        model:  clientHandler.clientList
                                         clip: true
 
                                         delegate: Rectangle {
@@ -399,7 +399,7 @@ Item {
                                                 onClicked: {
                                                     contactListView.currentIndex = index
                                                     rightContent.activeChatTarget = modelData
-                                                    msgHandler.clientHandler.setActiveChat(modelData)
+                                                     clientHandler.setActiveChat(modelData)
                                                 }
                                             }
                                         }
@@ -476,7 +476,7 @@ Item {
                                                     text: "清除记录"
                                                     flat: true
                                                     onClicked: {
-                                                        msgHandler.clientHandler.chatHistory = ""
+                                                         clientHandler.chatHistory = ""
                                                     }
                                                 }
 
@@ -485,7 +485,7 @@ Item {
                                                     flat: true
                                                     onClicked: {
                                                         if (rightContent.activeChatTarget) {
-                                                            msgHandler.clientHandler.loadChatHistory(rightContent.activeChatTarget)
+                                                             clientHandler.loadChatHistory(rightContent.activeChatTarget)
                                                         }
                                                     }
                                                 }
@@ -503,7 +503,7 @@ Item {
                                         TextArea {
                                             id: messageDisplay
                                             readOnly: true
-                                            text: msgHandler.clientHandler.chatHistory ||
+                                            text:  clientHandler.chatHistory ||
                                                   (rightContent.activeChatTarget ?
                                                    "与 " + rightContent.activeChatTarget + " 的对话\n\n等待消息..." :
                                                    "欢迎使用聊天功能！\n\n请从左侧选择一个联系人开始聊天。")
@@ -515,7 +515,7 @@ Item {
 
                                             // 自动滚动到底部
                                             onTextChanged: {
-                                                if (msgHandler.clientHandler.chatHistory) {
+                                                if ( clientHandler.chatHistory) {
                                                     chatScrollView.ScrollBar.vertical.position = 1.0
                                                 }
                                             }
@@ -546,7 +546,7 @@ Item {
 
                                                 onAccepted: {
                                                     if (rightContent.activeChatTarget && text.trim() !== "") {
-                                                        msgHandler.clientHandler.sendToClient(rightContent.activeChatTarget, text.trim())
+                                                         clientHandler.sendToClient(rightContent.activeChatTarget, text.trim())
                                                         messageInput.clear()
                                                     }
                                                 }
@@ -559,7 +559,7 @@ Item {
                                                 enabled: messageInput.text.trim() !== "" && rightContent.connected
                                                 onClicked: {
                                                     if (rightContent.activeChatTarget && messageInput.text.trim() !== "") {
-                                                        msgHandler.clientHandler.sendToClient(rightContent.activeChatTarget, messageInput.text.trim())
+                                                         clientHandler.sendToClient(rightContent.activeChatTarget, messageInput.text.trim())
                                                         messageInput.clear()
                                                     }
                                                 }
@@ -2612,7 +2612,7 @@ Item {
            }
 
            onAccepted: {
-               msgHandler.clientHandler.reconnect()
+                clientHandler.reconnect()
            }
 
            onRejected: {
@@ -2620,52 +2620,4 @@ Item {
            }
        }
 
-    // 监听C++信号
-    Connections {
-        target: msgHandler.clientHandler
-        function onConnectionError(errorMessage) {
-            errorMessageLabel.text = errorMessage
-            reconnectDialog.open()
-        }
-    }
-
-    Connections {
-        target: msgHandler.clientHandler
-        function onConnected() {
-            console.log("连接成功，当前用户:", msgHandler.clientHandler.name)
-        }
-    }
-
-    Connections {
-        target: msgHandler.clientHandler
-        function onClientListChanged() {
-            console.log("客户端列表更新，在线用户:", msgHandler.clientHandler.clientList.length)
-        }
-    }
-
-    Connections {
-        target: msgHandler.clientHandler
-        function onNewMessage(message) {
-            console.log("收到新消息:", message)
-        }
-    }
-
-    Connections {
-        target: msgHandler.clientHandler
-        function onHistoryReceived(contactName, history) {
-            console.log("收到", contactName, "的历史记录")
-            if (contactName === rightContent.activeChatTarget) {
-                // 聊天记录会自动通过 chatHistory 属性更新
-            }
-        }
-    }
-    Connections {
-        target: msgHandler.clientHandler
-        function onConnected() {
-            console.log("连接成功")
-        }
-        function onConnectionError(errorMessage) {
-            console.log("连接错误:", errorMessage)
-        }
-    }
 }

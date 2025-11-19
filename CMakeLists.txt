@@ -83,6 +83,7 @@ SOURCES
 SOURCES controllers/eventController.h controllers/eventController.cpp
 SOURCES controllers/videomanager.h controllers/videomanager.cpp
 SOURCES comment.h comment.cpp
+RESOURCES
 )
 
 # 链接必要的Qt模块

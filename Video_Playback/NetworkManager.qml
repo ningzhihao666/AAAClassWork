@@ -13,6 +13,7 @@ QtObject {
     function get(endpoint, callback) {
         var xhr = new XMLHttpRequest();
         var fullUrl = baseUrl + endpoint;
+        xhr.open("GET", fullUrl);//TODO
 
         console.log("🌐 发送请求:", fullUrl);
 
@@ -50,7 +51,7 @@ QtObject {
             requestComplete(false, {message: "网络连接错误"});
         };
 
-        xhr.open("GET", fullUrl);
+        // xhr.open("GET", fullUrl);
         xhr.send();
     }
 

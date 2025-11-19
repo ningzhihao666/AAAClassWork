@@ -932,7 +932,13 @@ Item {
     // 转发内部信号
     Connections {
         target: loginDialog
-        onLoginSuccess: container.loginSuccess(username, avatarUrl)
-        onLogout: container.logout()
+
+        function onLoginSuccess(username, avatarUrl) {
+            container.loginSuccess(username, avatarUrl)
+        }
+
+        function onLogout() {
+            container.logout()
+        }
     }
 }

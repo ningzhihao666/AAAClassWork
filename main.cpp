@@ -10,6 +10,7 @@
 #include "vedio.h"
 #include "user.h"
 #include "controllers/eventController.h"
+#include"clienthandler.h"
 
 
 int main(int argc, char *argv[])
@@ -61,6 +62,10 @@ int main(int argc, char *argv[])
     // 使用单例模式获取数据库实例
     DatabaseUser *db = DatabaseUser::instance();
     db->loadFromDatabase();
+
+    ClientHandler *clientHandler = new ClientHandler();
+    engine.rootContext()->setContextProperty("clientHandler", clientHandler);
+
 
     //暴露给qml文件
     engine.rootContext()->setContextProperty("databaseUser", db);

@@ -9,7 +9,8 @@ Rectangle {
 
     // 接收全局头像URL属性
     property alias globalAvatarUrl: personInfoPage.avatarUrl
-    property string avatarUrl: "https://i0.hdslb.com/bfs/face/member/noface.jpg@40w_40h.webp"
+    // property string avatarUrl: "https://i0.hdslb.com/bfs/face/member/noface.jpg@40w_40h.webp"
+    property string avatarUrl: " "
 
     // 状态管理
     property int selectedHistoryIndex: -1//历史记录index
