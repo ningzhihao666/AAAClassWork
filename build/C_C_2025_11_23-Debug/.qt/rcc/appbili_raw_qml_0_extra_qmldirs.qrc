@@ -1,0 +1,10 @@
+<RCC>
+  <qresource prefix="/qt/qml/bili/">
+    <file alias="Tools_Left/qmldir">/root/AAAClassWork/build/C_C_2025_11_23-Debug/bili/Tools_Left/qmldir</file>
+    <file alias="Send_videos/qmldir">/root/AAAClassWork/build/C_C_2025_11_23-Debug/bili/Send_videos/qmldir</file>
+    <file alias="Login/qmldir">/root/AAAClassWork/build/C_C_2025_11_23-Debug/bili/Login/qmldir</file>
+    <file alias="Video_Playback/qmldir">/root/AAAClassWork/build/C_C_2025_11_23-Debug/bili/Video_Playback/qmldir</file>
+    <file alias="Settings/qmldir">/root/AAAClassWork/build/C_C_2025_11_23-Debug/bili/Settings/qmldir</file>
+  </qresource>
+</RCC>
+
