@@ -1,0 +1,9 @@
+<RCC>
+  <qresource prefix="/qt/qml/bili/">
+    <file alias="Img.qrc">/root/sffx/AAAClassWork/Img.qrc</file>
+    <file alias="images.qrc">/root/sffx/AAAClassWork/images.qrc</file>
+    <file alias="a站需求文档.odt">/root/sffx/AAAClassWork/a站需求文档.odt</file>
+    <file alias="lll.qrc">/root/sffx/AAAClassWork/lll.qrc</file>
+  </qresource>
+</RCC>
+
