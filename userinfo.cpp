@@ -2,12 +2,8 @@
 #include <QStandardPaths>
 #include <QUrl>
 #include <QIODevice>
-
-
 #include "userinfo.h"
 #include "user.h"
-
-
 
 UserInfo::UserInfo(QString nickname,QString account,QString password, User *parent)
     : QObject(parent)

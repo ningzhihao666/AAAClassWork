@@ -26,8 +26,8 @@ DatabaseUser::DatabaseUser() : QObject()
 {
     // 初始化数据库连接
     m_db = QSqlDatabase::addDatabase("QMYSQL", "user_connection");
-    m_db.setHostName("cq-cdb-82wznfkj.sql.tencentcdb.com");
-    m_db.setPort(22290);
+    m_db.setHostName("cq-cdb-nffeyxbr.sql.tencentcdb.com");
+    m_db.setPort(21143);
     m_db.setDatabaseName("user");
     m_db.setUserName("root");
     m_db.setPassword("12345678n");

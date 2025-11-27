@@ -13,8 +13,6 @@ User::User(const QString &nickname, const QString &account, const QString &passw
 {
     // 初始化用户资料
     _uinfo = new UserInfo(nickname,account,password, this);  //其他属性用userinfo的初始化
-
-
     signalConnect();
 }
 

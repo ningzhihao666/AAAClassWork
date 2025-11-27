@@ -210,7 +210,6 @@ signals:
     void followerChanged();
     void commitChanged();
     void headUrlChanged();
-
     void commentsChanged();
     void commentAdded(Comment* newComment);
     void replyAdded(const QString &parentCommentId, Comment* newReply);

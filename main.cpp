@@ -1,4 +1,3 @@
-
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QProcess>
@@ -6,11 +5,14 @@
 #include <QDir>
 #include <QFile>
 #include <QQmlContext>
+#include <QCommandLineParser>
+#include <QCommandLineOption>
+#include "videoserver.h"        //服务器c++文件
 #include "databaseuser.h"
 #include "vedio.h"
 #include "user.h"
 #include "controllers/eventController.h"
-#include"clienthandler.h"
+#include "clienthandler.h"
 
 
 int main(int argc, char *argv[])
@@ -20,44 +22,19 @@ int main(int argc, char *argv[])
 
     // 初始化单例
     EventController::init(&app); // 设置 app 作为父对象
+    QString port = "3000";
 
-    //启动 Node.js 服务器
-    QProcess *nodeProcess = new QProcess(&app);
-    QProcess *nodeProcess2 = new QProcess(&app);
+    // 创建并启动服务器
+    VideoServer server;
+    bool ok;
+    quint16 portNumber = port.toUShort(&ok);
 
-    //获得当前文件夹的绝对地址
-    QString exeDir = QCoreApplication::applicationDirPath();
-    QStringList pathParts = exeDir.split('/', Qt::SkipEmptyParts);
-    QStringList newParts = pathParts.mid(0, pathParts.size() - 2);
-    QString withoutLastTwo = "/" + newParts.join("/");
-    QString serverScriptPath = withoutLastTwo + "/Send_videos/server.js";
-
-    //启动
-    nodeProcess->start("node", QStringList() << serverScriptPath);
-
-    // 检查是否成功启动
-    if (!nodeProcess->waitForStarted(3000)) {
-        qDebug() << "启动云服务器失败:" << nodeProcess->errorString();
+    if (ok && server.startServer(portNumber)) {
+        qInfo() << "✅ 视频服务器成功启动：" << portNumber;
     } else {
-        qDebug() << "[云服务器启动成功]";
+        qCritical() << "❌ 视频服务器启动失败：" << port;
+        return 1;
     }
-
-
-    // 退出时终止云服务器和云数据库进程
-    QObject::connect(&app, &QGuiApplication::aboutToQuit, [nodeProcess]() {
-        if (nodeProcess && nodeProcess->state() == QProcess::Running) {
-            qDebug() << "正在关闭云服务器...";
-            nodeProcess->terminate();
-            if (!nodeProcess->waitForFinished(5000)) { nodeProcess->kill(); }
-        }
-    });
-    QObject::connect(&app, &QGuiApplication::aboutToQuit, [nodeProcess2]() {
-        if (nodeProcess2 && nodeProcess2->state() == QProcess::Running) {
-            qDebug() << "正在关闭云数据库...";
-            nodeProcess2->terminate();
-            if (!nodeProcess2->waitForFinished(5000)) { nodeProcess2->kill(); }
-        }
-    });
 
     // 使用单例模式获取数据库实例
     DatabaseUser *db = DatabaseUser::instance();

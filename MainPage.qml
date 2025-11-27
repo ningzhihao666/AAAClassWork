@@ -63,12 +63,6 @@ FrameLessWindow {
         });
     }
 
-    // 显示错误信息
-    function showError(message) {
-        errorPopup.message = message;
-        errorPopup.open();
-    }
-
     Component.onCompleted: {
         loadVideos();
     }
@@ -85,7 +79,7 @@ FrameLessWindow {
 
         background: Rectangle {
             color: refreshButton.down ? "#e6f7ff" :
-                                        refreshButton.enabled ? "#00aeec" : "#cccccc"
+            refreshButton.enabled ? "#00aeec" : "#cccccc"
             border.color: refreshButton.enabled ? "#00aeec" : "#cccccc"
             border.width: 1
             radius: 4
@@ -165,9 +159,7 @@ FrameLessWindow {
 
     // 头像路径处理函数
     function processAvatarUrl(url) {
-        if (!url || url === "") {
-            return "https://i0.hdslb.com/bfs/face/member/noface.jpg@40w_40h.webp"
-        }
+        if (!url || url === "") { return "https://i0.hdslb.com/bfs/face/member/noface.jpg@40w_40h.webp" }
 
         console.log("原始头像URL:", url)
 
@@ -265,10 +257,7 @@ FrameLessWindow {
                         function getBackgroundColor() {
                             if (root.currentLeftMenuItem === modelData.text) {
                                 return "#e0e0e0"
-                            } /*else if (tapHandler.pressed) {
-                                return "#d8d8d8"
-                            }*/
-                            return "transparent"
+                            }
                         }
 
                         Row {
@@ -290,24 +279,6 @@ FrameLessWindow {
                             }
                         }
 
-                        /*TapHandler {
-                            id: tapHandler
-                            acceptedDevices: PointerDevice.Mouse | PointerDevice.Touch
-                            gesturePolicy: TapHandler.ReleaseWithinBounds
-
-                            onTapped: {
-                                console.log("点击菜单项:", modelData.text)
-                                root.currentLeftMenuItem = modelData.text
-
-                                if (modelData.text === "我的") {
-                                    root.showPersonInfo = true
-                                }
-                                if(modelData.text === "首页"){
-                                    root.showPersonInfo =false
-                                    root.currentLeftMenuItem = ""
-                                }
-                            }
-                        }*/
                         Button {
                             anchors.fill: parent
                             background: Rectangle {
@@ -325,8 +296,6 @@ FrameLessWindow {
                                     } else {
                                         root.showPersonInfo = true
                                     }
-
-
                                 }
                                 if(modelData.text === "首页"){
                                     root.showPersonInfo = false
@@ -334,7 +303,6 @@ FrameLessWindow {
                                 }
                                 if(modelData.text==="动态") dynamicUploadPopup.open()
                             }
-
                         }
 
                         Behavior on color {
@@ -594,34 +562,36 @@ FrameLessWindow {
     }
 
     // 视频上传弹窗
-    Popup {
-        id: videoUploadPopup
-        width: 800
-        height: 600
-        x: (parent.width - width) / 2
-        y: (parent.height - height) / 2
-        modal: true
-        focus: true
-        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+    FrameLessWindow {
+       id: videoUploadPopup
+       width: 900
+       height: 800
+       visible: false
+       flags: Qt.Dialog
+       title: "视频上传页面"
 
-        // 加载视频上传页面
-        Loader {
-            id: videoLoader
-            anchors.fill: parent
-            source: "Send_videos/VideoLode.qml"
+       // 加载视频上传页面
+       Loader {
+           id: videoLoader
+           anchors.fill: parent
+           source: "Send_videos/VideoLode.qml"
 
-            onLoaded: {
-                // 连接关闭信号
-                if (item) {
-                    item.uploadFinished.connect(function() {
-                        videoUploadPopup.close()
-                    })
-                    item.uploadCancelled.connect(function() {
-                        videoUploadPopup.close()
-                    })
-                }
-            }
-        }
+           onLoaded: {
+               // 连接关闭信号
+               if (item && item.closeRequested) {
+                   item.closeRequested.connect(function() {
+                       videoUploadPopup.close()
+                   })
+               }
+           }
+       }
+
+       // 打开时居中显示
+       function open() {
+           videoUploadPopup.show()
+           videoUploadPopup.x = (Screen.width - width) / 2
+           videoUploadPopup.y = (Screen.height - height) / 2
+       }
     }
 
     // 消息弹窗
@@ -656,16 +626,6 @@ FrameLessWindow {
             messagePopup.y = (Screen.height - height) / 2
         }
     }
-    // 视频上传弹窗
-    // Popup {
-    //    // id: dynamicUploadPopup
-    //    width: 800
-    //    height: 600
-    //    x: (parent.width - width) / 2
-    //    y: (parent.height - height) / 2
-    //    modal: true
-    //    focus: true
-    //    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
     Loader {
         id: dynamicUploadPopup
@@ -722,8 +682,6 @@ FrameLessWindow {
                 id: funcRegion
                 spacing: 10
                 Layout.fillWidth: true
-                // visible: !root.showPersonInfo
-                // visible: !root.showPersonInfo && root.currentLeftMenuItem !== "设置"
                 opacity: (!root.showPersonInfo && root.currentLeftMenuItem !== "设置") ? 1.0 : 0.0
                 enabled: opacity > 0.5
                 property real itemWidth: (width - (navRepeater.count - 1) * spacing) / navRepeater.count
@@ -773,10 +731,6 @@ FrameLessWindow {
                 }
             }
 
-            // ListModel {
-            //         id: videoModel11
-            //     }
-
             // 新增：搜索结果模型
             ListModel {
                 id: searchResultModel
@@ -786,8 +740,6 @@ FrameLessWindow {
                 id: search
                 Layout.preferredWidth: 250
                 Layout.preferredHeight: 40
-                // anchors.rightMargin: 20
-                // anchors.right: line.left
                 visible: true
 
                 placeholderText: "搜索你感兴趣的视频  🔍"
@@ -933,21 +885,7 @@ FrameLessWindow {
                     cellWidth: (width - 30) / 4
                     cellHeight: 220
                     clip: true
-                    model: contentContainer.videoManager ? contentContainer.videoManager.videoList : []
-
-                    // 调试信息
-                    Component.onCompleted: {
-                        console.log("视频网格初始化完成");
-                        console.log("视频管理器:", contentContainer.videoManager);
-                        console.log("视频列表长度:", videoGrid.count);
-
-                        if (videoGrid.count > 0) {
-                            console.log("第一个视频:", videoGrid.model[0]);
-                        }
-
-                        console.log("!!!!!!!!!!!!!!!!!!!!!" + contentContainer.videoManager.videoList)
-                    }
-
+                    model: videoModel
                     delegate: videoDelegate // 使用下面的组件
                 }
 
@@ -1254,49 +1192,56 @@ FrameLessWindow {
                         height: 24
                     }
 
-                    Text {
-                        text: modelData.author
-                        font.pixelSize: 12
-                        color: "#999"
-                    }
+                    // Text {
+                    //     text: modelData.author
+                    //     font.pixelSize: 12
+                    //     color: "#999"
+                    // }
 
-                    Text {
-                        text: "▶ " + modelData.viewCount
-                        font.pixelSize: 12
-                        color: "#999"
-                    }
+                    // Text {
+                    //     text: "▶ " + modelData.views
+                    //     font.pixelSize: 12
+                    //     color: "#999"
+                    // }
                 }
             }
 
-            TapHandler {
-                onTapped: {
-                    console.log("点击视频:", modelData.videoId, modelData.title,modelData.videoUrl,modelData.viewCount)
+            // TapHandler {
+            //     onTapped: {
+            //         console.log("点击视频:", modelData.video_Id, modelData.title,modelData.videoUrl,modelData.viewCount)
 
-                    // 如果已有视频在播放，先停止并清理
-                    if (videoLoaders.item) {
-                        console.log("停止当前播放的视频")
-                        videoLoaders.sourceComponent = undefined
-                    }
+            //         // 如果已有视频在播放，先停止并清理
+            //         if (videoLoaders.item) {
+            //             console.log("停止当前播放的视频")
+            //             videoLoaders.sourceComponent = undefined
+            //         }
 
-                    eventController.videoManager.increaseViews(modelData.videoId, modelData.viewCount)
+            //         eventController.videoManager.increaseViews(modelData.videoId, modelData.viewCount)
 
-                    var videoData = eventController.videoManager.getVideoData(modelData.videoId)
-                    if (databaseUser.addWatchHistory(root.username,modelData.videoUrl,modelData.title,modelData.coverUrl)) {//TODO
-                        console.log("✅ 历史记录保存成功!")
+            //         var videoData = eventController.videoManager.getVideoData(modelData.videoId)
+            //         if (databaseUser.addWatchHistory(root.username,modelData.videoUrl,modelData.title,modelData.coverUrl)) {//TODO
+            //             console.log("✅ 历史记录保存成功!")
 
-                    } else {
-                        console.log("❌ 历史记录保存失败!")
+            //         } else {
+            //             console.log("❌ 历史记录保存失败!")
 
-                    }
-                    videoLoaders.setSource("Video_Playback/Video.qml", {
-                                               videoData: videoData,  // 控制器处理过的数据
-                                               videoManager: eventController.videoManager,  // 传递控制器引用
-                                               index:index
-                                           })
+            //         }
+            //         videoLoaders.setSource("Video_Playback/Video.qml", {
+            //                                    videoData: videoData,  // 控制器处理过的数据
+            //                                    videoManager: eventController.videoManager,  // 传递控制器引用
+            //                                    index:index
+            //                                })
+            //     }
+            // }
+
+            Button{
+                anchors.fill:parent
+                background: Rectangle{ color:"transparent" }
+                onClicked: {
+                    var itemData=videoModel.get(index);
+                    stackView.push("Video_Playback/Video.qml",{ videoData: itemData})
                 }
             }
-
-
         }
     }
 
@@ -1329,5 +1274,4 @@ FrameLessWindow {
             }
         }
     }
-
 }
