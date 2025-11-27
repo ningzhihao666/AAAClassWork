@@ -887,3 +887,12 @@ bool DatabaseUser::addWatchHistory(const QString &userAccount, const QString &vi
     qDebug() << "✅ 用户" << userAccount << "观看历史已添加:" << videoUrl;
     return true;
 }
+void DatabaseUser::setCurrentUser(User* user) {
+    if (m_currentUser != user) {
+        // 清理旧用户（可选，根据需求决定是否删除）
+        // delete m_currentUser;
+        m_currentUser = user;
+        // 发射信号通知QML用户状态变化
+        emit currentUserChanged(m_currentUser);
+    }
+}

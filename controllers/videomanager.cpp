@@ -567,3 +567,15 @@ QVariantList VideoManager::getVideoComments(const QString &videoId) {
     }
     return commentsList;
 }
+
+Vedio* VideoManager::getVedio(const QString& videoId)
+{
+    // 1. 检查视频是否存在
+    if (!m_videos.contains(videoId)) { qWarning() << "没有视频"; }
+    Vedio* video = m_videos.value(videoId);
+    if (!video) { /* 错误处理 */
+    }
+
+    // 2. 转换为QVariantMap（QML可解析）
+    return video;
+}

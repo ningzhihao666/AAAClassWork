@@ -46,6 +46,8 @@ public:
     Q_INVOKABLE bool uploadVideo(const QVariantMap &videoInfo);  // 上传新视频
     Q_INVOKABLE bool deleteVideo(const QString &videoId);  // 删除视频
 
+    Q_INVOKABLE Vedio* getVedio(const QString &videoId);//获取对应具体的video
+
 signals:
     void viewsChanged(const QString &videoId, int newViews);
     void videoListChanged();

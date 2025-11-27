@@ -178,7 +178,7 @@ Item {
 
                         // 使用单例实例获取用户
                         var user = databaseUser.getuser(phone)
-
+                        databaseUser.setCurrentUser(user);
                         if (user) {
                             // 验证密码
                             if (user.password === inputPassword) {

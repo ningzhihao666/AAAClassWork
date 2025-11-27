@@ -2083,7 +2083,17 @@ FrameLessWindow{
 
                                      onClicked:
                                      {
+                                         //注释了涵予的，使用了收藏到数据库
+                                         // videoManager.increaseCollect(videoData.videoId,videoManager.videoList[index].collectionCount)
                                          videoManager.increaseCollect(videoData.videoId,videoManager.videoList[index].collectionCount)
+                                         console.log("当前用户:", databaseUser.currentUser ? databaseUser.currentUser.username : "未登录");
+                                                   const currentUser = databaseUser.currentUser;
+                                                   // console.log("111111",currentUser);
+                                                   // console.log("尝试获取视频 ID:", videoData.videoId); // 输出视频 ID
+                                                   var video = videoManager.getVedio(videoData.videoId);
+                                                   // console.log("视频对象:", video ? video.title : "未找到"); // 输出视频是否存在
+
+                                                   databaseUser.addFavoriteVideo(databaseUser.currentUser,videoManager.getVedio(videoData.videoId))
                                      }
                                   }
                                   Text {

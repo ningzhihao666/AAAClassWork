@@ -11,7 +11,8 @@
 class DatabaseUser : public QObject
 {
     Q_OBJECT
-
+    // 暴露当前用户属性给QML（NOTIFY信号用于通知用户状态变化）
+    Q_PROPERTY(User* currentUser READ currentUser NOTIFY currentUserChanged)
 public:
     // 单例访问方法
     static DatabaseUser *instance();
@@ -59,8 +60,13 @@ public:
     Q_INVOKABLE bool removeFavoriteVideo(const QString &userAccount, const QString &videoId);
     // 添加观看历史记录
     Q_INVOKABLE bool addWatchHistory(const QString &userAccount, const QString &videoUrl,const QString &videoTitle, const QString &coverUrl);
-
-
+    // 获取当前登录用户
+    User* currentUser() const { return m_currentUser; }
+    // 设置当前登录用户（登录成功时调用）
+    Q_INVOKABLE void setCurrentUser(User* user);
+signals:
+    // 当前用户变化时通知QML（比如登录/退出）
+    void currentUserChanged(User* user);
 
 private:
     // 单例访问指针
@@ -74,6 +80,8 @@ private:
 
     // 辅助方法 - 将数据库记录转换为 user 类
     User* recordToUser(const QSqlRecord &record);
+    //私有user成员
+    User *m_currentUser;
 
     // 更新用户信息到数据库
     bool updateUserInDatabase(User *user);
