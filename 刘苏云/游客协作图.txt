@@ -1,0 +1,6 @@
+与游客相关的用例有两个，一个观看视频，一个成为正式用户。
+初步发现类有：Visitor,Video,User,MainPage（视频展示UI），LoginPage（有关注册登录UI），VideoManager,UserManager（在我们项目中还没有Visitor和UserManager）
+衍生：
+    实体类：Visitor,Video,User
+    边界类：MainPage（视频展示UI），LoginPage（有关注册登录UI）
+    控制类：VideoManager,UserManager
