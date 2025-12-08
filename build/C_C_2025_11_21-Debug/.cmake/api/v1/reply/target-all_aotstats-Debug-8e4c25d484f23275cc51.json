@@ -1,0 +1,275 @@
+{
+	"backtrace" : 3,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_custom_target",
+			"_qt_internal_deferred_aotstats_setup"
+		],
+		"files" : 
+		[
+			"/opt/Qt/6.10.0/gcc_64/lib/cmake/Qt6Qml/Qt6QmlMacros.cmake",
+			"/opt/Qt/6.10.0/gcc_64/lib/cmake/Qt6Qml/Qt6QmlMacros.cmake:1178:EVAL",
+			"CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 2
+			},
+			{
+				"file" : 2,
+				"line" : -1,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 1,
+				"parent" : 1
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 1293,
+				"parent" : 2
+			}
+		]
+	},
+	"dependencies" : 
+	[
+		{
+			"id" : "module_appbili_aotstats_target::@6890427a1f51a3e7e1df"
+		}
+	],
+	"id" : "all_aotstats::@6890427a1f51a3e7e1df",
+	"name" : "all_aotstats",
+	"paths" : 
+	{
+		"build" : ".",
+		"source" : "."
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		},
+		{
+			"name" : "CMake Rules",
+			"sourceIndexes" : 
+			[
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12,
+				13,
+				14,
+				15,
+				16,
+				17,
+				18,
+				19,
+				20,
+				21,
+				22,
+				23,
+				24,
+				25,
+				26,
+				27,
+				28
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 3,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/CMakeFiles/all_aotstats",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/CMakeFiles/all_aotstats.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/all_aotstats.aotstats.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/module_appbili.aotstats.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/appbili_Commit_qml.cpp.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/appbili_DamuSystem_qml.cpp.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/appbili_FrameLessWindow_qml.cpp.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/appbili_Login/LoginPage_qml.cpp.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/appbili_MainPage_qml.cpp.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/appbili_Main_qml.cpp.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/appbili_Send_videos/VideoLode_qml.cpp.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/appbili_Send_videos/VideolodeFunction_qml.cpp.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/appbili_Settings/AboutSettings_qml.cpp.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/appbili_Settings/CacheSettings_qml.cpp.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/appbili_Settings/DownloadSettings_qml.cpp.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/appbili_Settings/GamepadSettings_qml.cpp.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/appbili_Settings/GeneralSettings_qml.cpp.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/appbili_Settings/PlaySettings_qml.cpp.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/appbili_Settings/PushSettings_qml.cpp.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/appbili_Settings/SectionDivider_qml.cpp.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/appbili_Settings/SettingsPage_qml.cpp.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/appbili_Settings/ShortcutKey_qml.cpp.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/appbili_Tools_Left/Dynamic_qml.cpp.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/appbili_Tools_Left/Message_Page_qml.cpp.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/appbili_Tools_Left/My_qml.cpp.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/appbili_Tools_Left/PersonInfo_qml.cpp.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/appbili_Video_Playback/NetworkManager_qml.cpp.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/.rcc/qmlcache/appbili_Video_Playback/Video_qml.cpp.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "/root/AAAClassWork/build/C_C_2025_11_21-Debug/appbili_qmltyperegistrations.cpp.rule",
+			"sourceGroupIndex" : 1
+		}
+	],
+	"type" : "UTILITY"
+}

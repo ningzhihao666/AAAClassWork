@@ -1,0 +1,2 @@
+set(__QT_DEPLOY_TARGET_appbili_FILE /root/AAAClassWork/build/C_C_2025_11_30-Debug/appbili)
+set(__QT_DEPLOY_TARGET_appbili_TYPE EXECUTABLE)
