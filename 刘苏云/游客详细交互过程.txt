@@ -3,13 +3,13 @@
 
     首先游客触发注册流程，调用initiateRegisterInterface()方法（消息 1），发起注册请求，随后RegisterLoginUI边界对象被激活并调用showRegisterForm()方法（消息 2），向游客展示注册表单，获取游客输入的账号、密码、昵称等注册信息。
     接着游客在注册表单中提交填写的信息（消息 3），RegisterLoginUI将这些信息传递给userManager控制对象，调用getRegisterInfo()方法完成注册信息的接收与归集。
-    随后userManager执行注册信息校验逻辑，调用verifyRegisterinfo()方法（消息 5）对获取的注册信息进行合法性、唯一性核验；核验通过后，userManager会调用createFormalUser()方法（消息 6），为游客创建正式用户的身份数据，生成对应的userId（消息 7）。
-    最后userManager将注册结果反馈给RegisterLoginUI，由其调用showRegisterResult()方法（消息 8），向用户展示注册成功或失败的结果及对应提示信息，完成整个注册流程，游客正式转变为user对象。
+    随后userManager执行注册信息校验逻辑，调用verifyRegisterinfo()方法（消息 5）对获取的注册信息进行合法性、唯一性核验；核验通过后，userController会调用createFormalUser()方法（消息 6），为游客创建正式用户的身份数据，生成对应的userId（消息 7）。
+    最后userController将注册结果反馈给RegisterLoginUI，由其调用showRegisterResult()方法（消息 8），向用户展示注册成功或失败的结果及对应提示信息，完成整个注册流程，游客正式转变为user对象。
 
 用况二：用户浏览并播放视频
 我们详细叙述用户浏览并播放视频的交互过程如下：
 
     首先用户触发主页面展示指令，调用triggerMainPageDisplay()方法（消息 1），MainpageUI边界对象被激活并执行displayMaininterface()方法，向用户呈现视频浏览的主界面。
-    接着用户在主界面中选定想要观看的视频（消息 2），MainpageUI记录该视频的chosenVideoId并调用getChoseVideoId()方法（消息 3），将选中的视频 ID 传递给videoManager控制对象。
-    随后videoManager根据接收的视频 ID，向video实体对象发起视频资源获取请求，调用getVideoUrl()方法（消息 4）；video对象返回对应的视频播放链接（消息 5），videoManager再将该链接转发至MainpageUI（消息 6）。
+    接着用户在主界面中选定想要观看的视频（消息 2），MainpageUI记录该视频的chosenVideoId并调用getChoseVideoId()方法（消息 3），将选中的视频 ID 传递给videoController控制对象。
+    随后videoController根据接收的视频 ID，向video实体对象发起视频资源获取请求，调用getVideoUrl()方法（消息 4）；video对象返回对应的视频播放链接（消息 5），videoController再将该链接转发至MainpageUI（消息 6）。
     最后MainpageUI接收视频链接后，调用showPlayState("playing")方法（消息 7），向用户展示视频的播放状态，同时开始加载并播放视频，完成整个视频浏览播放的交互流程。
