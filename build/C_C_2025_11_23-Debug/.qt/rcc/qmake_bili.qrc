@@ -1,6 +1,0 @@
-<RCC>
-  <qresource prefix="/qt/qml/bili">
-    <file alias="qmldir">/root/AAAClassWork/build/C_C_2025_11_23-Debug/bili/qmldir</file>
-  </qresource>
-</RCC>
-

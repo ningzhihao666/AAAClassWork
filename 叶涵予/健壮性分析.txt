@@ -1,7 +1,0 @@
-对观看并互动视频用况进行健壮性分析：
-观看并互动视频包括：参与者可以观看视频，并对视频进行分辨率、音量等设置;在简介页面，参与者可以查看up主信息、视频信息，还能够对视频进行点赞、收藏等操作;在视频的评论区域，可以发布评论、回复其他用户，并对评论和回复点赞。
-首先确定边界类：观看视频并互动用况涉及的边界有视频内容界面（VideoPlayerUI)、视频简介区域(VideoDescriptionUI)、视频评论区域(CommentUI)三个边界类。
-确定控制类：处理视频内容区域的控制器为（VideoPlayController），处理视频简介区域为（VideoDesController），处理评论区域为（CommentController）。
-确定实体类：1.对于VideoPlayController,涉及的实体类为Video视频类，用于获取视频内容、视频时 长信息。
-                     2.对于VideoDesController,涉及的实体类为Video视频类、Verified User正式用户类，Video用于获取视频标题、视频播放量、视频点赞量等。Verified User正式用户类 用于获取视频上传者名字、粉丝数、头像。
-                     3.对于CommentController,设计的实体类为Video视频类、Verified User正式用户类、Comment评论类。Video获取对于视频的唯一id,Verified User正式用户类 于获取评论或者回复的对应用户，Comment用于获取评论和回复的数据。
