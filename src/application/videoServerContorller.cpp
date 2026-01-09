@@ -10,79 +10,83 @@ namespace application {
         // 调用领域层工厂
         auto video = domain::Video::createLocalVideo(info);
 
-        if (video) {
-            // 临时存储
-            m_videos.push_back(std::make_unique<domain::Video>(*video));
+        domain::repository::VideoRepository rep;
 
-            return convertToVO(*video);
-        }
+        rep.addVideo(video);
 
-        return domain::vo::VideoVO{};
+        rep.saveVideoToDatabase(video);
+
+        return convertToVO(video);
     }
 
     domain::vo::VideoVO VideoServiceController::addView(const std::string& videoId) {
-        auto video = findVideoById(videoId);
+        domain::repository::VideoRepository rep;
+        auto video = rep.findById(videoId);
         if (video) {
             video->increaseViews();
+
+            rep.saveVideoToDatabase(*video);
+
             return video->toVO();
         }
-        std::cout << "无法找到id为：" << videoId << "的视频！" << std::endl;
+
         return domain::vo::VideoVO{};
     }
 
-    domain::vo::VideoVO VideoServiceController::addLike(const std::string& videoId) {
-        auto video = findVideoById(videoId);
+    domain::vo::VideoVO VideoServiceController::addLike(const std::string& videoId,int count) {
+        domain::repository::VideoRepository rep;
+        auto video = rep.findById(videoId);
         if (video) {
-            video->increaseLikes();
+            video->increaseLikes(count);
             return video->toVO();
         }
-        std::cout << "无法找到id为：" << videoId << "的视频！" << std::endl;
         return domain::vo::VideoVO{};
     }
 
     domain::vo::VideoVO VideoServiceController::addCoin(const std::string& videoId) {
-        auto video = findVideoById(videoId);
+        domain::repository::VideoRepository rep;
+        auto video = rep.findById(videoId);
         if (video) {
             video->increaseCoins();
             return video->toVO();
         }
-        std::cout << "无法找到id为：" << videoId << "的视频！" << std::endl;
         return domain::vo::VideoVO{};
     }
 
-    domain::vo::VideoVO VideoServiceController::addCollection(const std::string& videoId)           {
-        auto video = findVideoById(videoId);
+    domain::vo::VideoVO VideoServiceController::addCollection(const std::string& videoId,int count)           {
+        domain::repository::VideoRepository rep;
+        auto video = rep.findById(videoId);
         if (video) {
-            video->increaseCollections();
+            video->increaseCollections(count);
             return video->toVO();
         }
-        std::cout << "无法找到id为：" << videoId << "的视频！" << std::endl;
         return domain::vo::VideoVO{};
     }
 
     domain::vo::VideoVO VideoServiceController::setDownload(const std::string& videoId) {
-        auto video = findVideoById(videoId);
+        domain::repository::VideoRepository rep;
+        auto video = rep.findById(videoId);
         if (video) {
             video->setDownloaded();
             return video->toVO();
         }
-        std::cout << "无法找到id为：" << videoId << "的视频！" << std::endl;
         return domain::vo::VideoVO{};
     }
 
     domain::vo::VideoVO VideoServiceController::addForward(const std::string& videoId) {
-        auto video = findVideoById(videoId);
+        domain::repository::VideoRepository rep;
+        auto video = rep.findById(videoId);
         if (video) {
             video->increaseForward();
             return video->toVO();
         }
-        std::cout << "无法找到id为：" << videoId << "的视频！" << std::endl;
         return domain::vo::VideoVO{};
     }
 
 
     domain::vo::VideoVO VideoServiceController::getVideo(const std::string& videoId) {
-        auto video = findVideoById(videoId);
+        domain::repository::VideoRepository rep;
+        auto video = rep.findById(videoId);
 
         if (!video) {
             return domain::vo::VideoVO{};
@@ -93,23 +97,24 @@ namespace application {
     }
 
     std::vector<domain::vo::VideoVO> VideoServiceController::getAllVideos() {
-        std::vector<domain::vo::VideoVO> result;
-        for (auto& dtos : m_videos) {
-            result.push_back(convertToVO(*dtos));
-        }
-        return result;
+        domain::repository::VideoRepository rep;
+        return rep.findAllVideo();
     }
 
     domain::vo::CommentVO VideoServiceController::addComment(const std::string& videoId,
                                                              const std::string& content,
                                                              const std::string& userName)
     {
-        auto video = findVideoById(videoId);
+        domain::repository::VideoRepository rep;
+        auto video = rep.findById(videoId);
         if (video) {
             video->addComment(content, userName);
+
+            rep.saveVideoToDatabase(*video);
+
             auto comments = video->getComments();
             for (const auto& comment : comments) {
-                return convertCommentToVO(*comment);
+                return convertCommentToVO(comment);
             }
 
         }
@@ -120,14 +125,18 @@ namespace application {
                                                            const std::string& parentCommentId,
                                                            const std::string& content,
                                                            const std::string& userName) {
-        auto video = findVideoById(videoId);
+        domain::repository::VideoRepository rep;
+        auto video = rep.findById(videoId);
         if (video) {
             video->addReply(parentCommentId, content, userName);
+
+            rep.saveVideoToDatabase(*video);
+
             auto parentComment = video->getCommentById(parentCommentId);
-            if (parentComment) {
-                const auto& replies = parentComment->replies();
+            if (!parentComment.id().empty()) {
+                const auto& replies = parentComment.replies();
                 for (const auto& reply : replies) {
-                    return convertCommentToVO(*reply);
+                    return convertCommentToVO(reply);
                 }
             }
         }
@@ -135,15 +144,14 @@ namespace application {
     }
 
     std::vector<domain::vo::CommentVO> VideoServiceController::getVideoComments(const std::string& videoId) {
-        auto video = findVideoById(videoId);
+        domain::repository::VideoRepository rep;
+        auto video = rep.findById(videoId);
         std::vector<domain::vo::CommentVO> result;
 
         if (video) {
             auto comments = video->getComments();
             for (const auto& comment : comments) {
-                if (comment) {
-                    result.push_back(convertCommentToVO(*comment));
-                }
+                result.push_back(convertCommentToVO(comment));
             }
         }
 
@@ -151,7 +159,8 @@ namespace application {
     }
 
     int VideoServiceController::getVideoCommentCount(const std::string& videoId) {
-        auto video = findVideoById(videoId);
+        domain::repository::VideoRepository rep;
+        auto video = rep.findById(videoId);
         if (video) {
             return video->getCommentCount();
         }
@@ -159,27 +168,25 @@ namespace application {
     }
 
     void VideoServiceController::likeComment(const std::string& videoId, const std::string& commentId) {
-        auto video = findVideoById(videoId);
+        domain::repository::VideoRepository rep;
+        auto video = rep.findById(videoId);
         if (video) {
             video->likeComment(commentId);
         }
     }
 
     void VideoServiceController::unlikeComment(const std::string& videoId, const std::string& commentId) {
-        auto video = findVideoById(videoId);
+        domain::repository::VideoRepository rep;
+        auto video = rep.findById(videoId);
         if (video) {
             video->unlikeComment(commentId);
         }
     }
 
-    // 私有辅助方法
-    domain::Video* VideoServiceController::findVideoById(const std::string& id) {
-        for (auto& video : m_videos) {
-            if (video->id() == id) {
-                return video.get();
-            }
-        }
-        return nullptr;
+    void VideoServiceController::loadVideo()
+    {
+        domain::repository::VideoRepository rep;
+        rep.loadVideoFromDatabase();
     }
 
     domain::vo::VideoVO VideoServiceController::convertToVO(const domain::Video& video)

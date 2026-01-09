@@ -15,7 +15,8 @@ namespace interface {
         Q_PROPERTY(int commentCount READ commentCount NOTIFY commentCountChanged)
 
     public:
-        VideoController(QObject* parent = nullptr);
+        static VideoController* instance();
+        static void destroyInstance();
 
         // 核心方法
         Q_INVOKABLE void createVideo(const QString& title,
@@ -26,9 +27,9 @@ namespace interface {
                                      const QString& headUrl);
 
         Q_INVOKABLE void addView(const QString& videoId);
-        Q_INVOKABLE void addLike(const QString& videoId);
+        Q_INVOKABLE void addLike(const QString& videoId,int count = 1);
         Q_INVOKABLE void addCoin(const QString& videoId);
-        Q_INVOKABLE void addCollection(const QString& videoId);
+        Q_INVOKABLE void addCollection(const QString& videoId,int count = 1);
         Q_INVOKABLE void setDownload(const QString& videoId);
         Q_INVOKABLE void addForward(const QString& videoId);
 
@@ -49,6 +50,7 @@ namespace interface {
 
         Q_INVOKABLE void likeComment(const QString& videoId, const QString& commentId);
         Q_INVOKABLE void unlikeComment(const QString& videoId, const QString& commentId);
+        Q_INVOKABLE void loadVideoFromDatabase();
 
         // 属性
         QVariantList videos() const { return m_videos; }
@@ -69,6 +71,17 @@ namespace interface {
         void commentUnliked(const QString& commentId, int newUnlikeCount);
 
     private:
+        // 私有构造函数和析构函数
+        VideoController(QObject* parent = nullptr);
+        ~VideoController();
+
+        // 禁用拷贝和赋值
+        VideoController(const VideoController&) = delete;
+        VideoController& operator=(const VideoController&) = delete;
+
+        // 单例实例
+        static VideoController* s_instance;
+
         application::VideoServiceController m_service;
         QVariantList m_videos;
         QVariantList m_comments;

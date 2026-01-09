@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
 import VideoApp
+import UserApp
 // import QtGraphicalEffects
 import "./component"
 import "qml/Video_Playback"
@@ -30,9 +31,40 @@ FrameLessWindow {
     property bool coverUrlStatue:false
     property alias videoLoad: videoLoaders
 
-    VideoController
-    {
-        id:videoController
+    // VideoController
+    // {
+    //     id:videoController
+    // }
+
+    Connections {
+        target: userController
+
+        function onFavoriteAdded(videoId) {
+            console.log("收藏添加:", videoId)
+            // 刷新视频列表或更新特定视频的显示状态
+        }
+
+        function onFavoriteRemoved(videoId) {
+            console.log("收藏移除:", videoId)
+            // 刷新视频列表或更新特定视频的显示状态
+        }
+
+        function onFavoritesChanged() {
+            console.log("收藏列表变化")
+            // 如果需要，可以在这里刷新UI
+        }
+
+
+        function onVideoLiked(videoId) {
+            console.log("点赞视频:", videoId)
+            // 更新视频点赞状态
+        }
+
+        function onVideoUnliked(videoId) {
+            console.log("取消点赞视频:", videoId)
+            // 更新视频点赞状态
+        }
+
     }
 
     // 视频数据模型
@@ -81,7 +113,10 @@ FrameLessWindow {
     }
 
     Component.onCompleted: {
-        loadVideos();
+        console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        videoController.loadVideoFromDatabase();
+        videoController.loadVideos()
+         console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     }
 
     // 顶部刷新按钮
@@ -112,7 +147,8 @@ FrameLessWindow {
 
         onClicked: {
             console.log("手动刷新视频列表");
-            loadVideos();
+            videoController.loadVideoFromDatabase();
+            videoController.loadVideos()
         }
     }
 
@@ -159,16 +195,16 @@ FrameLessWindow {
     }
 
     LoginPage {
-        id: loginPage
-        visible: false
-        onLoginSuccess: {
-            root.isLoggedIn = true
-            root.username = username
-            root.userAccount = userAccount
-            root.globalAvatarUrl = avatarUrl
-            loginPage.close()
+            id: loginPage
+            visible: false
+            onLoginSuccess: function(username, avatarUrl, userAccount) {
+                root.isLoggedIn = true
+                root.username = username
+                root.userAccount = userAccount
+                root.globalAvatarUrl = avatarUrl
+                loginPage.close()
+            }
         }
-    }
 
     function openLoginDialog() {
         loginPage.open()
@@ -1240,7 +1276,7 @@ FrameLessWindow {
                         videoLoaders.sourceComponent = undefined
                     }
 
-                    videoController.addView(modelData.id)
+                    userController.addWatchHistory(modelData.id)
 
                     var videoData = videoController.getVideo(modelData.id)
 

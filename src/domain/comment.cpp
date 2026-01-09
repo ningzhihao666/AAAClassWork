@@ -8,6 +8,15 @@ namespace domain {
          : m_time(std::chrono::system_clock::now()) {
     }
 
+    Comment::Comment(const std::string& content, const std::string& userName)
+        : m_id(generateId())
+        , m_userName(userName)
+        , m_time(std::chrono::system_clock::now())
+        , m_content(content)
+        , m_isReply(false) {
+        //对应createRootComment
+    }
+
     Comment::Comment(const std::string& id,
                      const std::string& userName,
                      const std::string& content,
@@ -19,57 +28,37 @@ namespace domain {
         , m_content(content)
         , m_isReply(isReply)
         , m_parentId(parentId){
-                //对应createReplyComment
+        //对应createReplyComment
     }
 
-    Comment::Comment(const std::string& content, const std::string& userName)
-        : m_id(generateId())
-        , m_userName(userName)
-        , m_time(std::chrono::system_clock::now())
-        , m_content(content)
-        , m_isReply(false) {
-        //对应createRootComment
-    }
-
-
-    std::unique_ptr<Comment> Comment::createRootComment(
-        const std::string& content,
-        const std::string& userName) {
-
+    Comment Comment::createRootComment(const std::string& content, const std::string& userName,const std::string& customId)
+    {
         if (content.empty() || userName.empty()) {
-            std::cerr << "创建评论警告：内容或者名字为空！" << std::endl;
-            return nullptr;
+            throw std::invalid_argument("Content or userName is empty");
         }
 
-        return std::unique_ptr<Comment>(
-            new Comment(content, userName)
-            );
+        std::string id = customId.empty() ? generateId() : customId;
+        return Comment(id, userName, content, false, "");
     }
 
 
-    std::unique_ptr<Comment> Comment::createReplyComment(
-        const std::string& content,
-        const std::string& userName,
-        const std::string& parentId) {
-
+    Comment Comment::createReplyComment(const std::string& content,
+                                        const std::string& userName,
+                                        const std::string& parentId,
+                                        const std::string& customId)
+    {
         if (content.empty() || userName.empty() || parentId.empty()) {
             std::cerr << "创建评论警告：内容、名字或者父id为空！" << std::endl;
-            return nullptr;
+            throw std::invalid_argument("Content, userName or parentId is empty");
         }
 
-        auto comment = std::unique_ptr<Comment>(
-            new Comment(generateId(), userName, content, true, parentId)
-            );
-
-        return comment;
+        std::string id = customId.empty() ? generateId() : customId;
+        return Comment(id, userName, content, true, parentId);
     }
 
-    void Comment::addReply(std::unique_ptr<Comment> reply)
+    void Comment::addReply(const Comment& reply)
     {
-        if(reply)
-        {
-            m_replies.push_back(std::move(reply));
-        }
+        m_replies.push_back(reply);
     }
 
     std::string Comment::generateId() {

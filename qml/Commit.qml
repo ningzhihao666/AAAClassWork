@@ -348,6 +348,12 @@ Item {
 
                 onClicked: {
                     if (commentInput.text.trim() !== "") {
+                        if (!root.isLoggedIn) {
+                            console.log("请先登录")
+                            // 如果需要，可以在这里触发登录
+                            return
+                        }
+
                         // 添加新评论
                         addComment("当前用户", commentInput.text.trim());
 
@@ -736,6 +742,12 @@ Item {
                                     }
 
                                     onClicked: {
+                                        if (!root.isLoggedIn) {
+                                            console.log("请先登录")
+                                            // 如果需要，可以在这里触发登录
+                                            return
+                                        }
+
                                         if (replyPerson.text.trim() !== "") {
                                             // 获取当前评论的回复模型ID
                                             var commentId = commentModel.get(replyInput.commentIndex).id;
@@ -1068,6 +1080,12 @@ Item {
                                     }
 
                                     onClicked: {
+                                        if (!root.isLoggedIn) {
+                                            console.log("请先登录")
+                                            // 如果需要，可以在这里触发登录
+                                            return
+                                        }
+
                                         if (rreplyPerson.text.trim() !== "") {
                                             // 获取当前评论的回复模型ID
                                             var commentId = commentModel.get(replyInput.commentIndex).id;

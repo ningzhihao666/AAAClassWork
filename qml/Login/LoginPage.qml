@@ -1,11 +1,16 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import UserApp 1.0
 
 Item {
     id: container
     width: 450
     height: 800
+
+    // 添加 UserController 属性
+    //property var userController
+
     function open() {
         loginDialog.open()
     }
@@ -28,7 +33,7 @@ Item {
         property string username: ""
         property string avatarUrl: "https://i0.hdslb.com/bfs/face/member/noface.jpg@40w_40h.webp"
 
-        signal loginSuccess(string username, string avatarUrl,string userAccount)
+        signal loginSuccess(string username, string avatarUrl, string userAccount)
         signal logout()
 
         background: Rectangle {
@@ -67,23 +72,22 @@ Item {
                 spacing: 8
 
                 Text {
-                    text: "手机号"
+                    text: "账号"
                     font.pixelSize: 14
                     color: "#666"
                 }
 
                 TextField {
-                    id: phoneField
+                    id: accountField
                     Layout.fillWidth: true
                     Layout.preferredHeight: 46
-                    placeholderText: "请输入手机号"
+                    placeholderText: "请输入账号"
                     font.pixelSize: 14
-                    inputMethodHints: Qt.ImhDigitsOnly
 
                     background: Rectangle {
                         color: "#f8f8f8"
                         radius: 8
-                        border.color: phoneField.focus ? "#FB7299" : "#e0e0e0"
+                        border.color: accountField.focus ? "#FB7299" : "#e0e0e0"
                         border.width: 1
                     }
                 }
@@ -170,40 +174,20 @@ Item {
                 }
 
                 onClicked: {
-                    if (phoneField.text && passwordField.text) {
+                    if (accountField.text && passwordField.text) {
                         loginButton.enabled = false
+                        loginButton.text = "登录中..."
 
-                        var phone = phoneField.text
-                        var inputPassword = passwordField.text
+                        // 使用 UserController 登录
+                        userController.login(accountField.text, passwordField.text)
 
-                        // 使用单例实例获取用户
-                        var user = databaseUser.getuser(phone)
-                        databaseUser.setCurrentUser(user);
-                        if (user) {
-                            // 验证密码
-                            if (user.password === inputPassword) {
-                                // 登录成功
-                                var loginUsername = user.username ||  phone.slice(-4)
-                                // var loginUsername = user.username || "用户" + phone.slice(-4)
-                                var loginAvatarUrl = user.avatar || "https://i2.hdslb.com/bfs/face/5d35a39f7e8a8b7e17d2e0a0a0a0a0a0a0a0a0.jpg@40w_40h.webp"
-
-                                loginDialog.loginSuccess(loginUsername, loginAvatarUrl,phone)
-                                errorMessage.visible = false
-
-                                console.log("登录成功:", loginUsername)
-                                loginDialog.close()
-                            } else {
-                                errorMessage.text = "密码错误，请重新输入"
-                                errorMessage.visible = true
-                                loginButton.enabled = true
-                            }
-                        } else {
-                            errorMessage.text = "该手机号未注册，请先注册"
-                            errorMessage.visible = true
+                        // 重置按钮状态
+                        Qt.callLater(function() {
                             loginButton.enabled = true
-                        }
+                            loginButton.text = "登录"
+                        })
                     } else {
-                        errorMessage.text = "请输入手机号和密码"
+                        errorMessage.text = "请输入账号和密码"
                         errorMessage.visible = true
                     }
                 }
@@ -407,22 +391,22 @@ Item {
                 spacing: 8
 
                 Text {
-                    text: "用户名"
+                    text: "账号"
                     font.pixelSize: 14
                     color: "#666"
                 }
 
                 TextField {
-                    id: registerUsername
+                    id: registerAccount
                     Layout.fillWidth: true
                     Layout.preferredHeight: 44
-                    placeholderText: "请输入用户名"
+                    placeholderText: "请输入账号"
                     font.pixelSize: 14
 
                     background: Rectangle {
                         color: "#f8f8f8"
                         radius: 8
-                        border.color: registerUsername.focus ? "#FB7299" : "#e0e0e0"
+                        border.color: registerAccount.focus ? "#FB7299" : "#e0e0e0"
                         border.width: 1
                     }
                 }
@@ -433,23 +417,22 @@ Item {
                 spacing: 8
 
                 Text {
-                    text: "手机号"
+                    text: "昵称"
                     font.pixelSize: 14
                     color: "#666"
                 }
 
                 TextField {
-                    id: registerPhone
+                    id: registerNickname
                     Layout.fillWidth: true
                     Layout.preferredHeight: 44
-                    placeholderText: "请输入手机号"
+                    placeholderText: "请输入昵称"
                     font.pixelSize: 14
-                    inputMethodHints: Qt.ImhDigitsOnly
 
                     background: Rectangle {
                         color: "#f8f8f8"
                         radius: 8
-                        border.color: registerPhone.focus ? "#FB7299" : "#e0e0e0"
+                        border.color: registerNickname.focus ? "#FB7299" : "#e0e0e0"
                         border.width: 1
                     }
                 }
@@ -537,13 +520,13 @@ Item {
                 }
 
                 onClicked: {
-                    if (!registerUsername.text) {
-                        registerError.text = "请输入用户名"
+                    if (!registerAccount.text) {
+                        registerError.text = "请输入账号"
                         registerError.visible = true
                         return
                     }
-                    if (!registerPhone.text) {
-                        registerError.text = "请输入手机号"
+                    if (!registerNickname.text) {
+                        registerError.text = "请输入昵称"
                         registerError.visible = true
                         return
                     }
@@ -559,25 +542,20 @@ Item {
                     }
 
                     registerButton.enabled = false
+                    registerButton.text = "注册中..."
 
-                    // 调用数据库方法注册用户
-                    var success = databaseUser.registerUser(
-                        registerUsername.text,
-                        registerPhone.text,
-                        registerPassword.text
+                    // 使用 UserController 注册用户
+                    userController.registerUser(
+                        registerAccount.text,
+                        registerPassword.text,
+                        registerNickname.text
                     )
 
-                    if (success) {
-                        registerError.text = "注册成功！请登录"
-                        registerError.color = "#52c41a"
-                        registerError.visible = true
-
-                        backToLoginTimer.start()
-                    } else {
-                        registerError.text = "注册失败，手机号可能已被注册"
-                        registerError.visible = true
+                    // 重置按钮状态
+                    Qt.callLater(function() {
                         registerButton.enabled = true
-                    }
+                        registerButton.text = "注册"
+                    })
                 }
             }
 
@@ -609,25 +587,6 @@ Item {
                     registerDialog.close()
                     loginDialog.open()
                 }
-            }
-        }
-
-        Timer {
-            id: backToLoginTimer
-            interval: 1000
-            onTriggered: {
-                registerDialog.close()
-                loginDialog.open()
-                // 自动填充注册的手机号
-                phoneField.text = registerPhone.text
-                registerError.visible = false
-                registerButton.enabled = true
-
-                // 清空注册表单
-                registerUsername.text = ""
-                registerPhone.text = ""
-                registerPassword.text = ""
-                registerConfirmPassword.text = ""
             }
         }
 
@@ -687,7 +646,7 @@ Item {
 
             Text {
                 Layout.alignment: Qt.AlignHCenter
-                text: "请输入注册时使用的手机号"
+                text: "请输入注册时使用的账号"
                 font.pixelSize: 14
                 color: "#666"
                 wrapMode: Text.Wrap
@@ -699,90 +658,23 @@ Item {
                 spacing: 8
 
                 Text {
-                    text: "手机号"
+                    text: "账号"
                     font.pixelSize: 14
                     color: "#666"
                 }
 
                 TextField {
-                    id: recoveryPhone
+                    id: recoveryAccount
                     Layout.fillWidth: true
                     Layout.preferredHeight: 44
-                    placeholderText: "请输入手机号"
+                    placeholderText: "请输入账号"
                     font.pixelSize: 14
-                    inputMethodHints: Qt.ImhDigitsOnly
 
                     background: Rectangle {
                         color: "#f8f8f8"
                         radius: 8
-                        border.color: recoveryPhone.focus ? "#FB7299" : "#e0e0e0"
+                        border.color: recoveryAccount.focus ? "#FB7299" : "#e0e0e0"
                         border.width: 1
-                    }
-                }
-            }
-
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 8
-
-                Text {
-                    text: "验证码"
-                    font.pixelSize: 14
-                    color: "#666"
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 10
-
-                    TextField {
-                        id: verificationCode
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 44
-                        placeholderText: "请输入验证码"
-                        font.pixelSize: 14
-
-                        background: Rectangle {
-                            color: "#f8f8f8"
-                            radius: 8
-                            border.color: verificationCode.focus ? "#FB7299" : "#e0e0e0"
-                            border.width: 1
-                        }
-                    }
-
-                    Button {
-                        id: sendCodeButton
-                        Layout.preferredWidth: 120
-                        Layout.preferredHeight: 44
-                        text: "发送验证码"
-
-                        background: Rectangle {
-                            color: sendCodeButton.enabled ? "#FB7299" : "#FFB5C8"
-                            radius: 8
-                        }
-
-                        contentItem: Text {
-                            text: parent.text
-                            color: "white"
-                            font.pixelSize: 12
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-
-                        onClicked: {
-                            if (!recoveryPhone.text) {
-                                passwordError.text = "请输入手机号"
-                                passwordError.visible = true
-                                return
-                            }
-
-                            // 模拟发送验证码
-                            sendCodeButton.enabled = false
-                            countdownTimer.start()
-                            passwordError.text = "验证码已发送，请注意查收"
-                            passwordError.color = "#52c41a"
-                            passwordError.visible = true
-                        }
                     }
                 }
             }
@@ -807,14 +699,15 @@ Item {
                 }
 
                 onClicked: {
-                    if (!recoveryPhone.text || !verificationCode.text) {
-                        passwordError.text = "请填写完整信息"
+                    if (!recoveryAccount.text) {
+                        passwordError.text = "请输入账号"
                         passwordError.visible = true
                         return
                     }
 
-                    passwordError.text = "密码重置链接已发送到您的手机"
-                    passwordError.color = "#52c41a"
+                    // TODO: 实现密码重置逻辑
+                    passwordError.text = "密码重置功能开发中..."
+                    passwordError.color = "#ff4757"
                     passwordError.visible = true
 
                     // 模拟处理
@@ -856,32 +749,11 @@ Item {
         }
 
         Timer {
-            id: countdownTimer
-            interval: 1000
-            repeat: true
-            property int count: 60
-
-            onTriggered: {
-                count--
-                sendCodeButton.text = count + "秒后重发"
-                if (count <= 0) {
-                    stop()
-                    sendCodeButton.text = "发送验证码"
-                    sendCodeButton.enabled = true
-                    count = 60
-                }
-            }
-        }
-
-        Timer {
             id: resetTimer
             interval: 2000
             onTriggered: {
-                passwordError.text = "密码重置成功！请使用新密码登录"
+                passwordError.text = "请通过其他方式联系管理员重置密码"
                 passwordError.visible = true
-
-                // 自动关闭
-                closeTimer.start()
             }
         }
 
@@ -892,8 +764,7 @@ Item {
                 forgotPasswordDialog.close()
                 passwordError.visible = false
                 // 清空表单
-                recoveryPhone.text = ""
-                verificationCode.text = ""
+                recoveryAccount.text = ""
             }
         }
 
@@ -921,21 +792,79 @@ Item {
         }
     }
 
-    // 初始化打开登录对话框
-    Component.onCompleted: {
-        // loginDialog.open()
+    // 监听 UserController 的信号
+    Connections {
+        target: userController
+
+        // 登录成功
+        function onLoginSuccess(userId) {
+            console.log("✅ 登录成功，用户ID:", userId)
+
+            // 获取用户信息
+            var user = userController.currentUser
+            if (user && user.id) {
+                var username = user.nickname || "用户"
+                var avatarUrl = user.avatarUrl || "https://i0.hdslb.com/bfs/face/member/noface.jpg@40w_40h.webp"
+                var userAccount = user.account || ""
+
+                // 触发登录成功信号
+                loginDialog.loginSuccess(username, avatarUrl, userAccount)
+                errorMessage.visible = false
+
+                console.log("✅ 用户信息:", username, userAccount)
+                loginDialog.close()
+            }
+        }
+
+        // 注册成功
+        function onRegistrationSuccess(userId) {
+            console.log("✅ 注册成功，用户ID:", userId)
+            registerError.text = "注册成功！请登录"
+            registerError.color = "#52c41a"
+            registerError.visible = true
+
+            // 1秒后自动返回登录页面
+            backToLoginTimer.start()
+        }
+
+        // 错误处理
+        function onErrorOccurred(message) {
+            console.log("❌ 错误:", message)
+
+            if (loginDialog.opened) {
+                errorMessage.text = message
+                errorMessage.visible = true
+            } else if (registerDialog.opened) {
+                registerError.text = message
+                registerError.visible = true
+            }
+        }
+    }
+
+    Timer {
+        id: backToLoginTimer
+        interval: 1000
+        onTriggered: {
+            registerDialog.close()
+            loginDialog.open()
+            // 清空注册表单
+            registerAccount.text = ""
+            registerNickname.text = ""
+            registerPassword.text = ""
+            registerConfirmPassword.text = ""
+        }
     }
 
     // 暴露信号给外部
-    signal loginSuccess(string username, string avatarUrl,string userAccount)
+    signal loginSuccess(string username, string avatarUrl, string userAccount)
     signal logout()
 
     // 转发内部信号
     Connections {
         target: loginDialog
 
-        function onLoginSuccess(username, avatarUrl,userAccount) {
-            container.loginSuccess(username, avatarUrl,userAccount)
+        function onLoginSuccess(username, avatarUrl, userAccount) {
+            container.loginSuccess(username, avatarUrl, userAccount)
         }
 
         function onLogout() {

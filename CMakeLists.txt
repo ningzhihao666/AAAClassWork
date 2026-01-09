@@ -10,8 +10,9 @@ project(Bilibili VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Quick)
+find_package(Qt6 REQUIRED COMPONENTS Quick Sql)
 
+# configure_file(${CMAKE_SOURCE_DIR}/config.ini ${CMAKE_BINARY_DIR}/config.ini COPYONLY)
 
 qt_add_executable(appBilibili)
 
@@ -48,6 +49,17 @@ qt_add_qml_module(appBilibili
     SOURCES src/domain/commentVO.h
     QML_FILES component/ModernLoadingIndicator.qml
     QML_FILES
+    SOURCES src/component/clientmessagehandler.h src/component/clientmessagehandler.cpp src/component/clienthandler.h src/component/clienthandler.cpp
+    SOURCES src/domain/videorepository.h src/domain/videorepository.cpp
+    SOURCES src/database/videoDatabase.h src/database/videoDatabase.cpp
+    SOURCES src/application/userServerController.cpp src/application/userServerController.h
+    SOURCES src/database/userdatabase.cpp src/database/userdatabase.h
+    SOURCES src/domain/user.cpp src/domain/user.h src/domain/userVO.h
+    SOURCES src/presentation/userController.cpp src/presentation/userController.h
+    SOURCES
+    SOURCES src/component/simpleuploader.h src/component/simpleuploader.cpp
+    SOURCES
+    SOURCES src/component/videouploader.h src/component/videouploader.cpp
 )
 
 target_sources(appBilibili
@@ -66,6 +78,8 @@ target_compile_features(appBilibili PRIVATE cxx_std_23)
 target_link_libraries(appBilibili
     PRIVATE
         Qt6::Quick
+        Qt6::Sql
+        Qt6::Network
 )
 
 set_target_properties(appBilibili PROPERTIES

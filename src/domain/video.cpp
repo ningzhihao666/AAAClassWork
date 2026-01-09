@@ -4,6 +4,7 @@
 #include <random>
 #include <sstream>
 #include <iomanip>
+#include <stdexcept>
 
 namespace domain {
 
@@ -44,30 +45,36 @@ namespace domain {
         }
     }
 
-    std::unique_ptr<Video> Video::createLocalVideo(const Video_Info &info)
+    Video Video::createLocalVideo(const Video_Info &info, const std::string& customId)
     {
         if (!info.isValid()) {
             std::cerr << "Video创建失败：参数无效" << std::endl;
-            return nullptr;
+            throw std::invalid_argument("Invalid video info");
         }
 
         if (!isValidUrl(info.videoUrl)) {
             std::cerr << "Video创建失败：视频URL格式无效" << std::endl;
-            return nullptr;
+            throw std::invalid_argument("Invalid video URL");
         }
 
-        auto video = std::unique_ptr<Video>(new Video());
+        Video video;
 
-        video->m_id = generateUniqueId();
-        video->m_title = info.title;
-        video->m_author = info.author;
-        video->m_description = info.description;
-        video->m_videoUrl = info.videoUrl;
-        video->m_uploadDate = getCurrentTimeString();
-        video->m_coverUrl = info.coverUrl;
-        video->m_headUrl = info.headUrl;
+        if (!customId.empty()) {
+            video.m_id = customId;
+        } else {
+            video.m_id = generateUniqueId();
+        }
 
-        std::cout << "Video创建成功，ID: " << video->m_id << std::endl;
+        // video.m_id = generateUniqueId();
+        video.m_title = info.title;
+        video.m_author = info.author;
+        video.m_description = info.description;
+        video.m_videoUrl = info.videoUrl;
+        video.m_uploadDate = getCurrentTimeString();
+        video.m_coverUrl = info.coverUrl;
+        video.m_headUrl = info.headUrl;
+
+        std::cout << "Video创建成功，ID: " << video.m_id << std::endl;
 
         return video;
     }
@@ -95,11 +102,6 @@ namespace domain {
     }
 
     void Video::increaseLikes(int count) {
-        if (count <= 0) {
-            std::cerr << "警告：增加点赞数必须为正数" << std::endl;
-            return;
-        }
-
         m_likeCount += count;
         std::cout << "视频 " << m_id << " 点赞数增加 " << count
                   << "，当前点赞数: " << m_likeCount << std::endl;
@@ -117,11 +119,6 @@ namespace domain {
     }
 
     void Video::increaseCollections(int count) {
-        if (count <= 0) {
-            std::cerr << "警告：增加收藏数必须为正数" << std::endl;
-            return;
-        }
-
         m_collectionCount += count;
         std::cout << "视频 " << m_id << " 收藏数增加 " << count
                   << "，当前收藏数: " << m_collectionCount << std::endl;
@@ -153,56 +150,101 @@ namespace domain {
     void Video::addComment(const std::string &content, const std::string &userName)
     {
         auto comment = Comment::createRootComment(content, userName);
-        if (comment) {
-            std::string id = comment->id();
-            commentMap[id] = std::move(comment);
-            m_commitCount++;
-        }
+        std::string id = comment.id();
+        commentMap[id] = comment;
+        m_commitCount++;
     }
 
     void Video::addReply(const std::string &parentCommentId, const std::string &content, const std::string &userName)
     {
         auto reply = Comment::createReplyComment(content, userName, parentCommentId);
-        if (reply) {
-            auto it = commentMap.find(parentCommentId);
+
+        auto it = commentMap.find(parentCommentId);
             if (it != commentMap.end()) {
-                it->second->addReply(std::move(reply));
+                it->second.addReply(reply);
                 m_commitCount++;
             } else {
                 std::cerr << "无法找到父评论！" << std::endl;
             }
-        }
     }
 
     void Video::likeComment(const std::string &commentId)
     {
         auto comment = getCommentById(commentId);
-        if (comment) { comment->addLike(); }
+        comment.addLike();
     }
 
     void Video::unlikeComment(const std::string &commentId)
     {
         auto comment = getCommentById(commentId);
-        if (comment) {
-            comment->addUnlike();
+        comment.addUnlike();
+    }
+
+    void Video::addCommentWithId(const std::string& content,
+                                 const std::string& userName,
+                                 const std::string& customId)
+    {
+        Comment comment = Comment::createRootComment(content, userName, customId);
+        commentMap[comment.id()] = comment;
+        m_commitCount++;
+    }
+
+    void Video::addReplyWithId(const std::string& parentCommentId,
+                               const std::string& content,
+                               const std::string& userName,
+                               const std::string& customId)
+    {
+        auto it = commentMap.find(parentCommentId);
+        if (it != commentMap.end()) {
+            Comment reply = Comment::createReplyComment(content, userName, parentCommentId, customId);
+            it->second.addReply(reply);
+            commentMap[reply.id()] = reply;
+            m_commitCount++;
+        } else {
+            std::cerr << "❌ 无法找到父评论！父评论ID: " << parentCommentId << std::endl;
         }
     }
 
-    std::vector<const Comment *> Video::getComments() const
+    void Video::setStatistics(int viewCount, int likeCount, int coinCount,
+                              int collectionCount, bool downloaded, int forwardCount,
+                              int bulletCount, int followerCount, int commitCount)
     {
-        std::vector<const Comment *> comments;
+        m_viewCount = viewCount;
+        m_likeCount = likeCount;
+        m_coinCount = coinCount;
+        m_collectionCount = collectionCount;
+        m_downloaded = downloaded;
+        m_forwardCount = forwardCount;
+        m_bulletCount = bulletCount;
+        m_followerCount = followerCount;
+        m_commitCount = commitCount;
+    }
+
+    void Video::clearComments()
+    {
+        commentMap.clear();
+        m_commitCount = 0;
+    }
+
+    std::vector<Comment> Video::getComments() const
+    {
+        std::vector<Comment> comments;
         for (const auto &pair : commentMap) {
-            if (!pair.second->isReply()) { comments.push_back(pair.second.get()); }
+            if (!pair.second.isReply()) { comments.push_back(pair.second); }
         }
+
         return comments;
     }
 
-    Comment *Video::getCommentById(const std::string &commentId)
+    Comment Video::getCommentById(const std::string &commentId)
     {
         auto it = commentMap.find(commentId);
-        if (it != commentMap.end()) { return it->second.get(); }
-        return nullptr;
+        if (it != commentMap.end()) { return it->second; }
+        std::cerr << "未找到评论: " << commentId << std::endl;
+        return Comment();
     }
+
+
 
 }
 

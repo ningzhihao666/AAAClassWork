@@ -3,10 +3,34 @@
 
 namespace interface {
 
+    // 初始化静态成员
+    VideoController* VideoController::s_instance = nullptr;
+
     VideoController::VideoController(QObject* parent)
         : QObject(parent)
     {
         qDebug() << "视频控制器已创建";
+    }
+
+    VideoController::~VideoController()
+    {
+        qDebug() << "视频控制器已销毁";
+    }
+
+    VideoController* VideoController::instance()
+    {
+        if (!s_instance) {
+            s_instance = new VideoController();
+        }
+        return s_instance;
+    }
+
+    void VideoController::destroyInstance()
+    {
+        if (s_instance) {
+            delete s_instance;
+            s_instance = nullptr;
+        }
     }
 
     void VideoController::createVideo(const QString& title,
@@ -41,9 +65,9 @@ namespace interface {
 
     }
 
-    void VideoController::addLike(const QString& videoId)
+    void VideoController::addLike(const QString& videoId,int count)
     {
-        auto vo = m_service.addLike(videoId.toStdString());
+        auto vo = m_service.addLike(videoId.toStdString(),count);
         updateData(vo);
     }
 
@@ -53,9 +77,9 @@ namespace interface {
         updateData(vo);
     }
 
-    void VideoController::addCollection(const QString& videoId)
+    void VideoController::addCollection(const QString& videoId,int count)
     {
-        auto vo = m_service.addCollection(videoId.toStdString());
+        auto vo = m_service.addCollection(videoId.toStdString(),count);
         updateData(vo);
     }
 
@@ -75,6 +99,8 @@ namespace interface {
         setLoading(true);
 
         auto dtos = m_service.getAllVideos();
+
+        qDebug() << dtos.size();
 
         m_videos.clear();
         for (const auto& dto : dtos) {
@@ -225,6 +251,11 @@ namespace interface {
                 return;
             }
         }
+    }
+
+    void VideoController::loadVideoFromDatabase()
+    {
+        m_service.loadVideo();
     }
 
 

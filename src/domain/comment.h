@@ -19,22 +19,24 @@ namespace domain {
         std::chrono::system_clock::time_point time() const { return m_time; }
         std::string timeToString() const;
 
-        static std::unique_ptr<Comment> createRootComment(
-            const std::string& content,
-            const std::string& userName
-            );
-
-        static std::unique_ptr<Comment> createReplyComment(
+        static Comment createRootComment(
             const std::string& content,
             const std::string& userName,
-            const std::string& parentId
+            const std::string& customId = ""
             );
 
-        void addReply(std::unique_ptr<Comment> reply);
+        static Comment createReplyComment(
+            const std::string& content,
+            const std::string& userName,
+            const std::string& parentId,
+            const std::string& customId = ""
+            );
+
+        void addReply(const Comment& reply);
 
         bool isReply() const { return m_isReply; }
 
-        const std::vector<std::unique_ptr<Comment>>& replies() const { return m_replies; }
+        const std::vector<Comment>& replies() const { return m_replies; }
 
         domain::vo::CommentVO toVO() const
         {
@@ -49,14 +51,13 @@ namespace domain {
                                         .parentId = m_parentId
             };
 
-            const auto& replies = m_replies;
-            for (const auto& reply : replies) {
-                if (reply) { vo.replies.push_back(reply->toVO()); }
+            for (const auto& reply : m_replies) {
+                vo.replies.push_back(reply.toVO());
             }
             return vo;
         }
 
-        //目前简单的点赞和点踩
+        //点赞和点踩
         void addLike()
         {
             m_likeCount++;
@@ -78,7 +79,7 @@ namespace domain {
         bool m_isReply = false;        //是否为回复
         std::string m_parentId;            //父评论
         std::string m_replyModelId;        //回复id
-        std::vector<std::unique_ptr<Comment>> m_replies; // 回复列表
+        std::vector<Comment> m_replies; // 回复列表
 
 
         // 私有构造函数

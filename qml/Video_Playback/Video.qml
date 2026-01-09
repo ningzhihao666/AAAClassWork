@@ -4,6 +4,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtMultimedia
 import Qt.labs.platform
+import UserApp
 import "../../component"
 import "../"
 
@@ -1836,8 +1837,85 @@ FrameLessWindow{
                              } //填充
 
 
+                            // Button {
+                            //     id:bButton
+                            //     Layout.rightMargin: 20
+                            //     Layout.preferredWidth: 80
+                            //     Layout.preferredHeight: 35
+                            //     font.pixelSize: 18
+                            //     font.bold: true
+
+                            //     HoverHandler {
+                            //              cursorShape: Qt.PointingHandCursor
+                            //          }
+
+                            //     text:
+                            //     {
+                            //         if(videoPlayerPage.attention)
+                            //             return "已关注"
+                            //         else
+                            //             return "+关注"
+                            //     }
+
+                            //     Layout.alignment: Qt.AlignVCenter // 添加垂直居中
+                            //     contentItem: Text {
+                            //         text: bButton.text
+                            //         font:  bButton.font
+                            //         color: "white"
+                            //         horizontalAlignment: Text.AlignHCenter
+                            //         verticalAlignment: Text.AlignVCenter
+                            //     }  //自定义字体格式
+                            //     background: Rectangle {
+                            //         radius: 5
+                            //         color:
+                            //         {
+                            //             if(videoPlayerPage.attention)
+                            //                 return "black"
+                            //             else
+                            //                 return bButton.down ? "#6A6A6A":"#FF5252"
+                            //         }
+
+                            //                 Behavior on color {
+                            //                     ColorAnimation {
+                            //                         duration: 300
+                            //                         easing.type: Easing.InOutQuad
+                            //                     }
+                            //                 }
+
+                            //     }
+                            //     onClicked: {
+                            //         buttonAnime.start()
+                            //         videoPlayerPage.attention = !videoPlayerPage.attention;
+                            //         //操作
+                            //     }
+
+                            //     SequentialAnimation
+                            //     {
+                            //         id:buttonAnime
+                            //         PropertyAnimation
+                            //         {
+                            //             target: bButton
+                            //             property: "scale"
+                            //             to: 1.1
+                            //             duration: 300
+                            //             easing.type: Easing.OutCubic
+                            //         }
+
+                            //         PropertyAnimation
+                            //         {
+                            //             target: bButton
+                            //             property: "scale"
+                            //             to:1.0
+                            //             duration: 300
+                            //             easing.type: Easing.OutBack
+                            //         }
+                            //     }
+
+                            //  }
+
+                            // 关注按钮部分修改
                             Button {
-                                id:bButton
+                                id: bButton
                                 Layout.rightMargin: 20
                                 Layout.preferredWidth: 80
                                 Layout.preferredHeight: 35
@@ -1845,72 +1923,130 @@ FrameLessWindow{
                                 font.bold: true
 
                                 HoverHandler {
-                                         cursorShape: Qt.PointingHandCursor
-                                     }
-
-                                text:
-                                {
-                                    if(videoPlayerPage.attention)
-                                        return "已关注"
-                                    else
-                                        return "+关注"
+                                    cursorShape: Qt.PointingHandCursor
                                 }
 
-                                Layout.alignment: Qt.AlignVCenter // 添加垂直居中
+                                text: {
+                                    if (!userController || !userController.currentUser || !userController.isLoggedIn) {
+                                        return "+关注"
+                                    }
+                                    // 检查是否已经关注了该视频作者
+                                    var isFollowing = false
+                                    try {
+                                        isFollowing = userController.isFollowing(getAuthorUserId())
+                                    } catch (e) {
+                                        console.log("检查关注状态失败:", e)
+                                    }
+                                    return isFollowing ? "已关注" : "+关注"
+                                }
+
+                                Layout.alignment: Qt.AlignVCenter
                                 contentItem: Text {
                                     text: bButton.text
-                                    font:  bButton.font
+                                    font: bButton.font
                                     color: "white"
                                     horizontalAlignment: Text.AlignHCenter
                                     verticalAlignment: Text.AlignVCenter
-                                }  //自定义字体格式
+                                }
+
                                 background: Rectangle {
                                     radius: 5
-                                    color:
-                                    {
-                                        if(videoPlayerPage.attention)
-                                            return "black"
-                                        else
-                                            return bButton.down ? "#6A6A6A":"#FF5252"
+                                    color: {
+                                        if (bButton.text === "已关注") {
+                                            return "#666666"  // 已关注时显示灰色
+                                        } else {
+                                            return bButton.down ? "#6A6A6A" : "#FF5252"  // 未关注时显示红色
+                                        }
                                     }
-
-                                            Behavior on color {
-                                                ColorAnimation {
-                                                    duration: 300
-                                                    easing.type: Easing.InOutQuad
-                                                }
-                                            }
-
+                                    Behavior on color {
+                                        ColorAnimation {
+                                            duration: 300
+                                            easing.type: Easing.InOutQuad
+                                        }
+                                    }
                                 }
+
                                 onClicked: {
                                     buttonAnime.start()
-                                    videoPlayerPage.attention = !videoPlayerPage.attention;
-                                    //操作
+                                    handleFollowAction()
                                 }
 
-                                SequentialAnimation
-                                {
-                                    id:buttonAnime
-                                    PropertyAnimation
-                                    {
+                                SequentialAnimation {
+                                    id: buttonAnime
+                                    PropertyAnimation {
                                         target: bButton
                                         property: "scale"
                                         to: 1.1
                                         duration: 300
                                         easing.type: Easing.OutCubic
                                     }
-
-                                    PropertyAnimation
-                                    {
+                                    PropertyAnimation {
                                         target: bButton
                                         property: "scale"
-                                        to:1.0
+                                        to: 1.0
                                         duration: 300
                                         easing.type: Easing.OutBack
                                     }
                                 }
 
-                             }
+                                // 辅助函数：获取作者的用户ID
+                                function getAuthorUserId() {
+                                    // 这里需要根据实际情况获取作者的用户ID
+                                    // 假设 videoData.author 是作者的用户ID或账号
+                                    return videoData.author
+                                }
+
+                                // 处理关注/取消关注逻辑
+                                function handleFollowAction() {
+                                    if (!userController) {
+                                        console.log("userController 未初始化")
+                                        return
+                                    }
+
+                                    if (!userController.isLoggedIn) {
+                                        console.log("请先登录")
+                                        // 可以在这里触发登录对话框
+                                        return
+                                    }
+
+                                    var authorUserId = getAuthorUserId()
+                                    if (!authorUserId) {
+                                        console.log("无法获取作者用户ID")
+                                        return
+                                    }
+
+                                    try {
+                                        // 检查当前关注状态
+                                        var isCurrentlyFollowing = userController.isFollowing(authorUserId)
+
+                                        if (isCurrentlyFollowing) {
+                                            // 已关注，执行取消关注
+                                            console.log("取消关注作者:", authorUserId)
+                                            var result = userController.unfollowUser(authorUserId)
+                                            if (result) {
+                                                console.log("取消关注成功")
+                                                // 更新按钮状态
+                                                bButton.text = "+关注"
+                                            } else {
+                                                console.log("取消关注失败")
+                                            }
+                                        } else {
+                                            // 未关注，执行关注
+                                            console.log("关注作者:", authorUserId)
+                                            var result = userController.followUser(authorUserId)
+                                            if (result) {
+                                                console.log("关注成功")
+                                                // 更新按钮状态
+                                                bButton.text = "已关注"
+                                            } else {
+                                                console.log("关注失败")
+                                            }
+                                        }
+                                    } catch (e) {
+                                        console.log("关注操作异常:", e)
+                                    }
+                                }
+                            }
 
                         }
 
@@ -2038,17 +2174,51 @@ FrameLessWindow{
                                 spacing: 20
                                 Layout.alignment: Qt.AlignHCenter
 
-                                  Button
-                                  {
-                                     Layout.preferredHeight: 40
-                                     Layout.preferredWidth: 40
+                                Button
+                                    {
+                                        id: likeButton
+                                        Layout.preferredHeight: 40
+                                        Layout.preferredWidth: 40
 
-                                     onClicked:
-                                     {
-                                        videoManager.addLike(videoData.id)
-                                     }
+                                        // 检查是否已点赞
+                                        property bool isLiked: {
+                                            if (userController && userController.currentUser) {
+                                                return userController.isVideoLiked(videoData.id)
+                                            }
+                                            return false
+                                        }
 
-                                  }
+                                        // 显示不同的图标
+                                        text: isLiked ? "❤️" : "🤍"
+                                        font.pixelSize: 20
+
+                                        background: Rectangle {
+                                            color: likeButton.hovered ? "#2D2D2D" : "transparent"
+                                            radius: 20
+                                        }
+
+                                        onClicked: {
+                                            if (!root.isLoggedIn) {
+                                                console.log("请先登录")
+                                                // 如果需要，可以在这里触发登录
+                                                return
+                                            }
+
+                                            console.log("切换点赞状态，视频ID:", videoData.id)
+
+                                            // 调用UserController的点赞切换方法
+                                            userController.toggleLikeVideo(videoData.id)
+
+                                            // 强制刷新按钮状态
+                                            isLiked = Qt.binding(function() {
+                                                if (userController && userController.currentUser) {
+                                                    return userController.isVideoLiked(videoData.id)
+                                                }
+                                                return false
+                                            })
+                                        }
+                                    }
+
 
                                   Text {
                                       text:videoData.likeCount
@@ -2067,13 +2237,40 @@ FrameLessWindow{
                                   spacing: 20
                                   Button
                                   {
-                                     Layout.preferredHeight: 40
-                                     Layout.preferredWidth: 40
+                                      id: coinButton
+                                      Layout.preferredHeight: 40
+                                      Layout.preferredWidth: 40
 
-                                     onClicked:
-                                     {
-                                         videoManager.addCoin(videoData.id)
-                                     }
+                                      text: "🪙"  // 硬币emoji
+                                      font.pixelSize: 20
+
+                                      // 显示用户已投币数量
+                                      property int userCoinCount: {
+                                          if (userController && userController.currentUser) {
+                                              return userController.getUserVideoCoinCount(videoData.id) || 0
+                                          }
+                                          return 0
+                                      }
+
+                                      background: Rectangle {
+                                          color: coinButton.hovered ? "#2D2D2D" : "transparent"
+                                          radius: 20
+                                      }
+
+                                      onClicked: {
+                                          if (!root.isLoggedIn) {
+                                              console.log("请先登录")
+                                              return
+                                          }
+
+                                          console.log("投币，视频ID:", videoData.id)
+
+                                          // 调用UserController的投币方法
+                                          userController.addVideoCoin(videoData.id)
+
+                                          // 显示投币成功提示
+                                          //coinAnimation.start()
+                                      }
                                   }
                                   Text {
                                       text:videoData.coinCount
@@ -2090,25 +2287,51 @@ FrameLessWindow{
                               ColumnLayout
                               {
                                   spacing: 20
-                                  Button
-                                  {
-                                     Layout.preferredHeight: 40
-                                     Layout.preferredWidth: 40
+                                  Button {
+                                      id: favoriteButton
+                                      Layout.preferredHeight: 40
+                                      Layout.preferredWidth: 40
 
-                                     onClicked:
-                                     {
-                                         //注释了涵予的，使用了收藏到数据库
-                                         videoManager.addCollection(videoData.id)
-                                         // videoManager.increaseCollect(videoData.videoId,videoManager.videoList[index].collectionCount)
-                                         // console.log("当前用户:", databaseUser.currentUser ? databaseUser.currentUser.username : "未登录");
-                                         //           const currentUser = databaseUser.currentUser;
-                                         //           // console.log("111111",currentUser);
-                                         //           // console.log("尝试获取视频 ID:", videoData.videoId); // 输出视频 ID
-                                         //           var video = videoManager.getVedio(videoData.videoId);
-                                         //           // console.log("视频对象:", video ? video.title : "未找到"); // 输出视频是否存在
 
-                                         //           databaseUser.addFavoriteVideo(databaseUser.currentUser,videoManager.getVedio(videoData.videoId))
-                                     }
+
+                                      // 检查是否已收藏
+                                      property bool isFavorited: {
+                                          if (userController && userController.currentUser) {
+                                              return userController.isVideoFavorited(videoData.id)
+                                          }
+                                          return false
+                                      }
+
+
+                                      text: isFavorited ? "⭐" : "✨"
+                                      font.pixelSize: 16
+
+                                      background: Rectangle {
+                                          color: favoriteButton.hovered ? "#2D2D2D" : "transparent"
+                                          radius: 20
+                                      }
+
+
+
+
+                                      onClicked: {
+                                          if (!root.isLoggedIn) {
+                                              console.log("请先登录")
+                                              root.openLoginDialog()
+                                              return
+                                          }
+
+                                          console.log("切换收藏状态，视频ID:", videoData.id)
+                                          userController.addFavoriteVideo(videoData.id)
+
+                                          // 强制刷新按钮状态
+                                          isFavorited = Qt.binding(function() {
+                                              if (userController && userController.currentUser) {
+                                                  return userController.isVideoFavorited(videoData.id)
+                                              }
+                                              return false
+                                          })
+                                      }
                                   }
                                   Text {
                                       text:videoData.collectionCount

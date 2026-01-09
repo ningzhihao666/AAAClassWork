@@ -52,13 +52,15 @@ namespace domain {
 
             auto comments = getComments();
             for (const auto& comment : comments) {
-                if (comment) { vo.comments.push_back(comment->toVO()); }
+                if (!comment.id().empty()) {
+                    vo.comments.push_back(comment.toVO());
+                }
             }
 
             return vo;
         }
 
-        static std::unique_ptr<Video> createLocalVideo(const Video_Info &info); //创建本地视频
+        static Video createLocalVideo(const Video_Info &info, const std::string& customId = ""); //创建本地视频
 
         void increaseViews(int count = 1);
         void increaseLikes(int count = 1);
@@ -73,13 +75,29 @@ namespace domain {
         void addReply(const std::string& parentCommentId,
                       const std::string& content,
                       const std::string& userName);
-        Comment *getCommentById(const std::string &commentId) ;
-        std::vector<const Comment*> getComments() const;
+        Comment getCommentById(const std::string &commentId) ;
+        std::vector<Comment> getComments() const;
 
         int getCommentCount() const { return m_commitCount;}
 
         void likeComment(const std::string& commentId);
         void unlikeComment(const std::string& commentId);
+
+
+        void addCommentWithId(const std::string& content,
+                              const std::string& userName,
+                              const std::string& customId = "");
+
+        void addReplyWithId(const std::string& parentCommentId,
+                            const std::string& content,
+                            const std::string& userName,
+                            const std::string& customId = "");
+
+        void setStatistics(int viewCount, int likeCount, int coinCount,
+                           int collectionCount, bool downloaded, int forwardCount,
+                           int bulletCount, int followerCount, int commitCount);
+
+        void clearComments();
 
     private:
 
@@ -106,10 +124,11 @@ namespace domain {
         std::string m_coverUrl; //封面url
         std::string m_headUrl;  //头像url
 
-        std::unordered_map<std::string,std::shared_ptr<Comment>> commentMap;
+        std::unordered_map<std::string,domain::Comment> commentMap;
 
         void validate(); //检测创建视频的时候属性是否正常
-        // Comment* findCommentById(const std::string& commentId);
+
+        void setComments(const std::vector<Comment>& comments);
 
     };
 

@@ -2,8 +2,8 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "../domain/video.h"
 #include "../domain/videoVO.h"
+#include "../domain/videorepository.h"
 
 namespace application {
 
@@ -17,9 +17,9 @@ namespace application {
         domain::vo::VideoVO createVideo(const Video_Info &info);
 
         domain::vo::VideoVO addView(const std::string& videoId);
-        domain::vo::VideoVO addLike(const std::string& videoId);
+        domain::vo::VideoVO addLike(const std::string& videoId,int count = 1);
         domain::vo::VideoVO addCoin(const std::string& videoId);
-        domain::vo::VideoVO addCollection(const std::string& videoId);
+        domain::vo::VideoVO addCollection(const std::string& videoId,int count = 1);
         domain::vo::VideoVO setDownload(const std::string& videoId);
         domain::vo::VideoVO addForward(const std::string& videoId);
 
@@ -42,11 +42,9 @@ namespace application {
         void likeComment(const std::string& videoId, const std::string& commentId);
         void unlikeComment(const std::string& videoId, const std::string& commentId);
 
+        void loadVideo();
+
     private:
-        std::vector<std::unique_ptr<domain::Video>> m_videos;
-
-        domain::Video* findVideoById(const std::string& id);
-
         domain::vo::VideoVO convertToVO(const domain::Video& video);
         domain::vo::CommentVO convertCommentToVO(const domain::Comment& comment);
     };

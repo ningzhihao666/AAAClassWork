@@ -1,11 +1,10 @@
-//消息页面
-
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import UserApp 1.0  // 添加UserApp导入
 
 Item {
-    id:messageWindow
+    id: messageWindow
     width: 1200
     height: 800
 
@@ -14,41 +13,295 @@ Item {
                                clientHandler.connected : false
     property bool connecting: clientHandler ?
                                 clientHandler.connecting : false
+    // 新增：关注的用户列表
+    property var followingUsers: []
+    property var filteredContactList: []  // 过滤后的联系人列表
+    property bool filterInitialized: false
 
     signal closeRequested()
 
-
-    //自动连接
+    // 自动连接
     Component.onCompleted: {
-         if (clientHandler) {
-             generateRandomUsername()
-             autoConnectToServer()
-         } else {
-             console.error("msgHandler is not available")
-         }
-     }
+        if (clientHandler) {
+            // 不再生成随机用户名，等待用户登录后设置
+            if (userController && userController.isLoggedIn) {
+                setChatUserName()
+            }
+            autoConnectToServer()
+            loadFollowingUsers()  // 加载关注的用户
+        } else {
+            console.error("msgHandler is not available")
+        }
+    }
 
-        // 生成随机用户名
-        function generateRandomUsername() {
-            var adjectives = ["快乐的", "聪明的", "勇敢的", "优雅的", "神秘的", "热情的", "冷静的", "活泼的"]
-            var nouns = ["熊猫", "狮子", "海豚", "老鹰", "狐狸", "鲸鱼", "蝴蝶", "猎豹"]
-            var randomAdj = adjectives[Math.floor(Math.random() * adjectives.length)]
-            var randomNoun = nouns[Math.floor(Math.random() * nouns.length)]
-            var randomNum = Math.floor(Math.random() * 1000)
-            var randomName = randomAdj + randomNoun + randomNum
+    // 新增：设置聊天用户名
+    function setChatUserName() {
+        if (userController && userController.isLoggedIn) {
+            var currentUser = userController.currentUser
+            var nickname = currentUser.nickname || currentUser.account || "用户"
+            console.log("设置聊天用户名:", nickname)
+            clientHandler.setName(nickname)
+        }
+    }
 
-             clientHandler.setName(randomName)
-            console.log("生成随机用户名:", randomName)
+    // 自动连接到服务器
+    function autoConnectToServer() {
+        var serverAddress = "49.232.73.239" // 默认服务器地址
+        var serverPort = 8080
+
+        console.log("尝试自动连接到服务器:", serverAddress + ":" + serverPort)
+        clientHandler.connectToServer(serverAddress, serverPort)
+    }
+
+    // 新增：加载关注的用户
+    function loadFollowingUsers() {
+        if (userController && userController.isLoggedIn) {
+            console.log("开始加载关注用户...")
+            userController.loadFollowingUsers()
+        }
+    }
+
+    // 新增：过滤联系人列表，只显示关注的用户
+    function updateFilteredContactList() {
+        var allUsers = clientHandler.clientList
+        var filtered = []
+
+        console.log("=== 更新过滤联系人列表 ===")
+        console.log("当前用户是否登录:", userController && userController.isLoggedIn)
+        console.log("所有在线用户数量:", allUsers ? allUsers.length : 0)
+        console.log("所有在线用户:", JSON.stringify(allUsers))
+        console.log("关注用户数量:", followingUsers ? followingUsers.length : 0)
+
+        if (!allUsers || allUsers.length === 0) {
+            console.log("没有在线用户")
+            filteredContactList = []
+            filterInitialized = true
+            return
         }
 
-        // 自动连接到服务器
-        function autoConnectToServer() {
-            var serverAddress = "49.232.73.239" // 默认服务器地址
-            var serverPort = 8080
-
-            console.log("尝试自动连接到服务器:", serverAddress + ":" + serverPort)
-             clientHandler.connectToServer(serverAddress, serverPort)
+        if (!followingUsers || followingUsers.length === 0) {
+            console.log("没有关注任何用户")
+            filteredContactList = []
+            filterInitialized = true
+            return
         }
+
+        // 获取当前用户的昵称，用于过滤掉自己
+        var currentUserNickname = ""
+        if (userController && userController.isLoggedIn) {
+            var currentUser = userController.currentUser
+            currentUserNickname = currentUser.nickname || currentUser.account || ""
+        }
+
+        // 将关注用户列表转换为昵称数组
+        var followingNicknames = []
+        for (var i = 0; i < followingUsers.length; i++) {
+            var user = followingUsers[i]
+            if (user && user.nickname && user.nickname !== currentUserNickname) {
+                followingNicknames.push(user.nickname)
+            }
+        }
+
+        console.log("关注的用户昵称列表（排除自己）:", JSON.stringify(followingNicknames))
+
+        // 过滤：只显示关注的且在线的用户
+        for (var j = 0; j < allUsers.length; j++) {
+            var userName = allUsers[j]
+            // 过滤掉自己
+            if (userName === currentUserNickname) {
+                console.log("跳过自己:", userName)
+                continue
+            }
+
+            console.log("检查用户 '" + userName + "':",
+                       "是否在关注列表中:", followingNicknames.indexOf(userName) !== -1)
+            if (followingNicknames.indexOf(userName) !== -1) {
+                filtered.push(userName)
+                console.log("✓ 添加用户到过滤列表:", userName)
+            }
+        }
+
+        console.log("过滤后的联系人列表:", JSON.stringify(filtered))
+        console.log("过滤后的联系人数量:", filtered.length)
+
+        // 使用赋值而不是直接修改，确保QML能检测到变化
+        filteredContactList = filtered.slice()  // 创建新数组
+        filterInitialized = true
+    }
+
+    // 监听关注列表变化
+    Connections {
+        target: userController
+        enabled: userController
+
+        function onFollowingChanged() {
+            console.log("关注列表发生变化")
+            followingUsers = userController.followingUsers
+            updateFilteredContactList()
+        }
+
+        function onLoginStatusChanged() {
+            if (userController.isLoggedIn) {
+                console.log("用户登录状态变化: 已登录")
+                setChatUserName()  // 设置聊天用户名
+                loadFollowingUsers()
+            } else {
+                console.log("用户登录状态变化: 未登录")
+                followingUsers = []
+                filteredContactList = []
+            }
+        }
+
+        function onLoginSuccess(userId) {
+            console.log("用户登录成功:", userId)
+            setChatUserName()  // 设置聊天用户名
+            loadFollowingUsers()
+        }
+    }
+
+    // 监听在线用户列表变化
+    Connections {
+        target: clientHandler
+
+        function onClientListChanged() {
+            console.log("在线用户列表发生变化")
+            updateFilteredContactList()
+        }
+
+        function onConnected() {
+            console.log("已连接到聊天服务器")
+            // 连接成功后设置用户名
+            if (userController && userController.isLoggedIn) {
+                setChatUserName()
+            }
+        }
+    }
+
+    // ... 中间的大量布局代码保持不变 ...
+
+    // // 联系人列表部分需要修改
+    // ListView {
+    //     id: contactListView
+    //     Layout.fillWidth: true
+    //     Layout.fillHeight: true
+    //     // 修改这里：使用 filteredContactList 而不是 clientHandler.clientList
+    //     model: filteredContactList
+    //     clip: true
+
+    //     delegate: Rectangle {
+    //         width: contactListView.width
+    //         height: 70
+    //         color: contactListView.currentIndex === index ? "#e3f2fd" :
+    //                (modelData === rightContent.activeChatTarget ? "#e8f5e9" : "transparent")
+    //         border.color: "#f0f0f0"
+    //         border.width: 1
+
+    //         RowLayout {
+    //             anchors.fill: parent
+    //             anchors.margins: 10
+    //             spacing: 10
+
+    //             // 用户头像
+    //             Rectangle {
+    //                 Layout.preferredWidth: 40
+    //                 Layout.preferredHeight: 40
+    //                 radius: 20
+    //                 color: "#" + Math.floor(Math.random()*16777215).toString(16)
+
+    //                 Text {
+    //                     anchors.centerIn: parent
+    //                     text: modelData ? modelData.charAt(0) : "?"
+    //                     font.pixelSize: 16
+    //                     color: "white"
+    //                     font.bold: true
+    //                 }
+    //             }
+
+    //             // 用户信息
+    //             ColumnLayout {
+    //                 Layout.fillWidth: true
+    //                 Layout.fillHeight: true
+    //                 spacing: 4
+
+    //                 Text {
+    //                     text: modelData
+    //                     font.bold: true
+    //                     font.pixelSize: 14
+    //                     color: "#333333"
+    //                     Layout.fillWidth: true
+    //                     elide: Text.ElideRight
+    //                 }
+
+    //                 Text {
+    //                     text: "已关注 · 在线"
+    //                     font.pixelSize: 12
+    //                     color: "#2ecc71"
+    //                 }
+    //             }
+    //         }
+
+    //         MouseArea {
+    //             anchors.fill: parent
+    //             onClicked: {
+    //                 contactListView.currentIndex = index
+    //                 rightContent.activeChatTarget = modelData
+    //                 clientHandler.setActiveChat(modelData)
+    //             }
+    //         }
+    //     }
+
+    //     // 空白状态提示
+    //     Rectangle {
+    //         visible: contactListView.count === 0
+    //         anchors.centerIn: parent
+    //         width: 300
+    //         height: 120
+    //         color: "transparent"
+
+    //         ColumnLayout {
+    //             anchors.centerIn: parent
+    //             spacing: 10
+
+    //             Text {
+    //                 text: userController && userController.isLoggedIn ?
+    //                       "暂无关注的在线用户" : "请先登录"
+    //                 font.pixelSize: 16
+    //                 color: "#999999"
+    //                 Layout.alignment: Qt.AlignHCenter
+    //                 horizontalAlignment: Text.AlignHCenter
+    //             }
+
+    //             Text {
+    //                 text: {
+    //                     if (!userController || !userController.isLoggedIn) {
+    //                         return "登录后查看关注的好友"
+    //                     } else if (followingUsers.length === 0) {
+    //                         return "您还没有关注任何用户"
+    //                     } else {
+    //                         return "您关注的用户当前不在线"
+    //                     }
+    //                 }
+    //                 font.pixelSize: 12
+    //                 color: "#cccccc"
+    //                 Layout.alignment: Qt.AlignHCenter
+    //                 horizontalAlignment: Text.AlignHCenter
+    //                 wrapMode: Text.Wrap
+    //             }
+
+    //             // 添加登录按钮（如果未登录）
+    //             Button {
+    //                 visible: !userController || !userController.isLoggedIn
+    //                 text: "去登录"
+    //                 Layout.alignment: Qt.AlignHCenter
+    //                 onClicked: {
+    //                     // 这里需要触发主窗口的登录功能
+    //                     console.log("跳转到登录页面")
+    //                     // 可以添加打开登录对话框的逻辑
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     RowLayout {
         anchors.fill: parent
@@ -307,131 +560,276 @@ Item {
 
                                     // 联系人列表标题
                                     Rectangle {
-                                        Layout.fillWidth: true
-                                        Layout.preferredHeight: 50
-                                        color: "#f0f0f0"
-
-                                        RowLayout {
-                                            anchors.fill: parent
-                                            spacing: 10
-                                            anchors.margins: 10
-
-                                            Text {
-                                                text: "在线用户 (" +  clientHandler.clientList.length + ")"
-                                                font.bold: true
-                                                font.pixelSize: 16
-                                                color: "#333333"
-                                                Layout.fillWidth: true
-                                            }
-
-                                            Button {
-                                                text: "刷新"
-                                                flat: true
-                                                onClicked: {
-                                                    // 刷新联系人列表
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    // 联系人列表
-                                    ListView {
-                                        id: contactListView
-                                        Layout.fillWidth: true
-                                        Layout.fillHeight: true
-                                        model:  clientHandler.clientList
-                                        clip: true
-
-                                        delegate: Rectangle {
-                                            width: contactListView.width
-                                            height: 70
-                                            color: contactListView.currentIndex === index ? "#e3f2fd" :
-                                                   (modelData === rightContent.activeChatTarget ? "#e8f5e9" : "transparent")
-                                            border.color: "#f0f0f0"
-                                            border.width: 1
+                                            Layout.fillWidth: true
+                                            Layout.preferredHeight: 50
+                                            color: "#f0f0f0"
 
                                             RowLayout {
                                                 anchors.fill: parent
+                                                spacing: 10
                                                 anchors.margins: 10
-                                                spacing: 10
 
-                                                // 用户头像
-                                                Rectangle {
-                                                    Layout.preferredWidth: 40
-                                                    Layout.preferredHeight: 40
-                                                    radius: 20
-                                                    color: "#" + Math.floor(Math.random()*16777215).toString(16)
-
-                                                    Text {
-                                                        anchors.centerIn: parent
-                                                        text: modelData ? modelData.charAt(0) : "?"
-                                                        font.pixelSize: 16
-                                                        color: "white"
-                                                        font.bold: true
+                                                Text {
+                                                    text: {
+                                                        var followingCount = followingUsers ? followingUsers.length : 0
+                                                        var filteredCount = filteredContactList ? filteredContactList.length : 0
+                                                        return "关注的好友 (" + filteredCount + "/" + followingCount + "在线)"
                                                     }
-                                                }
-
-                                                // 用户信息
-                                                ColumnLayout {
+                                                    font.bold: true
+                                                    font.pixelSize: 16
+                                                    color: "#333333"
                                                     Layout.fillWidth: true
-                                                    Layout.fillHeight: true
-                                                    spacing: 4
+                                                }
 
-                                                    Text {
-                                                        text: modelData
-                                                        font.bold: true
-                                                        font.pixelSize: 14
-                                                        color: "#333333"
+                                                // 调试按钮
+                                                Button {
+                                                    text: "调试"
+                                                    flat: true
+                                                    onClicked: {
+                                                        console.log("=== 调试信息 ===")
+                                                        console.log("1. 当前用户:", userController ? userController.currentUser : "无")
+                                                        console.log("2. 在线用户列表:", JSON.stringify(clientHandler.clientList))
+                                                        console.log("3. 关注用户列表:", JSON.stringify(followingUsers))
+                                                        console.log("4. 过滤后列表:", JSON.stringify(filteredContactList))
+                                                        console.log("5. 聊天用户名:", clientHandler.name)
+
+                                                        // 手动触发更新
+                                                        updateFilteredContactList()
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                    // 联系人列表
+                                    // ListView {
+                                    //     id: contactListView
+                                    //     Layout.fillWidth: true
+                                    //     Layout.fillHeight: true
+                                    //     model:  clientHandler.clientList
+                                    //     clip: true
+
+                                    //     delegate: Rectangle {
+                                    //         width: contactListView.width
+                                    //         height: 70
+                                    //         color: contactListView.currentIndex === index ? "#e3f2fd" :
+                                    //                (modelData === rightContent.activeChatTarget ? "#e8f5e9" : "transparent")
+                                    //         border.color: "#f0f0f0"
+                                    //         border.width: 1
+
+                                    //         RowLayout {
+                                    //             anchors.fill: parent
+                                    //             anchors.margins: 10
+                                    //             spacing: 10
+
+                                    //             // 用户头像
+                                    //             Rectangle {
+                                    //                 Layout.preferredWidth: 40
+                                    //                 Layout.preferredHeight: 40
+                                    //                 radius: 20
+                                    //                 color: "#" + Math.floor(Math.random()*16777215).toString(16)
+
+                                    //                 Text {
+                                    //                     anchors.centerIn: parent
+                                    //                     text: modelData ? modelData.charAt(0) : "?"
+                                    //                     font.pixelSize: 16
+                                    //                     color: "white"
+                                    //                     font.bold: true
+                                    //                 }
+                                    //             }
+
+                                    //             // 用户信息
+                                    //             ColumnLayout {
+                                    //                 Layout.fillWidth: true
+                                    //                 Layout.fillHeight: true
+                                    //                 spacing: 4
+
+                                    //                 Text {
+                                    //                     text: modelData
+                                    //                     font.bold: true
+                                    //                     font.pixelSize: 14
+                                    //                     color: "#333333"
+                                    //                     Layout.fillWidth: true
+                                    //                     elide: Text.ElideRight
+                                    //                 }
+
+                                    //                 Text {
+                                    //                     text: "在线"
+                                    //                     font.pixelSize: 12
+                                    //                     color: "#2ecc71"
+                                    //                 }
+                                    //             }
+                                    //         }
+
+                                    //         MouseArea {
+                                    //             anchors.fill: parent
+                                    //             onClicked: {
+                                    //                 contactListView.currentIndex = index
+                                    //                 rightContent.activeChatTarget = modelData
+                                    //                  clientHandler.setActiveChat(modelData)
+                                    //             }
+                                    //         }
+                                    //     }
+
+                                    //     // 空白状态提示
+                                    //     Rectangle {
+                                    //         visible: contactListView.count === 0
+                                    //         anchors.centerIn: parent
+                                    //         width: 200
+                                    //         height: 100
+                                    //         color: "transparent"
+
+                                    //         ColumnLayout {
+                                    //             anchors.centerIn: parent
+                                    //             spacing: 10
+
+                                    //             Text {
+                                    //                 text: "暂无在线用户"
+                                    //                 font.pixelSize: 14
+                                    //                 color: "#999999"
+                                    //                 Layout.alignment: Qt.AlignHCenter
+                                    //             }
+
+                                    //             Text {
+                                    //                 text: "等待其他用户加入..."
+                                    //                 font.pixelSize: 12
+                                    //                 color: "#cccccc"
+                                    //                 Layout.alignment: Qt.AlignHCenter
+                                    //             }
+                                    //         }
+                                    //     }
+                                    // }
+
+                                    ListView {
+                                            id: contactListView
+                                            Layout.fillWidth: true
+                                            Layout.fillHeight: true
+                                            model: filteredContactList
+                                            clip: true
+
+                                            delegate: Rectangle {
+                                                width: contactListView.width
+                                                height: 70
+                                                color: contactListView.currentIndex === index ? "#e3f2fd" :
+                                                       (modelData === rightContent.activeChatTarget ? "#e8f5e9" : "transparent")
+                                                border.color: "#f0f0f0"
+                                                border.width: 1
+
+                                                RowLayout {
+                                                    anchors.fill: parent
+                                                    anchors.margins: 10
+                                                    spacing: 10
+
+                                                    // 用户头像
+                                                    Rectangle {
+                                                        Layout.preferredWidth: 40
+                                                        Layout.preferredHeight: 40
+                                                        radius: 20
+                                                        color: {
+                                                            // 根据用户名生成一致的颜色
+                                                            var hash = 0
+                                                            for (var i = 0; i < modelData.length; i++) {
+                                                                hash = modelData.charCodeAt(i) + ((hash << 5) - hash)
+                                                            }
+                                                            var colors = ["#e3f2fd", "#f3e5f5", "#e8f5e8", "#fff3e0", "#fce4ec", "#f1f8e9"]
+                                                            var index = Math.abs(hash) % colors.length
+                                                            return colors[index]
+                                                        }
+
+                                                        Text {
+                                                            anchors.centerIn: parent
+                                                            text: modelData ? modelData.charAt(0).toUpperCase() : "?"
+                                                            font.pixelSize: 16
+                                                            color: "#333333"
+                                                            font.bold: true
+                                                        }
+                                                    }
+
+                                                    // 用户信息
+                                                    ColumnLayout {
                                                         Layout.fillWidth: true
-                                                        elide: Text.ElideRight
+                                                        Layout.fillHeight: true
+                                                        spacing: 4
+
+                                                        Text {
+                                                            text: modelData || "未知用户"
+                                                            font.bold: true
+                                                            font.pixelSize: 14
+                                                            color: "#333333"
+                                                            Layout.fillWidth: true
+                                                            elide: Text.ElideRight
+                                                        }
+
+                                                        Text {
+                                                            text: "已关注 · 在线"
+                                                            font.pixelSize: 12
+                                                            color: "#2ecc71"
+                                                        }
+                                                    }
+                                                }
+
+                                                MouseArea {
+                                                    anchors.fill: parent
+                                                    onClicked: {
+                                                        console.log("点击联系人:", modelData)
+                                                        contactListView.currentIndex = index
+                                                        rightContent.activeChatTarget = modelData
+                                                        clientHandler.setActiveChat(modelData)
+                                                    }
+                                                }
+                                            }
+
+                                            // 空白状态提示
+                                            Rectangle {
+                                                visible: contactListView.count === 0
+                                                anchors.centerIn: parent
+                                                width: 300
+                                                height: 140
+                                                color: "transparent"
+
+                                                ColumnLayout {
+                                                    anchors.centerIn: parent
+                                                    spacing: 10
+
+                                                    Text {
+                                                        text: {
+                                                            if (!userController || !userController.isLoggedIn) {
+                                                                return "请先登录"
+                                                            } else if (!followingUsers || followingUsers.length === 0) {
+                                                                return "您还没有关注任何用户"
+                                                            } else if (!filteredContactList || filteredContactList.length === 0) {
+                                                                return "关注的用户不在线"
+                                                            } else {
+                                                                return "在线用户列表为空"
+                                                            }
+                                                        }
+                                                        font.pixelSize: 16
+                                                        color: "#999999"
+                                                        Layout.alignment: Qt.AlignHCenter
+                                                        horizontalAlignment: Text.AlignHCenter
                                                     }
 
                                                     Text {
-                                                        text: "在线"
+                                                        text: {
+                                                            if (!userController || !userController.isLoggedIn) {
+                                                                return "登录后查看关注的好友"
+                                                            } else if (!followingUsers || followingUsers.length === 0) {
+                                                                return "先去发现并关注一些用户吧"
+                                                            } else if (!filteredContactList || filteredContactList.length === 0) {
+                                                                var followingCount = followingUsers ? followingUsers.length : 0
+                                                                return "您关注的 " + followingCount + " 个用户当前不在线"
+                                                            } else {
+                                                                return "但模型显示有 " + filteredContactList.length + " 个用户"
+                                                            }
+                                                        }
                                                         font.pixelSize: 12
-                                                        color: "#2ecc71"
+                                                        color: "#cccccc"
+                                                        Layout.alignment: Qt.AlignHCenter
+                                                        horizontalAlignment: Text.AlignHCenter
+                                                        wrapMode: Text.Wrap
                                                     }
                                                 }
                                             }
-
-                                            MouseArea {
-                                                anchors.fill: parent
-                                                onClicked: {
-                                                    contactListView.currentIndex = index
-                                                    rightContent.activeChatTarget = modelData
-                                                     clientHandler.setActiveChat(modelData)
-                                                }
-                                            }
                                         }
-
-                                        // 空白状态提示
-                                        Rectangle {
-                                            visible: contactListView.count === 0
-                                            anchors.centerIn: parent
-                                            width: 200
-                                            height: 100
-                                            color: "transparent"
-
-                                            ColumnLayout {
-                                                anchors.centerIn: parent
-                                                spacing: 10
-
-                                                Text {
-                                                    text: "暂无在线用户"
-                                                    font.pixelSize: 14
-                                                    color: "#999999"
-                                                    Layout.alignment: Qt.AlignHCenter
-                                                }
-
-                                                Text {
-                                                    text: "等待其他用户加入..."
-                                                    font.pixelSize: 12
-                                                    color: "#cccccc"
-                                                    Layout.alignment: Qt.AlignHCenter
-                                                }
-                                            }
-                                        }
-                                    }
                                 }
                             }
 
