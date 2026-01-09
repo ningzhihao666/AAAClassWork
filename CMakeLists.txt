@@ -10,7 +10,7 @@ project(Bilibili VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Quick Sql)
+find_package(Qt6 REQUIRED COMPONENTS Quick Network Multimedia HttpServer Sql)
 
 # configure_file(${CMAKE_SOURCE_DIR}/config.ini ${CMAKE_BINARY_DIR}/config.ini COPYONLY)
 
@@ -20,46 +20,46 @@ qt_add_qml_module(appBilibili
     URI Bilibili
     VERSION 1.0
     SOURCES
-    main.cpp
-    src/domain/video.cpp
-    src/domain/video.h
+        main.cpp
+        src/domain/video.cpp
+        src/domain/video.h
 
     QML_FILES
-    Main.qml
-    component/FrameLessWindow.qml
-    SOURCES src/application/videoServerContorller.cpp
-    SOURCES src/application/videoServerContorller.h
-    SOURCES src/presentation/videoController.cpp
-    SOURCES src/presentation/videoController.h
+        Main.qml
+        component/FrameLessWindow.qml
+        component/DamuSystem.qml
+        qml/Commit.qml
+        qml/Video_Playback/Video.qml qml/Video_Playback/NetworkManager.qml
+        qml/User_HomePage/User_HomePage.qml
+        qml/Tools_Left/PersonInfo.qml
+        qml/Tools_Left/My.qml qml/Tools_Left/Message_Page.qml
+        qml/Tools_Left/Dynamic.qml
+        qml/Settings/AboutSettings.qml qml/Settings/CacheSettings.qml qml/Settings/DownloadSettings.qml
+        qml/Settings/GamepadSettings.qml qml/Settings/GeneralSettings.qml qml/Settings/PlaySettings.qml qml/Settings/PushSettings.qml
+        qml/Settings/SectionDivider.qml qml/Settings/SettingsPage.qml qml/Settings/ShortcutKey.qml
+        qml/Send_Videos/VideoLode.qml qml/Send_Videos/VideolodeFunction.qml
+        qml/Login/LoginPage.qml
+        component/ModernLoadingIndicator.qml
+
     SOURCES
-    SOURCES
-    QML_FILES component/DamuSystem.qml
-    QML_FILES qml/Commit.qml
-    QML_FILES
-    QML_FILES
-    QML_FILES qml/Commit.qml
-    QML_FILES qml/Video_Playback/Video.qml qml/Video_Playback/NetworkManager.qml
-    QML_FILES qml/User_HomePage/User_HomePage.qml
-    QML_FILES qml/Tools_Left/PersonInfo.qml qml/Tools_Left/My.qml qml/Tools_Left/Message_Page.qml qml/Tools_Left/Dynamic.qml
-    QML_FILES qml/Settings/AboutSettings.qml qml/Settings/CacheSettings.qml qml/Settings/DownloadSettings.qml qml/Settings/GamepadSettings.qml qml/Settings/GeneralSettings.qml qml/Settings/PlaySettings.qml qml/Settings/PushSettings.qml qml/Settings/SectionDivider.qml qml/Settings/SettingsPage.qml qml/Settings/ShortcutKey.qml
-    QML_FILES qml/Send_Videos/VideoLode.qml qml/Send_Videos/VideolodeFunction.qml
-    QML_FILES qml/Login/LoginPage.qml
-    SOURCES src/domain/videoVO.h
-    SOURCES src/domain/comment.h src/domain/comment.cpp
-    SOURCES src/domain/commentVO.h
-    QML_FILES component/ModernLoadingIndicator.qml
-    QML_FILES
-    SOURCES src/component/clientmessagehandler.h src/component/clientmessagehandler.cpp src/component/clienthandler.h src/component/clienthandler.cpp
-    SOURCES src/domain/videorepository.h src/domain/videorepository.cpp
-    SOURCES src/database/videoDatabase.h src/database/videoDatabase.cpp
-    SOURCES src/application/userServerController.cpp src/application/userServerController.h
-    SOURCES src/database/userdatabase.cpp src/database/userdatabase.h
-    SOURCES src/domain/user.cpp src/domain/user.h src/domain/userVO.h
-    SOURCES src/presentation/userController.cpp src/presentation/userController.h
-    SOURCES
-    SOURCES src/component/simpleuploader.h src/component/simpleuploader.cpp
-    SOURCES
-    SOURCES src/component/videouploader.h src/component/videouploader.cpp
+        src/domain/videoVO.h
+        src/domain/comment.h src/domain/comment.cpp
+        src/domain/commentVO.h
+        src/component/clientmessagehandler.h src/component/clientmessagehandler.cpp src/component/clienthandler.h src/component/clienthandler.cpp
+        src/domain/videorepository.h src/domain/videorepository.cpp
+        src/database/videoDatabase.h src/database/videoDatabase.cpp
+        src/application/userServerController.cpp src/application/userServerController.h
+        src/database/userdatabase.cpp src/database/userdatabase.h
+        src/domain/user.cpp src/domain/user.h src/domain/userVO.h
+        src/application/videoServerContorller.cpp
+        src/application/videoServerContorller.h
+        src/presentation/videoController.cpp
+        src/presentation/videoController.h
+        src/presentation/userController.cpp src/presentation/userController.h
+        src/component/simpleuploader.h  src/component/simpleuploader.cpp
+        src/domain/videoserver.h
+        src/component/videouploader.h src/component/videouploader.cpp
+        SOURCES src/domain/videoserver.cpp
 )
 
 target_sources(appBilibili
@@ -78,8 +78,10 @@ target_compile_features(appBilibili PRIVATE cxx_std_23)
 target_link_libraries(appBilibili
     PRIVATE
         Qt6::Quick
-        Qt6::Sql
         Qt6::Network
+        Qt6::Multimedia
+        Qt6::Sql
+        Qt6::HttpServer
 )
 
 set_target_properties(appBilibili PROPERTIES

@@ -4,7 +4,7 @@
 #include "src/presentation/videoController.h"
 #include "src/component/clienthandler.h"
 #include "src/presentation/userController.h"
-
+#include "src/domain/videoserver.h"     //服务器c++文件
 #include "src/component/simpleuploader.h"
 #include "src/component/videouploader.h"
 #include <QDebug>
@@ -23,6 +23,20 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     VideoUploader* videoUploader = new VideoUploader(&app);
+
+    QString port = "3000";
+
+    // 创建并启动服务器
+    VideoServer server;
+    bool ok;
+    quint16 portNumber = port.toUShort(&ok);
+
+    if (ok && server.startServer(portNumber)) {
+        qInfo() << "✅ 视频服务器成功启动：" << portNumber;
+    } else {
+        qCritical() << "❌ 视频服务器启动失败：" << port;
+        return 1;
+    }
 
     auto videoController = interface::VideoController::instance();
     auto userController = interface::UserController::instance();
@@ -55,7 +69,7 @@ int main(int argc, char *argv[])
         20450,                                  // 端口
         "video",                                // 数据库名
         "root",                                 // 用户名
-        "12345678lzh"                             // 密码
+        "12345678lzh"                           // 密码
         );
 
     engine.load(url);
