@@ -80,6 +80,9 @@ private slots:
     QHttpServerResponse handleSearchVideos(const QHttpServerRequest &request);
     QHttpServerResponse handleTestDB(const QHttpServerRequest &request);
 
+    QHttpServerResponse handleUploadUserAvatar(const QHttpServerRequest &request);
+
+
 private:
     bool initDatabase();
     bool initVideoTable();

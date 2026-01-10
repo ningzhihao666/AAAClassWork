@@ -17,6 +17,7 @@
 #include <QHttpServerRequest>
 #include <QHttpServerResponse>
 #include <cmath>
+#include "../application/userServerController.h"
 
 VideoServer::VideoServer(QObject *parent)
     : QObject(parent)
@@ -74,6 +75,12 @@ bool VideoServer::startServer(quint16 port)
                     [this](const QHttpServerRequest &request) {
                         return handleTestDB(request);
                     });
+    m_server->route("/api/user/upload-avatar",
+                    QHttpServerRequest::Method::Post,
+                    [this](const QHttpServerRequest &request) {
+                        return handleUploadUserAvatar(request);
+                    });
+
 
     // 创建并配置TCP服务器
     auto tcpServer = new QTcpServer(this);
@@ -760,4 +767,77 @@ void VideoServer::handleCOSUploadFinished(QNetworkReply *reply, const QString &f
     }
 
     reply->deleteLater();
+}
+QHttpServerResponse VideoServer::handleUploadUserAvatar(const QHttpServerRequest &request)
+{
+    auto json = parseJsonBody(request.body());
+    if (json.isEmpty()) {
+        return QHttpServerResponse("application/json",
+                                   QJsonDocument(QJsonObject{
+                                                     {"code", 1},
+                                                     {"message", "Invalid JSON"}
+                                                 }).toJson(),
+                                   QHttpServerResponse::StatusCode::BadRequest);
+    }
+
+    QString userId   = json["userId"].toString();
+    QString avatarPath = json["avatarPath"].toString();
+
+    if (userId.isEmpty() || avatarPath.isEmpty()) {
+        return QHttpServerResponse("application/json",
+                                   QJsonDocument(QJsonObject{
+                                                     {"code", 1},
+                                                     {"message", "userId or avatarPath empty"}
+                                                 }).toJson(),
+                                   QHttpServerResponse::StatusCode::BadRequest);
+    }
+
+    QFile avatarFile(avatarPath);
+    if (!avatarFile.exists()) {
+        return QHttpServerResponse("application/json",
+                                   QJsonDocument(QJsonObject{
+                                                     {"code", 1},
+                                                     {"message", "Avatar file not exists"}
+                                                 }).toJson(),
+                                   QHttpServerResponse::StatusCode::BadRequest);
+    }
+
+    // 生成 COS Key（完全仿造 video/cover）
+    QString ext = QFileInfo(avatarPath).suffix();
+    QString avatarKey = QString("avatars/%1_%2.%3")
+                            .arg(userId)
+                            .arg(QDateTime::currentSecsSinceEpoch())
+                            .arg(ext);
+
+    // 上传到 COS
+    bool ok = uploadToCOS(avatarKey, avatarPath, avatarFile.size());
+    if (!ok) {
+        return QHttpServerResponse("application/json",
+                                   QJsonDocument(QJsonObject{
+                                                     {"code", 1},
+                                                     {"message", "COS upload failed"}
+                                                 }).toJson(),
+                                   QHttpServerResponse::StatusCode::InternalServerError);
+    }
+
+    QString avatarUrl = QString("https://%1.cos.%2.myqcloud.com/%3")
+                            .arg(m_cosBucket)
+                            .arg(m_cosRegion)
+                            .arg(avatarKey);
+
+    // ⚠️ 更新用户头像（直接用你现有的 UserServiceController）
+    application::UserServiceController userService;
+    auto userVO = userService.updateUserProfile(
+        userId.toStdString(),
+        "", "", avatarUrl.toStdString()
+        );
+
+    QJsonObject resp{
+        {"code", 0},
+        {"message", "avatar upload success"},
+        {"avatarUrl", avatarUrl}
+    };
+
+    return QHttpServerResponse("application/json",
+                               QJsonDocument(resp).toJson());
 }

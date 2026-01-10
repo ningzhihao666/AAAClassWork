@@ -26,6 +26,34 @@ Rectangle {
     property var collectionGroups: ["默认收藏夹", "学习资料", "娱乐视频", "音乐收藏"]
     property var selectedCollectionItems: ({})
 
+    function uploadUserAvatar(avatarPath) {
+        var xhr = new XMLHttpRequest()
+        xhr.open("POST", "http://localhost:3000/api/user/upload-avatar")
+        xhr.setRequestHeader("Content-Type", "application/json")
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                var res = JSON.parse(xhr.responseText)
+                if (res.code === 0) {
+                    // ⚠️ 不要再用 file://
+                    setMainAvatarUrl(res.avatarUrl)
+
+                    userController.updateProfile(
+                        "",
+                        "",
+                        res.avatarUrl
+                    )
+                }
+            }
+        }
+
+        xhr.send(JSON.stringify({
+            userId: userController.currentUser.id,
+            avatarPath: avatarPath
+        }))
+    }
+
+
     // 加载模拟关注数据
     function loadMockFollowingData() {
         followingListModel.clear()
@@ -382,17 +410,21 @@ Rectangle {
         }
     }
 
-    // 文件选择对话框
+
     FileDialog {
         id: fileDialog
         title: "选择头像图片"
         nameFilters: ["图片文件 (*.png *.jpg *.jpeg)"]
+
         onAccepted: {
-            console.log("选择的文件: " + selectedFile)
-            // 更新头像URL
-            setMainAvatarUrl(selectedFile)
+            var filePath = selectedFile.toString().replace("file://", "")
+            console.log("选择的头像文件:", filePath)
+
+
+            uploadUserAvatar(filePath)
         }
     }
+
 
     // 头像大图弹窗
     Popup {
