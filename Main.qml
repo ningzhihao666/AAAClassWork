@@ -233,10 +233,7 @@ FrameLessWindow {
     }
 
     // 当全局头像URL改变时，强制更新侧边栏头像
-    onGlobalAvatarUrlChanged: {
-        console.log("全局头像URL更新为:", globalAvatarUrl)
-        leftSideBar.forceUpdateAvatar()
-    }
+
 
     // 左侧边栏
     Rectangle {
@@ -250,13 +247,7 @@ FrameLessWindow {
         color: "#f0f0f0"
         z: 100
 
-        // 强制更新头像的函数
-        function forceUpdateAvatar() {
-            console.log("强制更新侧边栏头像")
-            let processedUrl = root.processAvatarUrl(root.globalAvatarUrl)
-            console.log("更新头像为:", processedUrl)
-            userInfoArea.avatarImage.source = processedUrl
-        }
+
 
         ColumnLayout {
             spacing: 10
@@ -419,16 +410,19 @@ FrameLessWindow {
                             Image {
                                 id: avatarImage
                                 anchors.fill: parent
-                                source: root.processAvatarUrl(root.globalAvatarUrl)
+
+                                source: userController.avatarUrl
+                                        ? userController.avatarUrl + "?t=" + userController.avatarTimestamp
+                                        : "https://i0.hdslb.com/bfs/face/member/noface.jpg@40w_40h.webp"
+
                                 fillMode: Image.PreserveAspectCrop
                                 cache: false
-
-                                onStatusChanged: {
-                                    if (status === Image.Error) {
-                                        source = "https://i0.hdslb.com/bfs/face/member/noface.jpg@40w_40h.webp"
-                                    }
-                                }
                             }
+
+
+
+
+
                         }
 
                         Column {

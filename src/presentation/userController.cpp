@@ -110,9 +110,12 @@ namespace interface {
 
         if (user.isValid()) {
             updateCurrentUser(user);
+            emit avatarUrlChanged();
+            emit currentUserChanged();
             emit profileUpdated();
             qDebug() << "✅ 用户资料更新成功";
         } else {
+
             emit errorOccurred("更新资料失败");
         }
 
@@ -268,6 +271,14 @@ namespace interface {
 
     //     setLoading(false);
     // }
+
+    QString UserController::avatarUrl() const {
+        auto it = m_currentUser.find("avatarUrl");
+        if (it != m_currentUser.end()) {
+            return it->toString();
+        }
+        return "";
+    }
 
     void UserController::addFavoriteVideo(const QString& videoId) {
         if (!isLoggedIn()) {
@@ -561,11 +572,14 @@ namespace interface {
         // 初始化点赞列表
         m_likedVideos = m_currentUser["likedVideoIds"].toList();
 
+
         // 初始化投币记录
         QVariantMap coinMap = m_currentUser["videoCoins"].toMap();
         for (auto it = coinMap.begin(); it != coinMap.end(); ++it) {
             m_userVideoCoins[it.key()] = it.value().toInt();
         }
+        m_avatarTimestamp = QDateTime::currentMSecsSinceEpoch();
+        emit avatarUrlChanged();
 
         emit currentUserChanged();
         emit loginStatusChanged();

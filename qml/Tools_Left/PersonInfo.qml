@@ -7,9 +7,7 @@ Rectangle {
     id: personInfoPage
     color: "#f4f4f4"
 
-    // 接收全局头像URL属性
-    property alias globalAvatarUrl: personInfoPage.avatarUrl
-    property string avatarUrl: "https://i0.hdslb.com/bfs/face/member/noface.jpg@40w_40h.webp"
+
 
     // 状态管理
     property int selectedHistoryIndex: -1//历史记录index
@@ -36,7 +34,7 @@ Rectangle {
                 var res = JSON.parse(xhr.responseText)
                 if (res.code === 0) {
                     // ⚠️ 不要再用 file://
-                    setMainAvatarUrl(res.avatarUrl)
+
 
                     userController.updateProfile(
                         "",
@@ -131,13 +129,6 @@ Rectangle {
         // 这里只是UI效果，不实际调用数据库
     }
 
-    // 设置主窗口头像URL的函数
-    function setMainAvatarUrl(url) {
-        console.log("个人信息页面设置主窗口头像URL:", url)
-        avatarUrl = url
-        // 直接更新主窗口的globalAvatarUrl
-        root.globalAvatarUrl = url
-    }
 
     // 获取搜索提示文本
     function getSearchPlaceholder() {
@@ -438,7 +429,9 @@ Rectangle {
 
         contentItem: Image {
             id: largeImage
-            source: avatarUrl
+            source: userController.avatarUrl
+                        ? userController.avatarUrl + "?t=" + Date.now()
+                        : "https://i0.hdslb.com/bfs/face/member/noface.jpg"
             fillMode: Image.PreserveAspectFit
             asynchronous: true
             cache: false
@@ -546,7 +539,9 @@ Rectangle {
                     Image {
                         id: avatarImage
                         anchors.fill: parent
-                        source: avatarUrl
+                        source: userController.avatarUrl
+                                    ? userController.avatarUrl + "?t=" + Date.now()
+                                    : "https://i0.hdslb.com/bfs/face/member/noface.jpg"
                         fillMode: Image.PreserveAspectCrop
                     }
                 }
@@ -1089,7 +1084,10 @@ Rectangle {
                                 Image {
                                     id: mainAvatarImage
                                     anchors.fill: parent
-                                    source: avatarUrl
+                                    source: userController.avatarUrl
+                                                ? userController.avatarUrl + "?t=" + Date.now()
+                                                : "https://i0.hdslb.com/bfs/face/member/noface.jpg"
+
                                     fillMode: Image.PreserveAspectCrop
                                 }
 
@@ -2406,8 +2404,7 @@ Rectangle {
     // 组件初始化
     Component.onCompleted: {
         console.log("个人信息页面初始化完成")
-        console.log("当前头像URL:", avatarUrl)
-        console.log("全局头像URL:", root.globalAvatarUrl)
+
 
         // 初始化历史记录状态
         isHistoryEmpty = historyModel.count === 0
@@ -2418,14 +2415,7 @@ Rectangle {
         updateGroupVideoCount()
     }
 
-    // 监听全局头像URL变化
-    Connections {
-        target: root
-        function onGlobalAvatarUrlChanged() {
-            console.log("全局头像URL变化:", root.globalAvatarUrl)
-            avatarUrl = root.globalAvatarUrl
-        }
-    }
+
 
     // 监听登录状态变化
     Connections {

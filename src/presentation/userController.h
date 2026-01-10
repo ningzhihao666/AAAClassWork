@@ -25,6 +25,10 @@ namespace interface {
         Q_PROPERTY(QVariantList watchHistory READ watchHistory NOTIFY historyChanged)
         Q_PROPERTY(bool loading READ loading NOTIFY loadingChanged)
 
+        Q_PROPERTY(qint64 avatarTimestamp READ avatarTimestamp NOTIFY avatarUrlChanged)
+
+        Q_PROPERTY(QString avatarUrl READ avatarUrl NOTIFY avatarUrlChanged)
+
         // 检查是否已收藏
         Q_INVOKABLE bool isVideoFavorited(const QString& videoId) const;
 
@@ -86,6 +90,7 @@ namespace interface {
         QVariantList favoriteVideos() const { return m_favoriteVideos; }
         QVariantList watchHistory() const { return m_watchHistory; }
         bool loading() const { return m_loading; }
+        QString avatarUrl() const;
 
         // 单例实例访问器
         //static UserController* instance() { return m_instance; }
@@ -116,6 +121,8 @@ namespace interface {
         void videoUnliked(const QString& videoId);
         void videoCoined(const QString& videoId, int coinCount);
 
+        void avatarUrlChanged();
+
 
 
     private:
@@ -130,10 +137,14 @@ namespace interface {
         QMap<QString, int> m_userVideoCoins;
 
 
+        qint64 m_avatarTimestamp = 0;
+        qint64 avatarTimestamp() const { return m_avatarTimestamp; }
+
 
         // 禁止拷贝和赋值
         UserController(const UserController&) = delete;
         UserController& operator=(const UserController&) = delete;
+
 
         application::UserServiceController m_service;
 

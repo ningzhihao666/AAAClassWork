@@ -18,7 +18,7 @@
 #include <QHttpServerResponse>
 #include <cmath>
 #include "../application/userServerController.h"
-
+#include <QEventLoop>
 VideoServer::VideoServer(QObject *parent)
     : QObject(parent)
     , m_server(new QHttpServer(this))
@@ -772,72 +772,122 @@ QHttpServerResponse VideoServer::handleUploadUserAvatar(const QHttpServerRequest
 {
     auto json = parseJsonBody(request.body());
     if (json.isEmpty()) {
-        return QHttpServerResponse("application/json",
-                                   QJsonDocument(QJsonObject{
-                                                     {"code", 1},
-                                                     {"message", "Invalid JSON"}
-                                                 }).toJson(),
-                                   QHttpServerResponse::StatusCode::BadRequest);
+        return QHttpServerResponse(
+            "application/json",
+            QJsonDocument(QJsonObject{
+                              {"code", 1},
+                              {"message", "Invalid JSON"}
+                          }).toJson(),
+            QHttpServerResponse::StatusCode::BadRequest
+            );
     }
 
-    QString userId   = json["userId"].toString();
+    QString userId     = json["userId"].toString();
     QString avatarPath = json["avatarPath"].toString();
 
     if (userId.isEmpty() || avatarPath.isEmpty()) {
-        return QHttpServerResponse("application/json",
-                                   QJsonDocument(QJsonObject{
-                                                     {"code", 1},
-                                                     {"message", "userId or avatarPath empty"}
-                                                 }).toJson(),
-                                   QHttpServerResponse::StatusCode::BadRequest);
+        return QHttpServerResponse(
+            "application/json",
+            QJsonDocument(QJsonObject{
+                              {"code", 1},
+                              {"message", "userId or avatarPath empty"}
+                          }).toJson(),
+            QHttpServerResponse::StatusCode::BadRequest
+            );
     }
 
     QFile avatarFile(avatarPath);
     if (!avatarFile.exists()) {
-        return QHttpServerResponse("application/json",
-                                   QJsonDocument(QJsonObject{
-                                                     {"code", 1},
-                                                     {"message", "Avatar file not exists"}
-                                                 }).toJson(),
-                                   QHttpServerResponse::StatusCode::BadRequest);
+        return QHttpServerResponse(
+            "application/json",
+            QJsonDocument(QJsonObject{
+                              {"code", 1},
+                              {"message", "Avatar file not exists"}
+                          }).toJson(),
+            QHttpServerResponse::StatusCode::BadRequest
+            );
     }
 
-    // 生成 COS Key（完全仿造 video/cover）
+    // 1️⃣ 生成 COS Key
     QString ext = QFileInfo(avatarPath).suffix();
     QString avatarKey = QString("avatars/%1_%2.%3")
                             .arg(userId)
                             .arg(QDateTime::currentSecsSinceEpoch())
                             .arg(ext);
 
-    // 上传到 COS
+    // 2️⃣ 上传到 COS
     bool ok = uploadToCOS(avatarKey, avatarPath, avatarFile.size());
     if (!ok) {
-        return QHttpServerResponse("application/json",
-                                   QJsonDocument(QJsonObject{
-                                                     {"code", 1},
-                                                     {"message", "COS upload failed"}
-                                                 }).toJson(),
-                                   QHttpServerResponse::StatusCode::InternalServerError);
+        return QHttpServerResponse(
+            "application/json",
+            QJsonDocument(QJsonObject{
+                              {"code", 1},
+                              {"message", "COS upload failed"}
+                          }).toJson(),
+            QHttpServerResponse::StatusCode::InternalServerError
+            );
     }
 
+    // 3️⃣ 拼出公网 URL
     QString avatarUrl = QString("https://%1.cos.%2.myqcloud.com/%3")
                             .arg(m_cosBucket)
                             .arg(m_cosRegion)
                             .arg(avatarKey);
 
-    // ⚠️ 更新用户头像（直接用你现有的 UserServiceController）
+    // 4️⃣ 🔥关键：等待 COS 文件「真正可访问」
+    bool reachable = false;
+    QNetworkAccessManager manager;
+
+    for (int i = 0; i < 10; ++i) {   // 最多等 ~2 秒
+        QNetworkRequest req;
+        req.setUrl(QUrl(avatarUrl));
+
+
+
+        QNetworkReply *reply = manager.head(req);
+
+        QEventLoop loop;
+        QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+        loop.exec();
+
+        if (reply->error() == QNetworkReply::NoError) {
+            reachable = true;
+            reply->deleteLater();
+            break;
+        }
+
+        reply->deleteLater();
+        QThread::msleep(200);
+    }
+
+    if (!reachable) {
+        return QHttpServerResponse(
+            "application/json",
+            QJsonDocument(QJsonObject{
+                              {"code", 1},
+                              {"message", "Avatar uploaded but not reachable yet"}
+                          }).toJson(),
+            QHttpServerResponse::StatusCode::InternalServerError
+            );
+    }
+
+    // 5️⃣ 再更新用户头像（这一步现在才是安全的）
     application::UserServiceController userService;
-    auto userVO = userService.updateUserProfile(
+    userService.updateUserProfile(
         userId.toStdString(),
-        "", "", avatarUrl.toStdString()
+        "", "",
+        avatarUrl.toStdString()
         );
 
+    // 6️⃣ 返回前端（此时 QML 立刻可显示）
     QJsonObject resp{
         {"code", 0},
         {"message", "avatar upload success"},
         {"avatarUrl", avatarUrl}
     };
 
-    return QHttpServerResponse("application/json",
-                               QJsonDocument(resp).toJson());
+    return QHttpServerResponse(
+        "application/json",
+        QJsonDocument(resp).toJson()
+        );
 }

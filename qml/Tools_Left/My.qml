@@ -88,24 +88,22 @@ Rectangle {
                             Image {
                                 id: userAvatar
                                 anchors.fill: parent
-                                source: mainWindow.globalAvatarUrl
+                                source: userController.avatarUrl
+                                        ? userController.avatarUrl + "?t=" + Date.now()
+                                        : "https://i0.hdslb.com/bfs/face/member/noface.jpg"
                                 fillMode: Image.PreserveAspectCrop
                                 cache: false
-
-                                onStatusChanged: {
-                                    if (status === Image.Error) {
-                                        source = "https://i0.hdslb.com/bfs/face/member/noface.jpg@60w_60h.webp"
-                                    }
-                                }
                             }
+
+
 
                             // 头像边框
                             Rectangle {
                                 anchors.fill: parent
                                 color: "transparent"
                                 radius: 30
-                                border.color: mainWindow.isDarkMode ? "#555" : "#ddd"
-                                border.width: 1
+                                border.color: mainWindow.isDarkMode ? "#ff0000" : "#ff0000"
+                                border.width: 10
                             }
                         }
 
