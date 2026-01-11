@@ -152,6 +152,39 @@ FrameLessWindow {
         }
     }
 
+    Rectangle {
+        Layout.fillWidth: true
+        height: 36
+        width:300
+        z:100
+        color: "pink"
+        radius: 4
+        border.color: "#E5E9EF"
+
+        anchors {
+            horizontalCenter: parent.horizontalCenter
+            bottom: parent.bottom;
+            bottomMargin: 10
+            // leftMargin: 10
+        }
+
+        Text {
+            text: "加载更多..."
+            anchors.centerIn: parent
+            color: "#FB7299"
+            font.pixelSize: 14
+        }
+
+        TapHandler {
+            onTapped:
+            {
+                console.log("加载更多视频")
+                videoController.loadMoreVideos(5)
+                videoController.loadVideos()
+            }
+        }
+    }
+
     // 加载指示器
     Rectangle {
         id: loadingIndicator
@@ -953,25 +986,6 @@ FrameLessWindow {
                     cellHeight: 220
                     model: contentContainer.videoManager ? contentContainer.videoManager.videos : []
                     delegate: videoDelegate // 使用下面的组件
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 40
-                    color: "pink"
-                    radius: 4
-                    border.color: "#E5E9EF"
-
-                    Text {
-                        text: "加载更多..."
-                        anchors.centerIn: parent
-                        color: "#FB7299"
-                        font.pixelSize: 14
-                    }
-
-                    TapHandler {
-                        onTapped: console.log("加载更多视频")
-                    }
                 }
             }
         }

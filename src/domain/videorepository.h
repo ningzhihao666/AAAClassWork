@@ -21,6 +21,8 @@ namespace domain::repository {
 
         void loadVideoFromDatabase();
 
+        bool loadMoreVideos(int count);
+
     private:
         database::VideoDatabase& db;
 

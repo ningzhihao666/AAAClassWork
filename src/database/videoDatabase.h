@@ -74,8 +74,7 @@ namespace database {
         bool saveComments(const std::string& videoId, const std::vector<domain::Comment>& comments);
         bool saveSingleComment(const std::string& videoId, const domain::Comment& comment);
 
-        // 加载所有视频
-        bool loadAllVideosFromDatabase();
+        bool loadAllVideosFromDatabase(bool clearCache = true, int count = 5);
 
         // 加载特定视频
         bool loadVideoFromDatabase(const std::string& videoId);

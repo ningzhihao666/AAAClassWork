@@ -34,6 +34,7 @@ namespace interface {
         Q_INVOKABLE void addForward(const QString& videoId);
 
         Q_INVOKABLE void loadVideos();
+        Q_INVOKABLE void loadMoreVideos(int count);
         Q_INVOKABLE void clearVideos();
 
         Q_INVOKABLE QVariantMap getVideo(const QString& videoId) const;

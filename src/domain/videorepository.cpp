@@ -46,6 +46,11 @@ namespace domain::repository {
         db.loadAllVideosFromDatabase();
     }
 
+    bool VideoRepository::loadMoreVideos(int count)
+    {
+        return db.loadAllVideosFromDatabase(false, count);
+    }
+
 }
 
 

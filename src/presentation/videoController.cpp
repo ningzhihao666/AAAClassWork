@@ -258,5 +258,10 @@ namespace interface {
         m_service.loadVideo();
     }
 
+    void VideoController::loadMoreVideos(int count)
+    {
+        m_service.loadMoreVideos(count);
+    }
+
 
 }

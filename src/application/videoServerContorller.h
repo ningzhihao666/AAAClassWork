@@ -44,6 +44,8 @@ namespace application {
 
         void loadVideo();
 
+        void loadMoreVideos(int count);
+
     private:
         domain::vo::VideoVO convertToVO(const domain::Video& video);
         domain::vo::CommentVO convertCommentToVO(const domain::Comment& comment);

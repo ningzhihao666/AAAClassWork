@@ -3,6 +3,9 @@
 #include <stdexcept>
 #include <QDebug>
 #include <QVariant>
+#include <algorithm>
+#include <random>
+#include <chrono>
 
 namespace database {
     VideoDatabase* VideoDatabase::instance = nullptr;
@@ -852,25 +855,55 @@ namespace database {
     }
 
     // 从数据库加载所有视频
-    bool VideoDatabase::loadAllVideosFromDatabase()
+    bool VideoDatabase::loadAllVideosFromDatabase(bool clearCache, int count)
     {
         if (!m_isConnected) {
             std::cout << "数据库未连接" << std::endl;
             return false;
         }
 
-        std::cout << "【调试】开始从数据库加载所有视频..." << std::endl;
+        std::cout << (clearCache ? "【刷新】" : "【加载更多】")
+                  << "加载随机视频..." << std::endl;
 
+        // 1. 清空缓存（如果需要）
+        if (clearCache) {
+            m_videos.clear();
+            std::cout << "✅ 已清空视频缓存" << std::endl;
+        }
+
+        // 2. 获取所有视频ID
         std::vector<std::string> videoIds = getAllVideoIdsFromDatabase();
         if (videoIds.empty()) {
             std::cout << "❌ 数据库中没有视频" << std::endl;
             return false;
         }
 
+        std::cout << "✅ 数据库中有 " << videoIds.size() << " 个视频" << std::endl;
+
+        // 3. 随机打乱
+        std::random_device rd;
+        std::mt19937 g(rd());
+        std::shuffle(videoIds.begin(), videoIds.end(), g);
+
         int loaded = 0;
         int failed = 0;
+        int skipped = 0;  // 跳过已存在的视频
+
+        // 4. 加载视频
         for (const auto& videoId : videoIds) {
-            std::cout << "加载视频: " << videoId << std::endl;
+            // 如果已经加载了足够的数量，就停止
+            if (loaded >= count) {
+                break;
+            }
+
+            // 检查视频是否已存在（只有在不清空缓存时才需要）
+            if (!clearCache && m_videos.find(videoId) != m_videos.end()) {
+                std::cout << "跳过已存在的视频: " << videoId << std::endl;
+                skipped++;
+                continue;  // 跳过已存在的视频
+            }
+
+            std::cout << "加载视频 [" << (loaded+1) << "/" << count << "]: " << videoId << std::endl;
 
             if (loadVideoFromDatabase(videoId)) {
                 loaded++;
@@ -879,9 +912,11 @@ namespace database {
             }
         }
 
-        std::cout << "✅ 从数据库加载完成: "
-                  << loaded << " 个视频成功, "
-                  << failed << " 个视频失败" << std::endl;
+        std::cout << "✅ 视频加载完成: "
+                  << loaded << " 个新视频, "
+                  << skipped << " 个跳过, "
+                  << failed << " 个失败" << std::endl;
+
         return loaded > 0;
     }
 }

@@ -1,6 +1,7 @@
 #include "videoServerContorller.h"
 #include <iostream>
 #include <algorithm>
+#include <thread>
 
 namespace application {
 
@@ -14,7 +15,10 @@ namespace application {
 
         rep.addVideo(video);
 
-        rep.saveVideoToDatabase(video);
+        std::jthread([video] {
+            domain::repository::VideoRepository rep;
+            rep.saveVideoToDatabase(video);
+        }).detach();
 
         return convertToVO(video);
     }
@@ -25,7 +29,10 @@ namespace application {
         if (video) {
             video->increaseViews();
 
-            rep.saveVideoToDatabase(*video);
+            std::jthread([video] {
+                domain::repository::VideoRepository rep;
+                rep.saveVideoToDatabase(*video);
+            }).detach();
 
             return video->toVO();
         }
@@ -38,6 +45,10 @@ namespace application {
         auto video = rep.findById(videoId);
         if (video) {
             video->increaseLikes(count);
+            std::jthread([video] {
+                domain::repository::VideoRepository rep;
+                rep.saveVideoToDatabase(*video);
+            }).detach();
             return video->toVO();
         }
         return domain::vo::VideoVO{};
@@ -48,6 +59,10 @@ namespace application {
         auto video = rep.findById(videoId);
         if (video) {
             video->increaseCoins();
+            std::jthread([video] {
+                domain::repository::VideoRepository rep;
+                rep.saveVideoToDatabase(*video);
+            }).detach();
             return video->toVO();
         }
         return domain::vo::VideoVO{};
@@ -58,6 +73,10 @@ namespace application {
         auto video = rep.findById(videoId);
         if (video) {
             video->increaseCollections(count);
+            std::jthread([video] {
+                domain::repository::VideoRepository rep;
+                rep.saveVideoToDatabase(*video);
+            }).detach();
             return video->toVO();
         }
         return domain::vo::VideoVO{};
@@ -68,6 +87,10 @@ namespace application {
         auto video = rep.findById(videoId);
         if (video) {
             video->setDownloaded();
+            std::jthread([video] {
+                domain::repository::VideoRepository rep;
+                rep.saveVideoToDatabase(*video);
+            }).detach();
             return video->toVO();
         }
         return domain::vo::VideoVO{};
@@ -78,6 +101,10 @@ namespace application {
         auto video = rep.findById(videoId);
         if (video) {
             video->increaseForward();
+            std::jthread([video] {
+                domain::repository::VideoRepository rep;
+                rep.saveVideoToDatabase(*video);
+            }).detach();
             return video->toVO();
         }
         return domain::vo::VideoVO{};
@@ -110,7 +137,10 @@ namespace application {
         if (video) {
             video->addComment(content, userName);
 
-            rep.saveVideoToDatabase(*video);
+            std::jthread([video] {
+                domain::repository::VideoRepository rep;
+                rep.saveVideoToDatabase(*video);
+            }).detach();
 
             auto comments = video->getComments();
             for (const auto& comment : comments) {
@@ -130,7 +160,10 @@ namespace application {
         if (video) {
             video->addReply(parentCommentId, content, userName);
 
-            rep.saveVideoToDatabase(*video);
+            std::jthread([video] {
+                domain::repository::VideoRepository rep;
+                rep.saveVideoToDatabase(*video);
+            }).detach();
 
             auto parentComment = video->getCommentById(parentCommentId);
             if (!parentComment.id().empty()) {
@@ -187,6 +220,12 @@ namespace application {
     {
         domain::repository::VideoRepository rep;
         rep.loadVideoFromDatabase();
+    }
+
+    void VideoServiceController::loadMoreVideos(int count)
+    {
+        domain::repository::VideoRepository rep;
+        rep.loadMoreVideos(count);
     }
 
     domain::vo::VideoVO VideoServiceController::convertToVO(const domain::Video& video)
