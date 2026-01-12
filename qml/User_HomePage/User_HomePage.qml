@@ -4,13 +4,11 @@ import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
 import QtQuick.Window
 
-Window {
+Item{
     id: userProfilePage
     width: 1200
     height: 800
     visible: true
-    minimumWidth: 800
-    minimumHeight: 600
 
     // 用户数据属性
     property string userName: "创意设计师"

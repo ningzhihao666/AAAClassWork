@@ -81,6 +81,37 @@ FrameLessWindow{
         updateVideoData()
     }
 
+    // UP用户页面
+    FrameLessWindow {
+       id: user_homepage
+       width: 1200
+       height: 800
+       visible: false
+       flags: Qt.Dialog
+       title: "UP用户页面"
+
+       Loader {
+           id: user_homepage_loder
+           anchors.fill: parent
+           source: "../User_HomePage/User_HomePage.qml"
+
+           onLoaded: {
+               // 连接关闭信号
+               if (item && item.closeRequested) {
+                   item.closeRequested.connect(function() {
+                       user_homepage_loder.close()
+                   })
+               }
+           }
+       }
+       // 打开时居中显示
+       function open() {
+           user_homepage.show()
+           user_homepage.x = (Screen.width - width) / 2
+           user_homepage.y = (Screen.height - height) / 2
+       }
+    }
+
     // 主容器 - 添加圆角效果
     Rectangle {
         id: mainContainer
@@ -409,7 +440,9 @@ FrameLessWindow{
             RowLayout
             {
                 anchors.fill: parent
-                //==================================视频区域====================================//
+//===================================================================================================//
+//=============================================视频区域===============================================//
+//===================================================================================================//
                 Rectangle
                 {
                     id:vedio
@@ -1483,10 +1516,11 @@ FrameLessWindow{
 
                 }
 
-                //==================================视频区域====================================//
 
+//===================================================================================================//
+//==========================================评论简介区域===============================================//
+//===================================================================================================//
 
-                //==================================评论简介区域=================================//
                 Rectangle
                 {
 
@@ -1540,33 +1574,18 @@ FrameLessWindow{
                                 background: Rectangle {
                                     radius: 5
                                     color:"transparent"
-                                    // Rectangle {
-                                    //             anchors {
-                                    //                 bottom: parent.bottom
-                                    //                 horizontalCenter: parent.horizontalCenter
-                                    //             }
-                                    //             width: parent.width * 0.8
-                                    //             height: 3
-                                    //             color: "pink"
-                                    //             visible: videoPlayerPage.currentView === "info"
-                                    //         }
-
                                 }
                                 onClicked: {
                                     videoPlayerPage.currentView = "info"
                                     //操作
                                 }
-
                              }
-
                             Row {
                                 spacing: 1  // 按钮和标签之间的间距
                                 Layout.alignment: Qt.AlignVCenter
 
                                 Button {
                                     id: commitButton
-                                    // width: parent.parent.width * 0.15  // 注意：现在父级是Row，需要调整引用
-                                    // height: parent.parent.height * 0.7
                                     Layout.preferredWidth: widthNum.width * 0.15
                                         Layout.preferredHeight: widthNum.height * 0.7
                                     font.pixelSize: 18
@@ -1773,26 +1792,6 @@ FrameLessWindow{
 
                         }
 
-                        // Rectangle {
-                        //             id:currentRect
-                        //             width: infoButton.width * 0.8
-                        //             height: infoButton.height * 0.2
-                        //             color: "pink"
-                        //             visible: true
-                        //             z:500
-                        //             x: {
-                        //                 if (videoPlayerPage.currentView === "info") {
-                        //                     return infoButton.x + (infoButton.width - width) / 2
-                        //                 } else {
-                        //                     return commitButton.x + (commitButton.width - width) / 2
-                        //                 }
-                        //             }
-                        //             // 添加动画效果
-                        //             Behavior on x {
-                        //                 NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
-                        //             }
-                        //         }  //简介和评论下标
-
          // 简介部分===================//========================
                         Item {
                             visible: videoPlayerPage.currentView === "info"
@@ -1814,6 +1813,11 @@ FrameLessWindow{
                                 height: width
                                 radius: width/2
                                 color: "grey"
+                                Button{
+                                    anchors.fill:parent;
+                                    background: Rectangle{color:"transparent"}
+                                    onClicked: { user_homepage.open()}
+                                }
                             }
 
 
@@ -1835,83 +1839,6 @@ FrameLessWindow{
                             Item {
                                  Layout.fillWidth: true
                              } //填充
-
-
-                            // Button {
-                            //     id:bButton
-                            //     Layout.rightMargin: 20
-                            //     Layout.preferredWidth: 80
-                            //     Layout.preferredHeight: 35
-                            //     font.pixelSize: 18
-                            //     font.bold: true
-
-                            //     HoverHandler {
-                            //              cursorShape: Qt.PointingHandCursor
-                            //          }
-
-                            //     text:
-                            //     {
-                            //         if(videoPlayerPage.attention)
-                            //             return "已关注"
-                            //         else
-                            //             return "+关注"
-                            //     }
-
-                            //     Layout.alignment: Qt.AlignVCenter // 添加垂直居中
-                            //     contentItem: Text {
-                            //         text: bButton.text
-                            //         font:  bButton.font
-                            //         color: "white"
-                            //         horizontalAlignment: Text.AlignHCenter
-                            //         verticalAlignment: Text.AlignVCenter
-                            //     }  //自定义字体格式
-                            //     background: Rectangle {
-                            //         radius: 5
-                            //         color:
-                            //         {
-                            //             if(videoPlayerPage.attention)
-                            //                 return "black"
-                            //             else
-                            //                 return bButton.down ? "#6A6A6A":"#FF5252"
-                            //         }
-
-                            //                 Behavior on color {
-                            //                     ColorAnimation {
-                            //                         duration: 300
-                            //                         easing.type: Easing.InOutQuad
-                            //                     }
-                            //                 }
-
-                            //     }
-                            //     onClicked: {
-                            //         buttonAnime.start()
-                            //         videoPlayerPage.attention = !videoPlayerPage.attention;
-                            //         //操作
-                            //     }
-
-                            //     SequentialAnimation
-                            //     {
-                            //         id:buttonAnime
-                            //         PropertyAnimation
-                            //         {
-                            //             target: bButton
-                            //             property: "scale"
-                            //             to: 1.1
-                            //             duration: 300
-                            //             easing.type: Easing.OutCubic
-                            //         }
-
-                            //         PropertyAnimation
-                            //         {
-                            //             target: bButton
-                            //             property: "scale"
-                            //             to:1.0
-                            //             duration: 300
-                            //             easing.type: Easing.OutBack
-                            //         }
-                            //     }
-
-                            //  }
 
                             // 关注按钮部分修改
                             Button {
@@ -2527,8 +2454,6 @@ FrameLessWindow{
 
                     }  //Item
 
-        //简介部分============================//==================================
-
 
                         Commit{
                             id:commitComponent
@@ -2541,8 +2466,6 @@ FrameLessWindow{
                     }  //Column  父
 
                 }
-
-                //==================================评论简介区域=================================//
             }
 
         }

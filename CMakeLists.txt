@@ -59,7 +59,7 @@ qt_add_qml_module(appBilibili
         src/component/simpleuploader.h  src/component/simpleuploader.cpp
         src/domain/videoserver.h
         src/component/videouploader.h src/component/videouploader.cpp
-        SOURCES src/domain/videoserver.cpp
+        src/domain/videoserver.cpp
 )
 
 target_sources(appBilibili

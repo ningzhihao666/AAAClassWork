@@ -80,7 +80,6 @@ FrameLessWindow {
 
     // 加载视频列表
     function loadVideos() {
-        console.log("开始加载视频列表...");
         loadingIndicator.visible = true;
         emptyText.visible = false;
 
@@ -89,7 +88,6 @@ FrameLessWindow {
 
             if (success) {
                 if (response.code === 0) {
-                    console.log("成功加载", response.data.length, "个视频");
                     videoModel.clear();
 
                     // 添加视频到模型
@@ -950,8 +948,9 @@ FrameLessWindow {
             }
         }
     }
-
-    // 内容区域
+    //-----------------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------------内容区域--------------------------------------------------------
+    //-----------------------------------------------------------------------------------------------------------------------
     Item {
         id: contentContainer
         anchors {
@@ -1348,11 +1347,12 @@ FrameLessWindow {
 
                 Text {
                     width: parent.width
-                    text: title
+                    text: modelData.title
                     font.pixelSize: 14
                     wrapMode: Text.Wrap
                     elide: Text.ElideRight
                     maximumLineCount: 2
+                    horizontalAlignment: Text.AlignHCenter
                 }
 
                 Row {
