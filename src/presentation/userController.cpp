@@ -372,6 +372,8 @@ namespace interface {
         if (user.isValid()) {
             updateCurrentUser(user);
             emit favoriteRemoved(videoId);
+            removeFavoriteFromLocalList(videoId);
+            emit favoritesChanged();
             qDebug() << "✅ 取消收藏视频成功:" << videoId;
         } else {
             emit errorOccurred("取消收藏失败");
@@ -524,17 +526,27 @@ namespace interface {
     void UserController::loadFavoriteVideos() {
         if (!isLoggedIn()) {
             emit errorOccurred("请先登录");
+            m_favoriteVideos.clear();
+            emit favoritesChanged();
             return;
         }
 
         setLoading(true);
 
-        auto favorites = m_service.getFavoriteVideos(m_currentUserId);
+        // ✅ 正确类型：std::vector<std::string>
+        std::vector<std::string> favorites =
+            m_service.getFavoriteVideos(m_currentUserId);
+
+        // ✅ 正确转换
         m_favoriteVideos = stringListToVariantList(favorites);
+
+        qDebug() << "✅ loadFavoriteVideos 收藏ID:" << m_favoriteVideos;
 
         emit favoritesChanged();
         setLoading(false);
     }
+
+
 
     void UserController::loadWatchHistory() {
         if (!isLoggedIn()) {
@@ -568,6 +580,8 @@ namespace interface {
 
         // 初始化收藏列表
         m_favoriteVideos = m_currentUser["favoriteVideoIds"].toList();
+        emit favoritesChanged();
+
 
         // 初始化点赞列表
         m_likedVideos = m_currentUser["likedVideoIds"].toList();
@@ -583,6 +597,7 @@ namespace interface {
 
         emit currentUserChanged();
         emit loginStatusChanged();
+
     }
 
     void UserController::updateCurrentUser(const domain::vo::UserVO& user) {
@@ -605,7 +620,7 @@ namespace interface {
 
         emit currentUserChanged();
         emit favoritesChanged(); // 发出收藏列表变化信号
-        emit favoritesChanged(); // 发出点赞列表变化信号
+
     }
 
     QVariantList UserController::userVOListToVariantList(const std::vector<domain::vo::UserVO>& users) {
@@ -784,3 +799,4 @@ namespace interface {
         return m_service.getUserVideoCoinCount(m_currentUserId, videoId.toStdString());
     }
 }
+

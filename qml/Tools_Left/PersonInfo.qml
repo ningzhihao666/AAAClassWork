@@ -401,6 +401,48 @@ Rectangle {
         }
     }
 
+    function refreshFavorites() {
+        collectionModel.clear()
+
+        var ids = userController.favoriteVideos
+        console.log("🔥 收藏ID:", ids)
+
+        if (!ids || ids.length === 0) return
+        collectionModel.append({
+            title: "测试收藏 A",
+            group: "默认收藏夹",
+            selected: false,
+            videoId: "testA"
+        })
+
+        collectionModel.append({
+            title: "测试收藏 B",
+            group: "默认收藏夹",
+            selected: false,
+            videoId: "testB"
+        })
+
+
+        for (var i = 0; i < ids.length; i++) {
+            var vid = ids[i].toString()   // ✅ 关键
+
+            collectionModel.append({
+                title: "收藏视频 " + (i + 1),
+                author: "",
+                duration: "",
+                group: "默认收藏夹",
+                selected: false,
+                videoId: vid,
+                coverUrl: ""
+            })
+        }
+
+        console.log("✅ collectionModel.count =", collectionModel.count)
+    }
+
+
+
+
 
     FileDialog {
         id: fileDialog
@@ -685,69 +727,7 @@ Rectangle {
     // 收藏数据模型 - 修复：确保默认收藏夹有视频
     ListModel {
         id: collectionModel
-        ListElement {
-            title: "Python编程入门教程"
-            author: "编程小王子"
-            duration: "15:30"
-            group: "默认收藏夹"
-            selected: false
-        }
-        ListElement {
-            title: "经典老歌合集"
-            author: "音乐达人"
-            duration: "45:20"
-            group: "默认收藏夹"
-            selected: false
-        }
-        ListElement {
-            title: "搞笑动物视频"
-            author: "欢乐时刻"
-            duration: "03:15"
-            group: "默认收藏夹"
-            selected: false
-        }
-        ListElement {
-            title: "机器学习实战"
-            author: "AI探索者"
-            duration: "28:45"
-            group: "学习资料"
-            selected: false
-        }
-        ListElement {
-            title: "数据结构与算法"
-            author: "算法大师"
-            duration: "35:20"
-            group: "学习资料"
-            selected: false
-        }
-        ListElement {
-            title: "搞笑猫咪合集"
-            author: "萌宠世界"
-            duration: "08:45"
-            group: "娱乐视频"
-            selected: false
-        }
-        ListElement {
-            title: "游戏搞笑时刻"
-            author: "游戏达人"
-            duration: "12:30"
-            group: "娱乐视频"
-            selected: false
-        }
-        ListElement {
-            title: "周杰伦经典歌曲"
-            author: "音乐收藏家"
-            duration: "60:15"
-            group: "音乐收藏"
-            selected: false
-        }
-        ListElement {
-            title: "钢琴演奏合集"
-            author: "音乐大师"
-            duration: "42:30"
-            group: "音乐收藏"
-            selected: false
-        }
+
     }
 
     // 收藏分组模型
@@ -1046,7 +1026,7 @@ Rectangle {
     }
 
     // 主要内容区域
-    ScrollView {
+    ColumnLayout{
         anchors.fill: parent
         clip: true
 
@@ -1493,237 +1473,136 @@ Rectangle {
                     }
 
                     // 收藏视频列表
-                    Rectangle {
+                    ListView {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        color: "transparent"
+                        clip: true
 
-                        ScrollView {
-                            anchors.fill: parent
-                            clip: true
+                        model: collectionModel
 
-                            ColumnLayout {
+                        delegate: Rectangle {
+                            width: ListView.view.width
+                            height: 100
+                            color: "white"
+
+                            // 分隔线
+                            Rectangle {
+                                anchors.bottom: parent.bottom
                                 width: parent.width
-                                spacing: 1
+                                height: 1
+                                color: "#f0f0f0"
+                            }
 
-                                // 全选操作栏
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.margins: 15
+                                spacing: 15
+
+                                // ▶ 封面
                                 Rectangle {
-                                    Layout.fillWidth: true
-                                    Layout.preferredHeight: 50
-                                    color: "white"
-                                    visible: getFilteredCount() > 0
+                                    Layout.preferredWidth: 160
+                                    Layout.preferredHeight: 90
+                                    radius: 4
+                                    clip: true
+                                    color: "#e0e0e0"
 
-                                    RowLayout {
+                                    Image {
                                         anchors.fill: parent
-                                        anchors.margins: 15
-                                        spacing: 15
+                                        source: coverUrl && coverUrl !== ""
+                                                ? coverUrl
+                                                : "qrc:/Bilibili/assets/video_placeholder.png" // 没封面用占位
+                                        fillMode: Image.PreserveAspectCrop
+                                    }
 
-                                        CheckBox {
-                                            id: selectAllCheckBox
-                                            Layout.preferredWidth: 20
-                                            Layout.preferredHeight: 20
-                                            checked: false
-                                            onCheckedChanged: {
-                                                if (checked) {
-                                                    selectAllItems()
-                                                } else {
-                                                    clearAllSelection()
-                                                }
-                                            }
-                                        }
+                                    // ▶ 时长角标
+                                    Rectangle {
+                                        anchors.right: parent.right
+                                        anchors.bottom: parent.bottom
+                                        anchors.margins: 6
+                                        radius: 2
+                                        color: "#99000000"
 
                                         Text {
-                                            text: "全选"
-                                            font.pixelSize: 14
-                                            color: "#333"
+                                            padding: 4
+                                            text: duration && duration !== "" ? duration : "00:00"
+                                            color: "white"
+                                            font.pixelSize: 10
                                         }
+                                    }
+                                }
+
+                                // ▶ 右侧信息
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    Layout.fillHeight: true
+                                    spacing: 6
+
+                                    // 标题
+                                    Text {
+                                        text: title
+                                        font.pixelSize: 14
+                                        font.bold: true
+                                        color: "#333"
+                                        elide: Text.ElideRight
+                                        Layout.fillWidth: true
+                                    }
+
+                                    // UP 主
+                                    Text {
+                                        text: author && author !== "" ? author : "UP主"
+                                        font.pixelSize: 12
+                                        color: "#666"
+                                    }
+
+                                    Item { Layout.fillHeight: true }
+
+                                    // 操作区（以后可加取消收藏）
+                                    RowLayout {
+                                        Layout.fillWidth: true
 
                                         Text {
-                                            text: "已选择 " + getSelectedCount() + " 个项目"
-                                            font.pixelSize: 14
+                                            text: "已收藏"
+                                            font.pixelSize: 12
                                             color: "#FB7299"
                                         }
 
-                                        Item {
-                                            Layout.fillWidth: true
-                                        }
-                                    }
-                                }
+                                        Item { Layout.fillWidth: true }
 
-                                // 收藏视频列表 - 使用 Repeater 并筛选显示
-                                Repeater {
-                                    model: collectionModel
-
-                                    delegate: Rectangle {
-                                        id: collectionItem
-                                        width: collectionListView.width
-                                        height: model.group === currentCollectionGroup ? 100 : 0
-                                        visible: model.group === currentCollectionGroup
-                                        color: model.selected ? "#fff0f0" : "white"
-
-                                        RowLayout {
-                                            anchors.fill: parent
-                                            anchors.margins: 15
-                                            spacing: 15
-
-                                            // 选择框
-                                            CheckBox {
-                                                id: itemCheckBox
-                                                Layout.preferredWidth: 20
-                                                Layout.preferredHeight: 20
-                                                checked: model.selected
-                                                onCheckedChanged: {
-                                                    model.selected = checked
-                                                    updateSelectionCount()
-                                                }
+                                        Button {
+                                            text: "取消收藏"
+                                            Layout.preferredHeight: 28
+                                            background: Rectangle {
+                                                radius: 14
+                                                color: "#f4f4f4"
                                             }
-
-                                            // 视频缩略图
-                                            Rectangle {
-                                                Layout.preferredWidth: 120
-                                                Layout.preferredHeight: 70
-                                                color: "#e0e0e0"
-                                                radius: 4
-
-                                                Rectangle {
-                                                    anchors.bottom: parent.bottom
-                                                    width: parent.width
-                                                    height: 3
-                                                    color: "#e0e0e0"
-
-                                                    Rectangle {
-                                                        width: parent.width * 0.6
-                                                        height: parent.height
-                                                        color: "#FB7299"
-                                                    }
-                                                }
-
-                                                Text {
-                                                    anchors {
-                                                        right: parent.right
-                                                        bottom: parent.bottom
-                                                        margins: 5
-                                                    }
-                                                    text: model.duration
-                                                    color: "white"
-                                                    font.pixelSize: 10
-                                                    font.bold: true
-                                                }
+                                            contentItem: Text {
+                                                text: parent.text
+                                                font.pixelSize: 12
+                                                color: "#666"
+                                                horizontalAlignment: Text.AlignHCenter
+                                                verticalAlignment: Text.AlignVCenter
                                             }
-
-                                            // 视频信息
-                                            ColumnLayout {
-                                                Layout.fillWidth: true
-                                                Layout.fillHeight: true
-                                                spacing: 5
-
-                                                Text {
-                                                    Layout.fillWidth: true
-                                                    text: model.title
-                                                    font.pixelSize: 16
-                                                    font.bold: true
-                                                    color: "#333"
-                                                    elide: Text.ElideRight
-                                                }
-
-                                                Text {
-                                                    Layout.fillWidth: true
-                                                    text: "UP: " + model.author
-                                                    font.pixelSize: 14
-                                                    color: "#666"
-                                                }
-
-                                                RowLayout {
-                                                    Layout.fillWidth: true
-                                                    spacing: 10
-
-                                                    Text {
-                                                        text: "时长: " + model.duration
-                                                        font.pixelSize: 12
-                                                        color: "#999"
-                                                    }
-
-                                                    Text {
-                                                        text: "收藏夹: " + model.group
-                                                        font.pixelSize: 12
-                                                        color: "#FB7299"
-                                                    }
-
-                                                    Item {
-                                                        Layout.fillWidth: true
-                                                    }
-                                                }
+                                            onClicked: {
+                                                userController.removeFavoriteVideo(videoId)
                                             }
-
-                                            // 操作按钮
-                                            Button {
-                                                Layout.preferredWidth: 80
-                                                Layout.preferredHeight: 30
-                                                text: "移除"
-                                                background: Rectangle {
-                                                    color: parent.down ? "#d32f2f" : "#f44336"
-                                                    radius: 4
-                                                }
-                                                contentItem: Text {
-                                                    text: parent.text
-                                                    color: "white"
-                                                    font.pixelSize: 12
-                                                    horizontalAlignment: Text.AlignHCenter
-                                                    verticalAlignment: Text.AlignVCenter
-                                                }
-                                                onClicked: {
-                                                    showSingleDeleteConfirm(index)
-                                                }
-                                            }
-                                        }
-
-                                        // 分隔线
-                                        Rectangle {
-                                            anchors.bottom: parent.bottom
-                                            width: parent.width
-                                            height: 1
-                                            color: "#f0f0f0"
-                                            visible: model.group === currentCollectionGroup
-                                        }
-                                    }
-                                }
-
-                                // 空状态
-                                Rectangle {
-                                    Layout.fillWidth: true
-                                    Layout.preferredHeight: 300
-                                    color: "transparent"
-                                    visible: getFilteredCount() === 0
-
-                                    Column {
-                                        anchors.centerIn: parent
-                                        spacing: 20
-                                        opacity: 0.6
-
-                                        Text {
-                                            text: "❤️"
-                                            font.pixelSize: 48
-                                            anchors.horizontalCenter: parent.horizontalCenter
-                                        }
-
-                                        Text {
-                                            text: "收藏夹空空如也"
-                                            font.pixelSize: 16
-                                            color: "#666"
-                                            anchors.horizontalCenter: parent.horizontalCenter
-                                        }
-
-                                        Text {
-                                            text: "快去发现精彩内容收藏起来吧～"
-                                            font.pixelSize: 14
-                                            color: "#999"
-                                            anchors.horizontalCenter: parent.horizontalCenter
                                         }
                                     }
                                 }
                             }
+
+                            // ▶ 点击整卡播放（预留）
+                            TapHandler {
+                                onTapped: {
+                                    console.log("播放收藏视频:", videoId)
+                                    // TODO: 跳转播放器
+                                }
+                            }
                         }
+
+
                     }
+
+
                 }
             }
 
@@ -1732,6 +1611,7 @@ Rectangle {
                 id: contentArea
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                visible: currentTabIndex !== 2   // ⭐ 关键
                 color: (currentTabIndex === 0 || currentTabIndex === 1 || currentTabIndex === 3) ? "transparent" : "#f4f4f4"
 
                 // 历史记录区域
@@ -2405,7 +2285,7 @@ Rectangle {
     Component.onCompleted: {
         console.log("个人信息页面初始化完成")
 
-
+       console.log("🧪 delegate 渲染:", title)
         // 初始化历史记录状态
         isHistoryEmpty = historyModel.count === 0
         // 加载模拟数据
@@ -2413,9 +2293,18 @@ Rectangle {
         loadMockFollowerData()
         // 初始化收藏夹视频数量
         updateGroupVideoCount()
+        currentTabIndex = 2
+        userController.loadFavoriteVideos()
+        Qt.callLater(refreshFavorites)
     }
 
 
+    Connections {
+        target: userController
+        function onFavoritesChanged() {
+            refreshFavorites()
+        }
+    }
 
     // 监听登录状态变化
     Connections {

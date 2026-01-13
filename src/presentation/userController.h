@@ -11,10 +11,13 @@ namespace interface {
         // 添加单例访问
         Q_PROPERTY(interface::UserController* instance READ instance CONSTANT)
 
+
+
     public:
         // 单例获取方法
         static UserController* instance();
         static void destroyInstance();
+
 
         // 属性（保持不变）
         Q_PROPERTY(QVariantMap currentUser READ currentUser NOTIFY currentUserChanged)
@@ -90,7 +93,8 @@ namespace interface {
         QVariantList favoriteVideos() const { return m_favoriteVideos; }
         QVariantList watchHistory() const { return m_watchHistory; }
         bool loading() const { return m_loading; }
-        QString avatarUrl() const;
+        QString avatarUrl() const;  
+
 
         // 单例实例访问器
         //static UserController* instance() { return m_instance; }
