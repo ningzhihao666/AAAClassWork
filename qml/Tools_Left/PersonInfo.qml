@@ -17,6 +17,8 @@ Rectangle {
     // 新增：关注和粉丝列表显示状态
     property bool showFollowingList: false
     property bool showFollowerList : false
+    property var mainWindow
+
 
     // 收藏夹相关属性
     property bool showCollectionList: false
@@ -1474,44 +1476,84 @@ Rectangle {
                             height: 90
                             color: "white"
 
-                            Row {
+                            Rectangle {
                                 anchors.fill: parent
                                 anchors.margins: 10
-                                spacing: 12
+                                radius: 6
+                                color: "white"
+                                border.color: "#e6e6e6"
 
-                                // 封面
-                                Rectangle {
-                                    width: 140
-                                    height: 70
-                                    radius: 4
-                                    color: "#ddd"
-                                    clip: true
+                                Row {
+                                    anchors.fill: parent
+                                    spacing: 12
 
-                                    Image {
-                                        anchors.fill: parent
-                                        source: coverUrl
-                                        fillMode: Image.PreserveAspectCrop
+                                    // ▶ 左侧：视频封面
+                                    Rectangle {
+                                        width: 140
+                                        height: 70
+                                        radius: 4
+                                        clip: true
+                                        color: "#ddd"
+
+                                        Image {
+                                            anchors.fill: parent
+                                            source: coverUrl !== "" ? coverUrl : "qrc:/Bilibili/assets/default_cover.png"
+                                            fillMode: Image.PreserveAspectCrop
+                                        }
+
+                                        // ▶ 时长角标
+                                        Rectangle {
+                                            anchors.right: parent.right
+                                            anchors.bottom: parent.bottom
+                                            anchors.margins: 4
+                                            radius: 3
+                                            color: "#80000000"
+
+                                            Text {
+                                                text: duration !== "" ? duration : "00:00"
+                                                color: "white"
+                                                font.pixelSize: 10
+                                                padding: 4
+                                            }
+                                        }
                                     }
-                                }
 
-                                Column {
-                                    spacing: 6
-                                    width: parent.width - 170
+                                    // ▶ 右侧：标题 + UP
+                                    Column {
+                                        width: parent.width - 160
+                                        spacing: 6
 
-                                    Text {
-                                        text: title
-                                        font.pixelSize: 14
-                                        elide: Text.ElideRight
-                                    }
+                                        Text {
+                                            text: title
+                                            font.pixelSize: 14
+                                            font.bold: true
+                                            color: "#333"
+                                            elide: Text.ElideRight
+                                            maximumLineCount: 2
+                                        }
 
-                                    Text {
-                                        text: author
-                                        font.pixelSize: 12
-                                        color: "#888"
+                                        Text {
+                                            text: author !== "" ? author : "UP 主"
+                                            font.pixelSize: 12
+                                            color: "#999"
+                                        }
                                     }
                                 }
                             }
+
+                            // 点击整卡片
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    console.log("点击收藏视频:", videoId)
+                                    // 以后这里跳转播放页
+                                    videoController.addView(videoId)
+                                    mainWindow.openVideoFromFavorite(videoId)
+                                }
+                            }
                         }
+
 
 
 

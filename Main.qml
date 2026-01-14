@@ -30,6 +30,10 @@ FrameLessWindow {
     property bool showSearchResults: false
     property bool coverUrlStatue:false
     property alias videoLoad: videoLoaders
+    property string currentVideoId: ""
+    property bool showVideo: false
+
+
 
     // VideoController
     // {
@@ -116,6 +120,30 @@ FrameLessWindow {
         videoController.loadVideos()
          console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     }
+    function openVideoFromFavorite(videoId) {
+        console.log("🎬 收藏页直接播放视频:", videoId)
+
+        // 如果已有播放器，先销毁
+        if (videoLoaders.item) {
+            videoLoaders.sourceComponent = undefined
+        }
+
+        // 拿到完整视频数据（和首页一样）
+        var videoData = videoController.getVideo(videoId)
+
+        videoLoaders.setSource(
+            "qml/Video_Playback/Video.qml",
+            {
+                videoId: videoId,
+                videoData: videoData,
+                videoManager: videoController
+            }
+        )
+    }
+
+
+
+
 
     // 顶部刷新按钮
     Button {
@@ -1127,6 +1155,7 @@ FrameLessWindow {
             onLoaded: {
                 console.log("个人信息界面加载完成")
                 // 直接设置头像URL，确保同步
+                 personInfoLoader.item.mainWindow = root
                 personInfoLoader.item.setMainAvatarUrl(root.globalAvatarUrl)
             }
         }
