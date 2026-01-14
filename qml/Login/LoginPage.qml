@@ -50,7 +50,7 @@ Item {
 
             Text {
                 Layout.alignment: Qt.AlignHCenter
-                text: "登录bilibili"
+                text: "登录A站"
                 font.pixelSize: 24
                 font.bold: true
                 color: "#FB7299"

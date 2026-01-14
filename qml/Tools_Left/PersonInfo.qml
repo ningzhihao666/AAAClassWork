@@ -405,40 +405,29 @@ Rectangle {
         collectionModel.clear()
 
         var ids = userController.favoriteVideos
-        console.log("🔥 收藏ID:", ids)
-
         if (!ids || ids.length === 0) return
-        collectionModel.append({
-            title: "测试收藏 A",
-            group: "默认收藏夹",
-            selected: false,
-            videoId: "testA"
-        })
-
-        collectionModel.append({
-            title: "测试收藏 B",
-            group: "默认收藏夹",
-            selected: false,
-            videoId: "testB"
-        })
-
 
         for (var i = 0; i < ids.length; i++) {
-            var vid = ids[i].toString()   // ✅ 关键
+            var vid = ids[i].toString()
+
+            var video = videoController.getVideoVO(vid)
+
+            if (!video || !video.title) {
+                console.log("❌ 未找到视频:", vid)
+                continue
+            }
 
             collectionModel.append({
-                title: "收藏视频 " + (i + 1),
-                author: "",
-                duration: "",
-                group: "默认收藏夹",
-                selected: false,
                 videoId: vid,
-                coverUrl: ""
+                title: video.title,
+                author: video.author,
+                coverUrl: video.coverUrl,
+                group: "默认收藏夹",
+                selected: false
             })
         }
-
-        console.log("✅ collectionModel.count =", collectionModel.count)
     }
+
 
 
 
@@ -1482,122 +1471,50 @@ Rectangle {
 
                         delegate: Rectangle {
                             width: ListView.view.width
-                            height: 100
+                            height: 90
                             color: "white"
 
-                            // 分隔线
-                            Rectangle {
-                                anchors.bottom: parent.bottom
-                                width: parent.width
-                                height: 1
-                                color: "#f0f0f0"
-                            }
-
-                            RowLayout {
+                            Row {
                                 anchors.fill: parent
-                                anchors.margins: 15
-                                spacing: 15
+                                anchors.margins: 10
+                                spacing: 12
 
-                                // ▶ 封面
+                                // 封面
                                 Rectangle {
-                                    Layout.preferredWidth: 160
-                                    Layout.preferredHeight: 90
+                                    width: 140
+                                    height: 70
                                     radius: 4
+                                    color: "#ddd"
                                     clip: true
-                                    color: "#e0e0e0"
 
                                     Image {
                                         anchors.fill: parent
-                                        source: coverUrl && coverUrl !== ""
-                                                ? coverUrl
-                                                : "qrc:/Bilibili/assets/video_placeholder.png" // 没封面用占位
+                                        source: coverUrl
                                         fillMode: Image.PreserveAspectCrop
-                                    }
-
-                                    // ▶ 时长角标
-                                    Rectangle {
-                                        anchors.right: parent.right
-                                        anchors.bottom: parent.bottom
-                                        anchors.margins: 6
-                                        radius: 2
-                                        color: "#99000000"
-
-                                        Text {
-                                            padding: 4
-                                            text: duration && duration !== "" ? duration : "00:00"
-                                            color: "white"
-                                            font.pixelSize: 10
-                                        }
                                     }
                                 }
 
-                                // ▶ 右侧信息
-                                ColumnLayout {
-                                    Layout.fillWidth: true
-                                    Layout.fillHeight: true
+                                Column {
                                     spacing: 6
+                                    width: parent.width - 170
 
-                                    // 标题
                                     Text {
                                         text: title
                                         font.pixelSize: 14
-                                        font.bold: true
-                                        color: "#333"
                                         elide: Text.ElideRight
-                                        Layout.fillWidth: true
                                     }
 
-                                    // UP 主
                                     Text {
-                                        text: author && author !== "" ? author : "UP主"
+                                        text: author
                                         font.pixelSize: 12
-                                        color: "#666"
+                                        color: "#888"
                                     }
-
-                                    Item { Layout.fillHeight: true }
-
-                                    // 操作区（以后可加取消收藏）
-                                    RowLayout {
-                                        Layout.fillWidth: true
-
-                                        Text {
-                                            text: "已收藏"
-                                            font.pixelSize: 12
-                                            color: "#FB7299"
-                                        }
-
-                                        Item { Layout.fillWidth: true }
-
-                                        Button {
-                                            text: "取消收藏"
-                                            Layout.preferredHeight: 28
-                                            background: Rectangle {
-                                                radius: 14
-                                                color: "#f4f4f4"
-                                            }
-                                            contentItem: Text {
-                                                text: parent.text
-                                                font.pixelSize: 12
-                                                color: "#666"
-                                                horizontalAlignment: Text.AlignHCenter
-                                                verticalAlignment: Text.AlignVCenter
-                                            }
-                                            onClicked: {
-                                                userController.removeFavoriteVideo(videoId)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            // ▶ 点击整卡播放（预留）
-                            TapHandler {
-                                onTapped: {
-                                    console.log("播放收藏视频:", videoId)
-                                    // TODO: 跳转播放器
                                 }
                             }
                         }
+
+
+
 
 
                     }

@@ -22,6 +22,8 @@ namespace domain::repository {
         void loadVideoFromDatabase();
 
         bool loadMoreVideos(int count);
+        std::optional<Video> getVideoById(const std::string& videoId);
+
 
     private:
         database::VideoDatabase& db;

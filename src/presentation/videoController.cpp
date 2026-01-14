@@ -125,6 +125,29 @@ namespace interface {
         return QVariantMap();
     }
 
+
+
+    QVariantMap VideoController::getVideoVO(const QString& videoId)
+    {
+        QVariantMap result;
+
+        auto vo = database::VideoDatabase::getInstance()
+                      .getVideoVOFromDatabase(videoId.toStdString());
+
+        if (!vo.isValid()) {
+            return result;
+        }
+
+        result["videoId"]  = QString::fromStdString(vo.id);
+        result["title"]    = QString::fromStdString(vo.title);
+        result["author"]   = QString::fromStdString(vo.author);
+        result["coverUrl"] = QString::fromStdString(vo.coverUrl);
+
+        return result;
+    }
+
+
+
     void VideoController::clearVideos() {
         m_videos.clear();
         emit videosChanged();

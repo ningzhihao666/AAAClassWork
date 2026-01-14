@@ -2,6 +2,7 @@
 #include <QObject>
 #include <QVariant>
 #include "../application/videoServerContorller.h"
+#include <QVariantMap>
 
 namespace interface {
 
@@ -52,6 +53,11 @@ namespace interface {
         Q_INVOKABLE void likeComment(const QString& videoId, const QString& commentId);
         Q_INVOKABLE void unlikeComment(const QString& videoId, const QString& commentId);
         Q_INVOKABLE void loadVideoFromDatabase();
+
+
+
+        Q_INVOKABLE QVariantMap getVideoVO(const QString& videoId);
+
 
         // 属性
         QVariantList videos() const { return m_videos; }
