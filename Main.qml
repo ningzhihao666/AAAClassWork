@@ -1067,21 +1067,15 @@ FrameLessWindow {
                 GridView {
                     id: searchResultGrid
                     Layout.fillWidth: true
-                    height: Math.ceil(searchResultModel.count / 4) * 220 + 50
                     cellWidth: (width - 30) / 4
                     cellHeight: 220
-                    clip: true
                     model: searchResultModel
+                    delegate: videoDelegate2
 
-                    delegate: videoDelegate // 复用视频组件
-
-                    // 空状态
-                    Loader {
-                        anchors.centerIn: parent
-                        active: searchResultModel.count === 0 && !root.isSearching
-                        sourceComponent: emptySearchComponent
-                    }
+                    // 关键
+                    implicitHeight: contentHeight
                 }
+
             }
         }
 
@@ -1200,8 +1194,6 @@ FrameLessWindow {
                                 for (var i = 0; i < response.data.length; i++) {
                                     var video = response.data[i];
                                     searchResultModel.append(video);
-
-                                    console.log("📹 添加视频到搜索结果:", video.title);
                                 }
                             } else {
                                 console.log("⚠️ 未找到匹配的视频");
@@ -1404,6 +1396,213 @@ FrameLessWindow {
                         font.pixelSize: 12
                         color: "#999"
                         text: "▶ " + modelData.viewCount
+                    }
+                }
+            }
+
+            // 选中时的动画
+            SequentialAnimation {
+                id: selectAnimation
+                running: false
+
+                // 放大
+                PropertyAnimation {
+                    target: videoCard
+                    property: "scale"
+                    to: 1.02
+                    duration: 150
+                }
+
+                // 恢复
+                PropertyAnimation {
+                    target: videoCard
+                    property: "scale"
+                    to: 1.0
+                    duration: 150
+                }
+            }
+
+            // 当点击时触发选中动画
+            onIsSelectedChanged: {
+                if (isSelected) {
+                    selectAnimation.start()
+                }
+            }
+        }
+    }
+
+    // 可复用的视频组件
+    Component {
+        id: videoDelegate2
+
+        Rectangle {
+            id: videoCard
+            width: GridView.view.cellWidth - 10
+            height: GridView.view.cellHeight - 10
+            color: "white"
+            radius: 4
+
+            // 鼠标悬停效果
+            property real hoverScale: 1.0
+            property real borderWidth: 1
+            property color borderColor: "#E5E9EF"
+            property bool isSelected: false
+
+            // 平滑动画
+            Behavior on hoverScale {
+                NumberAnimation {
+                    duration: 300
+                    easing.type: Easing.OutQuad
+                }
+            }
+
+            Behavior on borderWidth {
+                NumberAnimation {
+                    duration: 300
+                    easing.type: Easing.OutQuad
+                }
+            }
+
+            Behavior on borderColor {
+                ColorAnimation {
+                    duration: 300
+                }
+            }
+
+            // 应用变换
+            scale: hoverScale
+
+            // 边框
+            border.width: borderWidth
+            border.color: borderColor
+
+            // 鼠标悬停
+            HoverHandler {
+                cursorShape: Qt.PointingHandCursor
+
+                onHoveredChanged: {
+                    if (hovered) {
+                        // 鼠标移入：轻微放大，边框变粉色
+                        videoCard.hoverScale = 1.05
+                        videoCard.borderWidth = 3
+                        videoCard.borderColor = "#FF6699"  // 粉色
+                    } else {
+                        // 鼠标移出：恢复
+                        videoCard.hoverScale = 1.0
+                        videoCard.borderWidth = 1
+                        videoCard.borderColor = "#E5E9EF"  // 灰色
+                    }
+                }
+            }
+
+            // 点击
+            TapHandler {
+                onTapped: {
+                    console.log("点击视频:", model.id, model.title, model.videoUrl, model.viewCount)
+
+                    // 设置选中状态
+                    videoCard.isSelected = true
+                    videoCard.borderWidth = 3
+                    videoCard.borderColor = "#FF6699"  // 粉色
+
+                    // 如果已有视频在播放，先停止并清理
+                    if (videoLoaders.item) {
+                        console.log("停止当前播放的视频")
+                        videoLoaders.sourceComponent = undefined
+                    }
+
+                    userController.addWatchHistory(model.id)
+
+                    var videoData = videoController.getVideo(model.id)
+
+                    videoLoaders.setSource("qml/Video_Playback/Video.qml", {
+                        videoId: model.id,
+                        videoData: videoData,
+                        videoManager: videoController,
+                        index: index
+                    })
+                    videoController.loadVideos()
+                }
+            }
+
+            // 内容区域
+            Column {
+                anchors {
+                    fill: parent
+                    margins: 10
+                }
+                spacing: 8
+
+                Rectangle {
+                    width: parent.width
+                    height: 120
+                    color: "lightgray"
+                    radius: 4
+
+                    Image {
+                        id: coverImage
+                        anchors.fill: parent
+                        source: {
+                            if(model.cover_url) {
+                                root.coverUrlStatue = true;
+                                return model.cover_url
+                            } else {
+                                root.coverUrlStatue = false;
+                                return ""
+                            }
+                        }
+                        fillMode: Image.PreserveAspectCrop
+                        asynchronous: true
+
+                        // 加载中显示
+                        BusyIndicator {
+                            anchors.centerIn: parent
+                            running: coverImage.status === Image.Loading
+                            width: 30
+                            height: 30
+                        }
+
+                        // 加载失败显示
+                        Text {
+                            anchors.centerIn: parent
+                            text: "封面加载失败"
+                            font.pixelSize: 12
+                            color: "#999999"
+                            visible: !root.coverUrlStatue
+                        }
+                    }
+                }
+
+                Text {
+                    width: parent.width
+                    text: model.title
+                    font.pixelSize: 14
+                    wrapMode: Text.Wrap
+                    elide: Text.ElideRight
+                    maximumLineCount: 2
+                    horizontalAlignment: Text.AlignHCenter
+                }
+
+                Row {
+                    spacing: 8
+
+                    Image {
+                        id: headImage
+                        source: model.head_url
+                        width: 24
+                        height: 24
+                    }
+
+                    Text {
+                        text: model.author
+                        font.pixelSize: 12
+                        color: "#999"
+                    }
+
+                    Text {
+                        font.pixelSize: 12
+                        color: "#999"
+                        text: "▶ " + model.viewCount
                     }
                 }
             }

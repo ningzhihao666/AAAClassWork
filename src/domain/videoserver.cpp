@@ -60,12 +60,6 @@ bool VideoServer::startServer(quint16 port)
                     });
 
     // 使用新的路由语法
-    m_server->route("/api/videos/<arg>",
-                    [this](const QString &videoId, const QHttpServerRequest &request) {
-                        Q_UNUSED(videoId)
-                        return handleGetVideoById(request);
-                    });
-
     m_server->route("/api/videos/search", QHttpServerRequest::Method::Get,
                     [this](const QHttpServerRequest &request) {
                         return handleSearchVideos(request);
@@ -79,6 +73,11 @@ bool VideoServer::startServer(quint16 port)
                     QHttpServerRequest::Method::Post,
                     [this](const QHttpServerRequest &request) {
                         return handleUploadUserAvatar(request);
+                    });
+    m_server->route("/api/videos/<arg>",
+                    [this](const QString &videoId, const QHttpServerRequest &request) {
+                        Q_UNUSED(videoId)
+                        return handleGetVideoById(request);
                     });
 
 
@@ -265,15 +264,15 @@ QHttpServerResponse VideoServer::handleUploadByPath(const QHttpServerRequest &re
     videoData.author = "当前用户"; // 这里应该从用户系统获取真实作者
     videoData.description = description;
     videoData.upload_date = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
-    videoData.view_count = generateRandomNumber(100, 1000000);
-    videoData.like_count = generateRandomNumber(0, 50000);
-    videoData.coin_count = generateRandomNumber(0, 10000);
-    videoData.collection_count = generateRandomNumber(0, 20000);
+    videoData.view_count = 0;
+    videoData.like_count = 0;
+    videoData.coin_count = 0;
+    videoData.collection_count = 0;
     videoData.downloaded = false;
-    videoData.forward_count = generateRandomNumber(0, 10000);
-    videoData.bullet_count = generateRandomNumber(0, 50000);
-    videoData.follower_count = generateRandomNumber(1000, 1000000);
-    videoData.commit_count = generateRandomNumber(0, 10000);
+    videoData.forward_count = 0;
+    videoData.bullet_count = 0;
+    videoData.follower_count = 0;
+    videoData.commit_count = 0;
     videoData.video_url = QString("https://%1.cos.%2.myqcloud.com/%3")
                               .arg(m_cosBucket)
                               .arg(m_cosRegion)
@@ -336,10 +335,20 @@ QHttpServerResponse VideoServer::handleSearchVideos(const QHttpServerRequest &re
     QString keyword = query.queryItemValue("keyword");
 
     if (keyword.isEmpty()) {
-        return QHttpServerResponse(QJsonDocument(QJsonObject{
-                                                     {"code", 1},
-                                                     {"message", "搜索关键词不能为空"}
-                                                 }).toJson(), "application/json", QHttpServerResponse::StatusCode::BadRequest);
+        qWarning() << "⚠️ 搜索关键词为空";
+
+        QJsonObject errorResponse{
+            {"code", 1},
+            {"message", "搜索关键词不能为空"}
+        };
+
+        // ✅ 与handleGetVideos保持一致：先contentType，后data
+        QJsonDocument doc(errorResponse);
+        return QHttpServerResponse(
+            "application/json",  // 第一个参数：内容类型
+            doc.toJson(),        // 第二个参数：JSON数据
+            QHttpServerResponse::StatusCode::BadRequest  // 第三个参数：状态码（可选）
+            );
     }
 
     qInfo() << "🔍 Searching videos:" << keyword;
@@ -357,8 +366,14 @@ QHttpServerResponse VideoServer::handleSearchVideos(const QHttpServerRequest &re
             {"message", "搜索成功"},
             {"data", videoArray}
         };
+        QJsonDocument doc(response);
 
-        return QHttpServerResponse(QJsonDocument(response).toJson(), "application/json");
+        // 关键：构造函数参数顺序必须正确
+        return QHttpServerResponse(
+            "application/json",  // 参数1：内容类型
+            doc.toJson(),        // 参数2：数据
+            QHttpServerResponse::StatusCode::Ok  // 参数3：状态码（可省略，默认为200）
+            );
 
     } catch (const std::exception &e) {
         qCritical() << "❌ Search failed:" << e.what();
@@ -368,7 +383,12 @@ QHttpServerResponse VideoServer::handleSearchVideos(const QHttpServerRequest &re
             {"message", QString("搜索失败: %1").arg(e.what())}
         };
 
-        return QHttpServerResponse(QJsonDocument(response).toJson(), "application/json", QHttpServerResponse::StatusCode::InternalServerError);
+        QJsonDocument doc(response);
+        return QHttpServerResponse(
+            "application/json",
+            doc.toJson(),
+            QHttpServerResponse::StatusCode::InternalServerError
+            );
     }
 }
 
@@ -590,19 +610,20 @@ QList<VideoMetadata> VideoServer::searchVideosByKeyword(const QString &keyword)
             cover_url,
             head_url
         FROM videos
-        WHERE title LIKE ? OR author LIKE ? OR description LIKE ?
-        ORDER BY created_at DESC
+        WHERE title LIKE ?
+        ORDER BY id DESC
+        LIMIT 50
     )";
 
     QSqlQuery query;
     query.prepare(sql);
     QString searchPattern = "%" + keyword + "%";
     query.addBindValue(searchPattern);
-    query.addBindValue(searchPattern);
-    query.addBindValue(searchPattern);
 
     if (!query.exec()) {
         qCritical() << "❌ 搜索视频失败:" << query.lastError().text();
+        qCritical() << "❌ SQL语句:" << sql;
+        qCritical() << "❌ 绑定参数:" << searchPattern;
         return videos;
     }
 
