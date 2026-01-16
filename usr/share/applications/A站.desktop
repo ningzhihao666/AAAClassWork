@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=A站
+Exec=/usr/share/applications/usr/bin/appBilibili
+Icon=/usr/share/applications/usr/share/icons/hicolor/256x256/apps/a.png
+Categories=KDE;AudioVideo;Video;
+Path=

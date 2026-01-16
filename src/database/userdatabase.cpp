@@ -1,3 +1,4 @@
+// userdatabase.cpp
 #include "userdatabase.h"
 #include <QDebug>
 #include <algorithm>
@@ -76,13 +77,11 @@ namespace infrastructure {
         return success;
     }
 
-
-
     bool UserRepository::createUsersTable() {
         QSqlQuery query(m_db);
         QString sql = R"(
             CREATE TABLE IF NOT EXISTS users (
-                id VARCHAR(255) PRIMARY KEY,
+                id VARCHAR(255) PRIMARY KEY,  -- 这里改为存储account值
                 account VARCHAR(255) UNIQUE NOT NULL,
                 password VARCHAR(255) NOT NULL,
                 nickname VARCHAR(255),
@@ -230,8 +229,10 @@ namespace infrastructure {
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         )");
 
-        query.addBindValue(QString::fromStdString(user->id()));
-        query.addBindValue(QString::fromStdString(user->account()));
+        // 修改：id 使用 account 的值
+        std::string account = user->account();
+        query.addBindValue(QString::fromStdString(account));  // id = account
+        query.addBindValue(QString::fromStdString(account));  // account
         query.addBindValue(QString::fromStdString(user->password()));
         query.addBindValue(QString::fromStdString(user->nickname()));
         query.addBindValue(QString::fromStdString(user->avatarUrl()));
@@ -367,62 +368,8 @@ namespace infrastructure {
     }
 
     std::unique_ptr<domain::User> UserRepository::getUserByAccount(const std::string& account) {
-        if (!connectToDatabase()) {
-            return nullptr;
-        }
-
-        QSqlQuery query(m_db);
-        query.prepare("SELECT * FROM users WHERE account = ?");
-        query.addBindValue(QString::fromStdString(account));
-
-        if (!executeQuery(query, "获取用户失败") || !query.next()) {
-            return nullptr;
-        }
-
-        auto user = recordToUser(query.record());
-        if (!user) {
-            return nullptr;
-        }
-
-        std::string userId = user->id();
-
-        //加载点赞关系
-        auto likedIds = getLikedVideoIds(userId);
-        for (const auto& id : likedIds) {
-            user->addLikedVideo(id);
-        }
-
-        // 加载关注关系
-        auto followingIds = getFollowingIds(userId);
-        for (const auto& id : followingIds) {
-            user->follow(id);
-        }
-
-        // 加载粉丝关系
-        auto followerIds = getFollowerIds(userId);
-        for (const auto& id : followerIds) {
-            user->addFollowerId(id);
-        }
-
-        // 加载收藏
-        auto favoriteIds = getFavoriteVideoIds(userId);
-        for (const auto& id : favoriteIds) {
-            user->addFavoriteVideo(id);
-        }
-
-        // 加载历史记录
-        auto historyIds = getWatchHistoryIds(userId);
-        for (const auto& id : historyIds) {
-            user->addWatchHistory(id);
-        }
-
-        // 加载投币记录
-        auto coinRecords = getUserVideoCoins(userId);
-        for (const auto& pair : coinRecords) {
-            user->setVideoCoinCount(pair.first, pair.second);
-        }
-
-        return user;
+        // 修改：现在直接通过account获取用户，因为id=account
+        return getUserById(account);
     }
 
     std::vector<std::unique_ptr<domain::User>> UserRepository::getAllUsers() {
@@ -855,7 +802,7 @@ namespace infrastructure {
         }
 
         QSqlQuery query(m_db);
-        query.prepare("SELECT COUNT(*) FROM users WHERE account = ? AND password = ?");
+        query.prepare("SELECT COUNT(*) FROM users WHERE id = ? AND password = ?");
         query.addBindValue(QString::fromStdString(account));
         query.addBindValue(QString::fromStdString(password));
 
