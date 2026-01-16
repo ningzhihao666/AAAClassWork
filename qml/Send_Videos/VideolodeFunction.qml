@@ -17,17 +17,15 @@ Item {
     property string currentTitle: ""
     property string currentDescription: ""
     property string currentCoverPath: ""
+    property string currentAuthorName: ""
+    property string currentAuthorId: ""
+    property string currentAvatar: ""
     property bool isUploading: false
     property var currentRequest: null
 
     // 上传视频方法 - 修改：添加封面路径参数
     function uploadVideo(filePath, title, description, coverPath = "") {
         console.log("🚀 开始上传视频 - 参数:");
-        console.log("  filePath:", filePath);
-        console.log("  title:", title);
-        console.log("  description:", description);
-        console.log("  coverPath:", coverPath);
-
         if (isUploading) {
             uploadError("已有文件正在上传");
             return;
@@ -38,20 +36,17 @@ Item {
         currentTitle = title || "未命名视频";
         currentDescription = description || "暂无描述";
         currentCoverPath = coverPath || "";
+        currentAuthorName=userController.currentUser.nickname;
+        currentAuthorId=userController.currentUser.id;
+        currentAvatar=userController.avatarUrl;
         isUploading = true;
 
-        console.log("设置属性完成:");
-        console.log("  currentFilePath:", currentFilePath);
-        console.log("  currentTitle:", currentTitle);
-        console.log("  currentDescription:", currentDescription);
-        console.log("  currentCoverPath:", currentCoverPath);
-
         // 调用上传方法，传递封面路径
-        uploadViaPath(filePath, currentTitle, currentDescription, currentCoverPath);
+        uploadViaPath(filePath, currentTitle, currentDescription, currentCoverPath,currentAuthorName,currentAuthorId,currentAvatar);
     }
 
     // 通过文件路径上传 - 修改：添加封面路径参数
-    function uploadViaPath(filePath, title, description, coverPath = "") {
+    function uploadViaPath(filePath, title, description, coverPath = "",author,authorId,avatar) {
         console.log("📤 使用文件路径上传方案");
         console.log("  封面路径:", coverPath || "未提供封面");
 
@@ -66,7 +61,10 @@ Item {
             title: title,
             description: description,
             fileName: getFileName(filePath),
-            coverPath: coverPath  // 新增封面路径参数
+            coverPath: coverPath,  // 新增封面路径参数
+            author:author,
+            authorId:authorId,
+            avatar:avatar,
         };
 
         console.log("发送请求数据:", JSON.stringify(requestData));

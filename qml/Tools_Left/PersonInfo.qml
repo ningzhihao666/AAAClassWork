@@ -7,8 +7,6 @@ Rectangle {
     id: personInfoPage
     color: "#f4f4f4"
 
-
-
     // 状态管理
     property int selectedHistoryIndex: -1//历史记录index
     property bool isHistoryEmpty: false
@@ -35,8 +33,6 @@ Rectangle {
             if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
                 var res = JSON.parse(xhr.responseText)
                 if (res.code === 0) {
-                    // ⚠️ 不要再用 file://
-
 
                     userController.updateProfile(
                         "",

@@ -1602,7 +1602,7 @@ FrameLessWindow {
                     Text {
                         font.pixelSize: 12
                         color: "#999"
-                        text: "▶ " + model.viewCount
+                        text: "▶ " + model.view_count
                     }
                 }
             }

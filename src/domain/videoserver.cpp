@@ -229,6 +229,8 @@ QHttpServerResponse VideoServer::handleUploadByPath(const QHttpServerRequest &re
     QString title = jsonData["title"].toString("未命名视频");
     QString description = jsonData["description"].toString("暂无描述");
     QString coverPath = jsonData["coverPath"].toString();
+    QString author = jsonData["author"].toString();
+    QString head_url= jsonData["avatar"].toString();
 
     qInfo() << "📤 通过文件路径上传:" << filePath;
     qInfo() << "📝 标题:" << title;
@@ -261,7 +263,7 @@ QHttpServerResponse VideoServer::handleUploadByPath(const QHttpServerRequest &re
     VideoMetadata videoData;
     videoData.id = QString("video_%1").arg(timestamp);
     videoData.title = title;
-    videoData.author = "当前用户"; // 这里应该从用户系统获取真实作者
+    videoData.author = author; // 这里应该从用户系统获取真实作者
     videoData.description = description;
     videoData.upload_date = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
     videoData.view_count = 0;
@@ -282,7 +284,7 @@ QHttpServerResponse VideoServer::handleUploadByPath(const QHttpServerRequest &re
                                   .arg(m_cosBucket)
                                   .arg(m_cosRegion)
                                   .arg(coverFileKey);
-    videoData.head_url = "https://example.com/default_avatar.jpg"; // 默认头像
+    videoData.head_url = head_url;
 
     // 1. 先保存到数据库（记录基本信息）
     if (!saveVideoToDatabase(videoData)) {
